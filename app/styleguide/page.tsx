@@ -102,8 +102,8 @@ export default function StyleguidePage() {
             aria-busy="true"
             aria-live="polite"
           >
-            <span className="opacity-70">Loading</span>
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 animate-pulse">•••</span>
+            <span>Loading</span>
+            <span className="ml-2 animate-pulse">•••</span>
           </button>
         </div>
       </Section>
@@ -160,7 +160,7 @@ export default function StyleguidePage() {
               <li>
                 <a
                   href="#"
-                  className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] px-3 py-2 font-medium hover:bg-[var(--color-ink)] hover:text-white transition-colors"
+                  className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] px-3 py-2 font-medium bg-[var(--color-ink)] text-white shadow-[2px_2px_0_rgba(0,0,0,0.2)] hover:bg-[var(--color-ink)]/90 transition-colors"
                   aria-current="page"
                 >
                   Active Item
