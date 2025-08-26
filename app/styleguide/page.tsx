@@ -85,10 +85,10 @@ export default function StyleguidePage() {
       {/* 3) Buttons */}
       <Section title="Buttons">
         <div className="flex flex-wrap gap-4">
-          <button className="px-4 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-[var(--color-ink)] text-white focus:outline-none focus:ring-4 ring-[var(--color-ink)]/30">
+          <button className="px-4 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-[var(--color-ink)] text-white focus:outline-none focus:ring-4 ring-[var(--color-ink)]/30 hover:bg-[var(--color-ink)]/90 transition-colors">
             Primary
           </button>
-          <button className="px-4 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] text-[var(--color-ink)] bg-transparent focus:outline-none focus:ring-4 ring-[var(--color-ink)]/30">
+          <button className="px-4 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] text-[var(--color-ink)] bg-transparent focus:outline-none focus:ring-4 ring-[var(--color-ink)]/30 hover:bg-[var(--color-ink)] hover:text-white transition-colors">
             Secondary
           </button>
           <button
@@ -160,20 +160,20 @@ export default function StyleguidePage() {
               <li>
                 <a
                   href="#"
-                  className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] px-3 py-2 font-medium"
+                  className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] px-3 py-2 font-medium hover:bg-[var(--color-ink)] hover:text-white transition-colors"
                   aria-current="page"
                 >
                   Active Item
                 </a>
               </li>
               <li>
-                <a href="#" className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] px-3 py-2">
+                <a href="#" className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] px-3 py-2 hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors">
                   Normal Item
                 </a>
               </li>
               <li>
-                <a href="#" className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] px-3 py-2">
-                  Hover Item (simulate by hovering)
+                <a href="#" className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] px-3 py-2 hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors">
+                  Hover Item (hover to see effect)
                 </a>
               </li>
             </ul>
