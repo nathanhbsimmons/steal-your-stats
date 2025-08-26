@@ -5,8 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-4">
-      <h2 className="text-2xl font-serif">{title}</h2>
-      <div className="rounded-2xl border-2 border-black/90 p-4 shadow-[6px_6px_0_rgba(0,0,0,0.2)] bg-[var(--paper,theme(colors.gray.100))]">
+      <h2 className="text-2xl font-display">{title}</h2>
+      <div className="rounded-[var(--radius-xl)] border-[var(--border-w)] border-[var(--color-ink)] p-4 shadow-[6px_6px_0_rgba(0,0,0,0.2)] bg-[var(--color-paper)]">
         {children}
       </div>
     </section>
@@ -39,10 +39,10 @@ export default function StyleguidePage() {
   }, []);
 
   return (
-    <main className="p-6 md:p-10 space-y-10 bg-[var(--paper,theme(colors.gray.100))] text-[var(--ink,#111)]">
-      <header className="rounded-3xl border-2 border-black/90 p-6 shadow-[6px_6px_0_rgba(0,0,0,0.2)] bg-white">
-        <h1 className="text-4xl md:text-5xl font-serif">Styleguide</h1>
-        <p className="mt-2 max-w-prose text-sm md:text-base italic">
+    <main className="p-6 md:p-10 space-y-10 bg-[var(--color-paper)] text-[var(--color-ink)]">
+      <header className="rounded-[var(--radius-xl)] border-[var(--border-w)] border-[var(--color-ink)] p-6 shadow-[6px_6px_0_rgba(0,0,0,0.2)] bg-white">
+        <h1 className="text-4xl md:text-5xl font-display">Styleguide</h1>
+        <p className="mt-2 max-w-prose text-sm md:text-base italic font-body">
           Visual tokens, typography, and generic components for the retro/monochrome design language.
         </p>
       </header>
@@ -72,33 +72,33 @@ export default function StyleguidePage() {
       {/* 2) Typography */}
       <Section title="Typography">
         <div className="space-y-4">
-          <h1 className="text-4xl font-serif">H1 — Serif Display</h1>
-          <h3 className="text-xl font-serif italic">Subhead — Italic style</h3>
-          <p className="max-w-prose leading-relaxed">
-            Body copy uses a clean sans-serif with comfortable measure (~65ch). This paragraph is a placeholder to
+          <h1 className="text-4xl font-display">H1 — Serif Display (Playfair Display)</h1>
+          <h3 className="text-xl font-display italic">Subhead — Italic style</h3>
+          <p className="max-w-prose leading-relaxed font-body">
+            Body copy uses a clean sans-serif (Inter) with comfortable measure (~65ch). This paragraph is a placeholder to
             verify line-height (1.4–1.6), contrast, and readability in the monochrome theme.
           </p>
-          <p className="font-mono text-sm">Mono sample — code/meta text</p>
+          <p className="font-meta text-sm">Mono sample — code/meta text (IBM Plex Mono)</p>
         </div>
       </Section>
 
       {/* 3) Buttons */}
       <Section title="Buttons">
         <div className="flex flex-wrap gap-4">
-          <button className="px-4 py-2 rounded-xl border-2 border-black bg-black text-white focus:outline-none focus:ring-4 ring-black/30">
+          <button className="px-4 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-[var(--color-ink)] text-white focus:outline-none focus:ring-4 ring-[var(--color-ink)]/30">
             Primary
           </button>
-          <button className="px-4 py-2 rounded-xl border-2 border-black text-black bg-transparent focus:outline-none focus:ring-4 ring-black/30">
+          <button className="px-4 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] text-[var(--color-ink)] bg-transparent focus:outline-none focus:ring-4 ring-[var(--color-ink)]/30">
             Secondary
           </button>
           <button
-            className="px-4 py-2 rounded-xl border-2 border-black text-black/50 bg-gray-200 cursor-not-allowed"
+            className="px-4 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] text-[var(--color-gray)] bg-[var(--color-gray)]/20 cursor-not-allowed"
             disabled
           >
             Disabled
           </button>
           <button
-            className="px-4 py-2 rounded-xl border-2 border-black bg-black text-white relative"
+            className="px-4 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-[var(--color-ink)] text-white relative"
             aria-busy="true"
             aria-live="polite"
           >
@@ -111,24 +111,36 @@ export default function StyleguidePage() {
       {/* 4) Pills */}
       <Section title="Pills">
         <div className="flex flex-wrap gap-3">
-          <span className="px-3 py-1 rounded-2xl border-2 border-black text-sm">Neutral</span>
-          <span className="px-3 py-1 rounded-2xl border-2 border-black bg-black text-white text-sm">Active</span>
-          <span className="px-3 py-1 rounded-2xl border-2 border-black/50 text-black/50 text-sm">Disabled</span>
+          <span className="px-3 py-1 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] text-sm">Neutral</span>
+          <span className="px-3 py-1 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-[var(--color-ink)] text-white text-sm">Active</span>
+          <span className="px-3 py-1 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] text-[var(--color-gray)] text-sm">Disabled</span>
+        </div>
+      </Section>
+
+      {/* 4.5) Halftone Background Utility */}
+      <Section title="Halftone Background Utility">
+        <div className="relative p-8 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-white">
+          <div className="bg-halftone absolute inset-0 rounded-[var(--radius-md)]" />
+          <div className="relative z-10">
+            <h3 className="font-display text-lg mb-2">Halftone Background Demo</h3>
+            <p className="text-sm">This demonstrates the optional halftone/grain background utility class with low opacity.</p>
+            <p className="text-sm mt-2">The pattern is pure CSS and creates a subtle retro texture.</p>
+          </div>
         </div>
       </Section>
 
       {/* 5) Cards */}
       <Section title="Cards">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="rounded-2xl border-2 border-black/90 p-4">
-            <h4 className="font-serif text-lg">Card Header</h4>
-            <p className="text-sm mt-2">Simple card with border and rounded corners.</p>
+          <div className="rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] p-4">
+            <h4 className="font-display text-lg">Card Header</h4>
+            <p className="text-sm mt-2 font-body">Simple card with border and rounded corners.</p>
           </div>
-          <div className="rounded-2xl border-2 border-black/90 p-0">
-            <div className="border-b-2 border-black/90 p-3 font-serif">Scrollable Card</div>
+          <div className="rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] p-0">
+            <div className="border-b-[var(--border-w)] border-[var(--color-ink)] p-3 font-display">Scrollable Card</div>
             <div className="max-h-32 overflow-auto p-3 space-y-2">
               {Array.from({ length: 12 }).map((_, i) => (
-                <p key={i} className="text-sm">
+                <p key={i} className="text-sm font-body">
                   Scroll line {i + 1}
                 </p>
               ))}
@@ -141,33 +153,33 @@ export default function StyleguidePage() {
       <Section title="Sidebar & NavItem">
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
           <nav
-            className="rounded-2xl border-2 border-black/90 p-2"
+            className="rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] p-2"
             aria-label="Demo sidebar"
           >
             <ul className="space-y-1">
               <li>
                 <a
                   href="#"
-                  className="block rounded-xl border-2 border-black/90 px-3 py-2 font-medium"
+                  className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] px-3 py-2 font-medium"
                   aria-current="page"
                 >
                   Active Item
                 </a>
               </li>
               <li>
-                <a href="#" className="block rounded-xl border-2 border-black/50 px-3 py-2">
+                <a href="#" className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] px-3 py-2">
                   Normal Item
                 </a>
               </li>
               <li>
-                <a href="#" className="block rounded-xl border-2 border-black/50 px-3 py-2">
+                <a href="#" className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] px-3 py-2">
                   Hover Item (simulate by hovering)
                 </a>
               </li>
             </ul>
           </nav>
-          <div className="rounded-2xl border-2 border-black/90 p-4">
-            <p className="text-sm">
+          <div className="rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] p-4">
+            <p className="text-sm font-body">
               Content pane placeholder. On small screens, this would be full width; sidebar becomes collapsible.
             </p>
           </div>
@@ -177,9 +189,9 @@ export default function StyleguidePage() {
       {/* 7) Table */}
       <Section title="Table">
         <div className="overflow-x-auto">
-          <table className="min-w-[480px] w-full border-2 border-black/90 rounded-2xl overflow-hidden">
-            <thead className="bg-[var(--gray,theme(colors.gray.300))]">
-              <tr className="[&_th]:text-left [&_th]:px-3 [&_th]:py-2 [&_th]:font-serif">
+          <table className="min-w-[480px] w-full border-[var(--border-w)] border-[var(--color-ink)] rounded-[var(--radius-md)] overflow-hidden">
+            <thead className="bg-[var(--color-gray)]">
+              <tr className="[&_th]:text-left [&_th]:px-3 [&_th]:py-2 [&_th]:font-display">
                 <th scope="col">
                   Name <span aria-hidden>↕</span>
                 </th>
@@ -192,15 +204,15 @@ export default function StyleguidePage() {
               </tr>
             </thead>
             <tbody className="[&_td]:px-3 [&_td]:py-2">
-              <tr className="odd:bg-white even:bg-[var(--paper,theme(colors.gray.100))]">
-                <td>Row A</td>
-                <td>1972-05-26</td>
-                <td>12:34</td>
+              <tr className="odd:bg-white even:bg-[var(--color-paper)]">
+                <td className="font-body">Row A</td>
+                <td className="font-body">1972-05-26</td>
+                <td className="font-meta">12:34</td>
               </tr>
-              <tr className="odd:bg-white even:bg-[var(--paper,theme(colors.gray.100))]">
-                <td>Row B</td>
-                <td>1977-05-08</td>
-                <td>09:12</td>
+              <tr className="odd:bg-white even:bg-[var(--color-paper)]">
+                <td className="font-body">Row B</td>
+                <td className="font-body">1977-05-08</td>
+                <td className="font-meta">09:12</td>
               </tr>
             </tbody>
           </table>
@@ -211,7 +223,7 @@ export default function StyleguidePage() {
       <Section title="Collapse">
         <div className="space-y-2">
           <button
-            className="px-3 py-2 rounded-xl border-2 border-black bg-white focus:outline-none focus:ring-4 ring-black/30"
+            className="px-3 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-white focus:outline-none focus:ring-4 ring-[var(--color-ink)]/30"
             aria-expanded={isOpen}
             aria-controls="demo-collapse"
             onClick={() => setIsOpen((v) => !v)}
@@ -221,9 +233,9 @@ export default function StyleguidePage() {
           <div
             id="demo-collapse"
             hidden={!isOpen}
-            className="rounded-xl border-2 border-black/80 p-3"
+            className="rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] p-3"
           >
-            <p className="text-sm">Collapsible content block (accessible toggle).</p>
+            <p className="text-sm font-body">Collapsible content block (accessible toggle).</p>
           </div>
         </div>
       </Section>
@@ -231,24 +243,24 @@ export default function StyleguidePage() {
       {/* 9) Player (Docked) */}
       <Section title="Player (Docked)">
         <div className="relative min-h-40">
-          <div className="fixed inset-x-4 bottom-6 rounded-2xl border-2 border-black/90 bg-white p-3 shadow-[6px_6px_0_rgba(0,0,0,0.2)] max-w-3xl mx-auto">
+          <div className="fixed inset-x-4 bottom-6 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-white p-3 shadow-[6px_6px_0_rgba(0,0,0,0.2)] max-w-3xl mx-auto">
             <div className="flex items-center gap-3">
-              <button className="px-3 py-2 rounded-xl border-2 border-black bg-black text-white">⏮</button>
-              <button className="px-3 py-2 rounded-xl border-2 border-black bg-black text-white">⏯</button>
-              <button className="px-3 py-2 rounded-xl border-2 border-black bg-black text-white">⏭</button>
+              <button className="px-3 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-[var(--color-ink)] text-white">⏮</button>
+              <button className="px-3 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-[var(--color-ink)] text-white">⏯</button>
+              <button className="px-3 py-2 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-[var(--color-ink)] text-white">⏭</button>
               <div className="flex-1 truncate px-2">
-                <div className="text-sm font-medium">Track Title — Demo</div>
-                <div className="h-2 mt-1 rounded bg-gray-200">
-                  <div className="h-2 w-1/3 rounded bg-gray-500" />
+                <div className="text-sm font-medium font-body">Track Title — Demo</div>
+                <div className="h-2 mt-1 rounded bg-[var(--color-gray)]">
+                  <div className="h-2 w-1/3 rounded bg-[var(--color-ink)]" />
                 </div>
               </div>
-              <div className="text-xs font-mono">01:23 / 04:56</div>
+              <div className="text-xs font-meta">01:23 / 04:56</div>
             </div>
-            <div className="mt-2 text-xs text-gray-600">
+            <div className="mt-2 text-xs text-[var(--color-gray)]">
               Queue: Item 1, Item 2
             </div>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-[var(--color-gray)] font-body">
             Placeholder content to show page scroll with a docked player.
           </p>
         </div>
@@ -257,21 +269,21 @@ export default function StyleguidePage() {
       {/* 10) States */}
       <Section title="States">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-xl border-2 border-black p-3">
-            <div className="font-serif">Idle</div>
-            <p className="text-sm">Neutral content.</p>
+          <div className="rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] p-3">
+            <div className="font-display">Idle</div>
+            <p className="text-sm font-body">Neutral content.</p>
           </div>
-          <div className="rounded-xl border-2 border-black p-3" aria-busy="true">
-            <div className="font-serif">Loading</div>
-            <p className="text-sm animate-pulse">•••</p>
+          <div className="rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] p-3" aria-busy="true">
+            <div className="font-display">Loading</div>
+            <p className="text-sm animate-pulse font-body">•••</p>
           </div>
-          <div className="rounded-xl border-2 border-black p-3">
-            <div className="font-serif">Empty</div>
-            <p className="text-sm italic">Nothing to show yet.</p>
+          <div className="rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] p-3">
+            <div className="font-display">Empty</div>
+            <p className="text-sm italic font-body">Nothing to show yet.</p>
           </div>
-          <div className="rounded-xl border-2 border-red-700 p-3">
-            <div className="font-serif text-red-800">Error</div>
-            <button className="mt-2 px-3 py-1 rounded-lg border-2 border-black bg-white">Retry</button>
+          <div className="rounded-[var(--radius-md)] border-[var(--border-w)] border-red-700 p-3">
+            <div className="font-display text-red-800">Error</div>
+            <button className="mt-2 px-3 py-1 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] bg-white">Retry</button>
           </div>
         </div>
       </Section>
@@ -283,19 +295,19 @@ export default function StyleguidePage() {
             ref={liveRef}
             role="status"
             aria-live="polite"
-            className="rounded-xl border-2 border-black p-3"
+            className="rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] p-3"
           >
-            <strong className="font-serif">Live region: </strong>
-            <span>{liveMsg}</span>
+            <strong className="font-display">Live region: </strong>
+            <span className="font-body">{liveMsg}</span>
           </div>
-          <a href="#top" className="inline-block px-3 py-1 rounded-xl border-2 border-black focus:ring-4 ring-black/30">
+          <a href="#top" className="inline-block px-3 py-1 rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] focus:ring-4 ring-[var(--color-ink)]/30">
             Skip to content (demo)
           </a>
         </div>
       </Section>
 
-      <footer className="pt-2 text-xs text-gray-600">
-        <p>
+      <footer className="pt-2 text-xs text-[var(--color-gray)]">
+        <p className="font-body">
           This page is a visual QA surface for tokens & primitives. No real data is used.
         </p>
       </footer>
