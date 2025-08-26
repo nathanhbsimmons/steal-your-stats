@@ -1,0 +1,58 @@
+# Steal Your Stats — Cursor Rules
+
+## Purpose
+Ship a retro/monochrome Grateful Dead stats & player app in **small, verified slices**. Priorities: simplest solution, clean code, WCAG AA accessibility, and data correctness with attribution.
+
+## Scope (MVP)
+Song lookup → first/last show, opener/closer/encore counts, versions list with durations, in-browser playback (track or whole show), era blurb. Optional: BPM estimation.
+
+## Stack & Conventions
+- Next.js (App Router) + React + TypeScript; Node ≥20; **pnpm**.
+- Tailwind + shadcn/ui; SWR for remote data. Vitest + Testing Library.
+- Feature-first folders; UI primitives in `components/ui`; API clients in `lib/clients`.
+- **No secrets** in repo. Use `lib/env.ts` (zod-validated) and `.env.local`.
+
+## Design Language (look & feel only)
+- **Monochrome theme**, high contrast. 2px borders. 12–24px radii. Offset shadow.
+- Typography: serif display for H1, clean sans for body, mono for meta.
+- Optional subtle grain/halftone background (low opacity).
+- **Don’t replicate reference content** (no specific icons, about cards, etc.). Reuse the *style*, not the assets.
+
+## Accessibility (WCAG AA)
+- Keyboard-first. Visible focus rings. Logical tab order. One `<h1>` per view.
+- State model everywhere: idle → loading → empty → error → success.
+- Respect `prefers-reduced-motion`. Announce async updates with `aria-live`.
+- Labels on all inputs; helpful error text via `aria-describedby`.
+
+## Data & IDs
+- Sources: **setlist.fm**, **Archive.org**, **MusicBrainz**.
+- Preserve canonical IDs (MBIDs, Archive item IDs, setlist.fm URLs) for cross-links.
+- Show **attribution + license** near results and player.
+
+## Networking, Caching, Limits
+- Central fetch wrapper with: retries + backoff on 429, header logging for rate limits.
+- Cache: in-memory (short TTL) + localStorage (longer TTL) for GETs.
+- Debounce user input. Paginate & batch when scanning setlists.
+
+## Testing & Quality
+- Add/keep unit tests for utilities/clients and critical UI states.
+- Lint, typecheck, tests must pass before moving to the next slice.
+- Snapshot tests only for stable UI primitives; avoid brittle visuals.
+
+## Workflow
+- Work **one Task Card at a time** from `/AGENT/AGENT_TASKS.md`.
+- New branch per slice: `feat/<slice-kebab>`. Minimal diff focused on the card.
+- Commit message: `feat: <slice> (<key changes>)`.
+- Produce in the final message: changed files summary, verification steps, risks/next.
+
+## Definition of Done (per slice)
+- Acceptance criteria in the Task Card met and demoable locally.
+- `pnpm test`, `pnpm lint`, `pnpm typecheck` all pass.
+- A11y quick check passes (no serious axe issues).
+- No obvious perf regressions; docs/README updated if user-facing.
+
+## Agent Working Agreement
+- Prefer the **simplest** solution; avoid premature abstraction.
+- Don’t invent APIs or data that don’t exist. Call out assumptions explicitly.
+- Stop after the current card’s **Acceptance Criteria**. Don’t start the next card.
+- If blocked by missing env/config, scaffold stubs and return precise instructions for me.

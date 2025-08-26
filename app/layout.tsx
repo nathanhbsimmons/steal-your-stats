@@ -27,7 +27,23 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-black focus:text-white focus:rounded"
+        >
+          Skip to content
+        </a>
+        <header className="sr-only">
+          <nav aria-label="Main navigation">
+            {/* Navigation will be added in future tasks */}
+          </nav>
+        </header>
+        <main id="main-content">
+          {children}
+        </main>
+        <footer className="sr-only">
+          {/* Footer content will be added in future tasks */}
+        </footer>
       </body>
     </html>
   );
