@@ -171,4 +171,9 @@
     opacity: 0.05;
     pointer-events: none;
   }
+  
+  /* Window Shadow Utility */
+  .shadow-window {
+    box-shadow: 4px 4px 0px var(--color-ink);
+  }
 }
