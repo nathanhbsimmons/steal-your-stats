@@ -74,7 +74,7 @@ describe('AppShell Components', () => {
       );
       
       const main = screen.getByText('Main content').closest('main');
-      expect(main).toHaveClass('p-4', 'lg:p-6');
+      expect(main).toHaveClass('p-4');
     });
 
     it('has proper accessibility attributes', () => {

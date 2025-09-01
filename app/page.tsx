@@ -9,9 +9,16 @@ export default function Home() {
     <AppShell>
       <AppShellNavigation>
         <Window>
-          <WindowHeader>
-            <span className="font-mono text-sm">Navigation</span>
-          </WindowHeader>
+          <header className="border-b-2 border-ink bg-ink text-paper px-3 py-2 rounded-t-radius-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                {/* No icon for navigation */}
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="font-mono text-sm">Navigation</span>
+              </div>
+            </div>
+          </header>
           <WindowBody>
             <Sidebar>
               <NavSection title="Main">
