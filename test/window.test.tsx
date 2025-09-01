@@ -47,8 +47,8 @@ describe('Window Components', () => {
       
       const gdIcon = document.querySelector('svg');
       expect(gdIcon).toBeInTheDocument();
-      expect(gdIcon).toHaveAttribute('width', '24');
-      expect(gdIcon).toHaveAttribute('height', '24');
+      expect(gdIcon).toHaveAttribute('width', '32');
+      expect(gdIcon).toHaveAttribute('height', '32');
       expect(gdIcon).toHaveClass('text-paper');
     });
   });

@@ -38,7 +38,7 @@ export function WindowHeader({ children, className }: WindowHeaderProps) {
   return (
     <header
       className={cn(
-        'border-b-2 border-ink bg-ink text-paper px-4 py-3 rounded-t-radius-xl',
+        'border-b-2 border-ink bg-ink text-paper px-3 py-2 rounded-t-radius-xl',
         className
       )}
     >
@@ -48,8 +48,8 @@ export function WindowHeader({ children, className }: WindowHeaderProps) {
           <svg 
             version="1.0" 
             xmlns="http://www.w3.org/2000/svg" 
-            width="24" 
-            height="24" 
+            width="32" 
+            height="32" 
             viewBox="0 0 300.000000 300.000000" 
             preserveAspectRatio="xMidYMid meet"
             className="text-paper"
