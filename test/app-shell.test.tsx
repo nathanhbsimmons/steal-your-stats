@@ -39,7 +39,7 @@ describe('AppShell Components', () => {
       );
       
       const nav = screen.getByText('Nav content').closest('nav');
-      expect(nav).toHaveClass('border-r-2', 'border-ink', 'bg-gray');
+      expect(nav).toHaveClass('p-4');
     });
 
     it('has proper accessibility attributes', () => {

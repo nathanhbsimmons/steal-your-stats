@@ -30,7 +30,7 @@ export function AppShellNavigation({ children, className }: AppShellNavigationPr
   return (
     <nav
       className={cn(
-        'border-r-2 border-ink bg-gray p-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto',
+        'p-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto',
         className
       )}
       role="navigation"
