@@ -89,14 +89,14 @@ export default function Home() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="border-2 border-ink rounded-radius-md p-4">
-                  <DisplayHeading as="h3" className="text-xl lg:text-2xl mb-2">Quick Stats</DisplayHeading>
+                  <DisplayHeading as="h3" className="text-2xl lg:text-3xl mb-2">Quick Stats</DisplayHeading>
                   <BodyText size="sm">
                     Get started by searching for a song to see its performance history.
                   </BodyText>
                 </div>
                 
                 <div className="border-2 border-ink rounded-radius-md p-4">
-                  <DisplayHeading as="h3" className="text-xl lg:text-2xl mb-2">Recent Activity</DisplayHeading>
+                  <DisplayHeading as="h3" className="text-2xl lg:text-3xl mb-2">Recent Activity</DisplayHeading>
                   <BodyText size="sm">
                     View the latest shows and performances added to the database.
                   </BodyText>

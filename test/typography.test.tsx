@@ -9,7 +9,7 @@ describe('Typography Components', () => {
 
       const heading = screen.getByRole('heading', { level: 1, name: 'Main Title' });
       expect(heading).toBeInTheDocument();
-      expect(heading).toHaveClass('font-display', 'font-bold', 'text-ink', 'leading-tight');
+      expect(heading).toHaveClass('font-display', 'font-bold', 'text-ink', 'text-4xl', 'lg:text-5xl', 'tracking-tight');
     });
 
     it('renders as custom heading element', () => {
@@ -33,7 +33,7 @@ describe('Typography Components', () => {
 
       const subhead = screen.getByRole('heading', { level: 2, name: 'Subtitle' });
       expect(subhead).toBeInTheDocument();
-      expect(subhead).toHaveClass('font-body', 'text-ink/80', 'leading-relaxed', 'italic');
+      expect(subhead).toHaveClass('font-body', 'text-ink/80', 'text-xl', 'lg:text-2xl', 'italic');
     });
 
     it('renders as custom element', () => {

@@ -16,6 +16,7 @@ export function DisplayHeading({
     <Component
       className={cn(
         'font-display font-bold text-ink leading-tight',
+        'text-4xl lg:text-5xl',
         'tracking-tight',
         className
       )}
@@ -40,6 +41,7 @@ export function Subhead({
     <Component
       className={cn(
         'font-body text-ink/80 leading-relaxed',
+        'text-xl lg:text-2xl',
         'italic',
         className
       )}
