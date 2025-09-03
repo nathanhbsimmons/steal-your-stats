@@ -34,6 +34,12 @@ export class HttpClient {
   private baseUrl: string
   private defaultHeaders: Record<string, string>
 
+  /**
+   * Public courtesy: MusicBrainz & Archive.org request a descriptive UA.
+   * Add your email/website for contact per their guidelines.
+   */
+  static USER_AGENT = 'StealYourStats/1.0 (contact: you@example.com)'
+
   constructor(
     baseUrl: string = '',
     defaultHeaders: Record<string, string> = {}
@@ -41,7 +47,7 @@ export class HttpClient {
     this.baseUrl = baseUrl
     this.defaultHeaders = {
       'Content-Type': 'application/json',
-      'User-Agent': 'steal-your-stats/1.0',
+      'User-Agent': HttpClient.USER_AGENT,
       ...defaultHeaders,
     }
   }
@@ -80,9 +86,23 @@ export class HttpClient {
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
+        // Inject auth header for setlist.fm automatically by host match.
+        const host = (() => {
+          try { return new URL(fullUrl).host } catch { return '' }
+        })()
+
+        const dynamicHeaders: Record<string, string> = { ...requestHeaders }
+        if (host.endsWith('api.setlist.fm')) {
+          // Setlist.fm requires x-api-key; value comes from env loader.
+          const { env } = await import('./env')
+          dynamicHeaders['x-api-key'] = env.SETLISTFM_API_KEY
+          // Setlist recommends Accept header versioning; JSON by default:
+          dynamicHeaders['Accept'] = 'application/json'
+        }
+
         const response = await fetch(fullUrl, {
           method,
-          headers: requestHeaders,
+          headers: dynamicHeaders,
           body,
         })
 
@@ -182,3 +202,8 @@ export class HttpClient {
     return this.cache.size()
   }
 }
+
+// Convenience factories (optional)
+export const setlistClient = new HttpClient('https://api.setlist.fm/rest/1.0')
+export const musicbrainzClient = new HttpClient('https://musicbrainz.org')
+export const archiveClient = new HttpClient('https://archive.org')

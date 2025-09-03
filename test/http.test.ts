@@ -38,7 +38,7 @@ describe('HttpClient', () => {
           method: 'GET',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'User-Agent': 'steal-your-stats/1.0',
+            'User-Agent': 'StealYourStats/1.0 (contact: you@example.com)',
           }),
         })
       )
