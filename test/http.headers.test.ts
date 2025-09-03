@@ -26,7 +26,7 @@ describe('HttpClient header injection', () => {
     const res = await client.get('/search/songs')
     expect(res.status).toBe(200)
     const call = vi.mocked(fetch).mock.calls[0]
-    const opts = call[1]
+    const opts = call[1] as { headers: Record<string, string> }
     expect(opts?.headers?.['x-api-key']).toBe('test-api-key')
   })
 })
