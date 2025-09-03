@@ -7,11 +7,17 @@ import { Window, WindowHeader, WindowBody } from '@/components/ui/window'
 import { SongHeader } from '@/components/ui/song-header'
 import { FactRow } from '@/components/ui/fact-row'
 import { Card } from '@/components/ui/card'
-import { getGratefulDeadSongFacts, FirstLastFacts } from '@/lib/songFacts'
+import { getGratefulDeadSongFacts, getGratefulDeadPositionFacts, FirstLastFacts, PositionFacts } from '@/lib/songFacts'
+import { Collapse } from '@/components/ui/collapse'
+import { PositionList } from '@/components/ui/position-list'
 
-// SWR fetcher function
+// SWR fetcher functions
 async function fetchSongFacts(songTitle: string): Promise<FirstLastFacts> {
   return getGratefulDeadSongFacts(songTitle)
+}
+
+async function fetchPositionFacts(songTitle: string): Promise<PositionFacts> {
+  return getGratefulDeadPositionFacts(songTitle)
 }
 
 // Loading skeleton component
@@ -72,10 +78,27 @@ export default function SongPage() {
   // Decode the slug to get the song title
   const songTitle = decodeURIComponent(slug)
   
-  // SWR hook with 24h TTL
+  // SWR hooks with 24h TTL
   const { data, error, isLoading, mutate } = useSWR(
     `song-facts-${songTitle}`,
     () => fetchSongFacts(songTitle),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 24 * 60 * 60 * 1000, // 24 hours
+      errorRetryCount: 3,
+      errorRetryInterval: 5000,
+    }
+  )
+
+  const { 
+    data: positionData, 
+    error: positionError, 
+    isLoading: positionLoading, 
+    mutate: mutatePositions 
+  } = useSWR(
+    `position-facts-${songTitle}`,
+    () => fetchPositionFacts(songTitle),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
@@ -135,6 +158,75 @@ export default function SongPage() {
                   </div>
                 )}
               </Card>
+
+              {/* Position Facts Sections */}
+              {positionLoading && (
+                <div className="space-y-4">
+                  <div className="h-12 bg-gray animate-pulse rounded"></div>
+                  <div className="h-12 bg-gray animate-pulse rounded"></div>
+                  <div className="h-12 bg-gray animate-pulse rounded"></div>
+                </div>
+              )}
+
+              {positionError && (
+                <Card className="p-6">
+                  <div className="text-center">
+                    <div className="text-red-600 mb-4">
+                      <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <p className="font-medium">Failed to load position data</p>
+                      <p className="text-sm text-gray mt-1">{positionError.message}</p>
+                    </div>
+                    <button
+                      onClick={() => mutatePositions()}
+                      className="px-4 py-2 bg-ink text-paper border-2 border-ink rounded-md hover:bg-paper hover:text-ink transition-colors"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                </Card>
+              )}
+
+              {positionData && (
+                <div className="space-y-4">
+                  <Collapse 
+                    title={`Opener (${positionData.opener.count})`}
+                    id="opener-section"
+                    defaultOpen={false}
+                  >
+                    <PositionList
+                      shows={positionData.opener.shows}
+                      count={positionData.opener.count}
+                      positionType="opener"
+                    />
+                  </Collapse>
+
+                  <Collapse 
+                    title={`Closer (${positionData.closer.count})`}
+                    id="closer-section"
+                    defaultOpen={false}
+                  >
+                    <PositionList
+                      shows={positionData.closer.shows}
+                      count={positionData.closer.count}
+                      positionType="closer"
+                    />
+                  </Collapse>
+
+                  <Collapse 
+                    title={`Encore (${positionData.encore.count})`}
+                    id="encore-section"
+                    defaultOpen={false}
+                  >
+                    <PositionList
+                      shows={positionData.encore.shows}
+                      count={positionData.encore.count}
+                      positionType="encore"
+                    />
+                  </Collapse>
+                </div>
+              )}
               
               <div className="text-xs text-gray text-center">
                 <p>

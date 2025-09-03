@@ -83,7 +83,17 @@ describe('songFacts', () => {
               country: { code: 'US', name: 'USA' } 
             },
           },
-          sets: { set: [] },
+          sets: { 
+            set: [
+              {
+                name: 'Set 1',
+                song: [
+                  { name: 'Dark Star' },
+                  { name: 'Other Song' }
+                ]
+              }
+            ]
+          },
         },
         {
           id: 'setlist2',
@@ -98,7 +108,17 @@ describe('songFacts', () => {
               country: { code: 'US', name: 'USA' } 
             },
           },
-          sets: { set: [] },
+          sets: { 
+            set: [
+              {
+                name: 'Set 1',
+                song: [
+                  { name: 'Other Song' },
+                  { name: 'Dark Star' }
+                ]
+              }
+            ]
+          },
         },
       ]
 
@@ -111,18 +131,21 @@ describe('songFacts', () => {
         confidence: 1.0,
       })
 
-      const mockClient = new SetlistClientImpl()
-      vi.mocked(mockClient.searchSongs).mockResolvedValue([
-        {
-          id: 'song1',
-          name: 'Dark Star',
-          artist: { id: GRATEFUL_DEAD_MBID, name: 'Grateful Dead' },
-        },
-      ])
-
-      vi.mocked(mockClient.searchSetlistsBySong)
-        .mockResolvedValueOnce(mockSetlists)
-        .mockResolvedValueOnce([]) // No more pages
+      const mockClient = {
+        searchSongs: vi.fn().mockResolvedValue([
+          {
+            id: 'song1',
+            name: 'Dark Star',
+            artist: { id: GRATEFUL_DEAD_MBID, name: 'Grateful Dead' },
+          },
+        ]),
+        searchSetlistsBySong: vi.fn()
+          .mockResolvedValueOnce(mockSetlists)
+          .mockResolvedValueOnce([]) // No more pages
+      }
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(SetlistClientImpl).mockImplementation(() => mockClient as any)
 
       const result = await getFirstLast({
         artistMbid: GRATEFUL_DEAD_MBID,
