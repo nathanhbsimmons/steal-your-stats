@@ -130,7 +130,7 @@ describe('ArchiveClientImpl', () => {
       expect(result[0].name).toBe('Dark Star')
     })
 
-    it('should return empty array when no tracks match', async () => {
+    it('should return all tracks when no specific matches found (Archive.org behavior)', async () => {
       const mockTracks = [
         {
           name: 'Sugar Magnolia',
@@ -151,7 +151,9 @@ describe('ArchiveClientImpl', () => {
         ['dark star', 'darkstar']
       )
 
-      expect(result).toHaveLength(0)
+      // When no specific matches are found, return all tracks (common for Archive.org shows)
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('Sugar Magnolia')
     })
   })
 })

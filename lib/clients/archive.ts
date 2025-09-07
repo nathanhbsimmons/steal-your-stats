@@ -90,19 +90,13 @@ export class ArchiveClientImpl implements ArchiveClient {
     
     // Filter by date if provided
     if (date) {
-      console.log(`Filtering shows by date: ${date}`)
-      console.log(`Available show dates:`, shows.map(s => s.date))
-      
       shows = shows.filter(show => {
         if (!show.date) return false
         
         // Extract just the date part (YYYY-MM-DD) from ISO format
         const showDate = show.date.split('T')[0]
-        console.log(`Comparing ${showDate} with ${date}`)
         return showDate === date
       })
-      
-      console.log(`Filtered shows count: ${shows.length}`)
     }
     
     return shows
@@ -154,6 +148,10 @@ export class ArchiveClientImpl implements ArchiveClient {
   async getSongTracks(itemId: string, normalizedTitle: string, aliases: string[]): Promise<ArchiveTrack[]> {
     const allTracks = await this.listTracks(itemId)
     
+    if (allTracks.length === 0) {
+      return []
+    }
+    
     // Create a set of all possible titles to match against
     const searchTitles = [normalizedTitle, ...aliases].map(title => title.toLowerCase())
     
@@ -177,6 +175,11 @@ export class ArchiveClientImpl implements ArchiveClient {
       
       return false
     })
+    
+    // If no specific matches found, return all tracks (common for Archive.org shows with generic track names)
+    if (matchingTracks.length === 0) {
+      return allTracks
+    }
     
     return matchingTracks
   }
