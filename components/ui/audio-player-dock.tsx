@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from './button'
 import { Card } from './card'
 
@@ -25,6 +25,7 @@ export interface AudioPlayerDockProps {
   onNext: () => void
   onPrevious: () => void
   onTrackSelect?: (track: Track) => void
+  onPlayEntireShow?: () => void
   className?: string
 }
 
@@ -35,6 +36,7 @@ export function AudioPlayerDock({
   onPause,
   onNext,
   onPrevious,
+  onPlayEntireShow,
   className = ''
 }: AudioPlayerDockProps) {
   const [currentTime, setCurrentTime] = useState(0)
@@ -79,13 +81,57 @@ export function AudioPlayerDock({
     audio.volume = volume
   }, [volume])
 
-  const handlePlayPause = () => {
+  const handlePlayPause = useCallback(() => {
     if (isPlaying) {
       onPause()
     } else {
       onPlay()
     }
-  }
+  }, [isPlaying, onPause, onPlay])
+
+  // Handle keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle keyboard shortcuts when the audio player is focused or when no other input is focused
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        return
+      }
+
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault()
+          handlePlayPause()
+          break
+        case 'ArrowRight':
+          e.preventDefault()
+          onNext()
+          break
+        case 'ArrowLeft':
+          e.preventDefault()
+          onPrevious()
+          break
+        case 'KeyM':
+          e.preventDefault()
+          // Toggle mute
+          if (audioRef.current) {
+            audioRef.current.muted = !audioRef.current.muted
+          }
+          break
+        case 'KeyF':
+          e.preventDefault()
+          // Toggle fullscreen (if supported)
+          if (document.fullscreenElement) {
+            document.exitFullscreen()
+          } else {
+            document.documentElement.requestFullscreen()
+          }
+          break
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [handlePlayPause, onNext, onPrevious])
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const audio = audioRef.current
@@ -130,14 +176,34 @@ export function AudioPlayerDock({
         }}
       />
 
-      {/* Track info */}
+      {/* Aria-live region for announcements */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {isPlaying && currentTrack && `Now playing: ${currentTrack.name}`}
+      </div>
+
+      {/* Track info and Play Entire Show button */}
       <div className="mb-4">
-        <h3 className="font-medium text-ink text-sm truncate" title={currentTrack.name}>
-          {currentTrack.name}
-        </h3>
-        <p className="text-xs text-gray">
-          {currentTrack.showDate} • {currentTrack.venue}, {currentTrack.city}
-        </p>
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-ink text-sm truncate" title={currentTrack.name}>
+              {currentTrack.name}
+            </h3>
+            <p className="text-xs text-gray">
+              {currentTrack.showDate} • {currentTrack.venue}, {currentTrack.city}
+            </p>
+          </div>
+          {onPlayEntireShow && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onPlayEntireShow}
+              className="ml-2 flex-shrink-0"
+              aria-label="Play entire show"
+            >
+              Play Entire Show
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Progress bar */}
@@ -221,6 +287,16 @@ export function AudioPlayerDock({
             aria-label="Volume"
           />
         </div>
+      </div>
+
+      {/* Keyboard shortcuts help */}
+      <div className="text-xs text-gray border-t-2 border-gray pt-2 mb-2">
+        <p className="text-center">
+          <span className="font-mono">Space</span> Play/Pause • 
+          <span className="font-mono">←/→</span> Previous/Next • 
+          <span className="font-mono">M</span> Mute • 
+          <span className="font-mono">F</span> Fullscreen
+        </p>
       </div>
 
       {/* License/Attribution */}

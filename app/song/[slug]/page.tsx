@@ -126,7 +126,8 @@ export default function SongPage() {
     selectTrack,
     addToQueue,
     removeFromQueue,
-    clearQueue
+    clearQueue,
+    enqueueEntireShow
   } = useAudioPlayer()
   
   // SWR hooks with 24h cache as specified
@@ -158,6 +159,25 @@ export default function SongPage() {
       errorRetryInterval: 5000,
     }
   )
+
+  // Handler functions for new functionality
+  const handlePlayEntireShow = async (showRef: { date: string; venue: string; city: string }) => {
+    try {
+      await enqueueEntireShow(showRef, { clearExisting: true })
+    } catch (error) {
+      console.error('Failed to enqueue entire show:', error)
+      alert('Failed to load the entire show. Please try again.')
+    }
+  }
+
+  const handleClearAndPlayEntireShow = async (showRef: { date: string; venue: string; city: string }) => {
+    try {
+      await enqueueEntireShow(showRef, { clearExisting: true })
+    } catch (error) {
+      console.error('Failed to clear and play entire show:', error)
+      alert('Failed to load the entire show. Please try again.')
+    }
+  }
 
   return (
     <Window>
@@ -293,6 +313,7 @@ export default function SongPage() {
                     onPause={pause}
                     onNext={next}
                     onPrevious={previous}
+                    onPlayEntireShow={data?.first ? () => handlePlayEntireShow(data.first!) : undefined}
                   />
                   
                   <Queue
@@ -301,6 +322,7 @@ export default function SongPage() {
                     onTrackSelect={selectTrack}
                     onTrackRemove={removeFromQueue}
                     onClearQueue={clearQueue}
+                    onClearAndPlayEntireShow={data?.first ? () => handleClearAndPlayEntireShow(data.first!) : undefined}
                   />
                 </div>
 

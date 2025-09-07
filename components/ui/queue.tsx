@@ -11,6 +11,7 @@ export interface QueueProps {
   onTrackSelect: (track: Track) => void
   onTrackRemove: (trackId: string) => void
   onClearQueue: () => void
+  onClearAndPlayEntireShow?: () => void
   className?: string
 }
 
@@ -20,6 +21,7 @@ export function Queue({
   onTrackSelect,
   onTrackRemove,
   onClearQueue,
+  onClearAndPlayEntireShow,
   className = ''
 }: QueueProps) {
   if (tracks.length === 0) {
@@ -36,14 +38,26 @@ export function Queue({
     <Card className={`p-4 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium text-ink">Queue ({tracks.length})</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onClearQueue}
-          disabled={tracks.length === 0}
-        >
-          Clear
-        </Button>
+        <div className="flex items-center space-x-2">
+          {onClearAndPlayEntireShow && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClearAndPlayEntireShow}
+              className="text-xs"
+            >
+              Clear & Play Entire Show
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClearQueue}
+            disabled={tracks.length === 0}
+          >
+            Clear
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-2 max-h-64 overflow-y-auto">
