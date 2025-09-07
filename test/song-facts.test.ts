@@ -2,10 +2,13 @@ import { describe, it, expect, vi } from 'vitest'
 import { GRATEFUL_DEAD_MBID } from '../lib/ids'
 
 // Mock the clients before importing songFacts
-vi.mock('../lib/clients/setlist', () => ({
-  SetlistClientImpl: vi.fn().mockImplementation(() => ({
-    searchSongs: vi.fn(),
-    searchSetlistsBySong: vi.fn(),
+const mockSearchSongs = vi.fn()
+const mockSearchSetlistsBySong = vi.fn()
+
+vi.mock('../lib/clients/setlist-server', () => ({
+  SetlistClientServer: vi.fn().mockImplementation(() => ({
+    searchSongs: mockSearchSongs,
+    searchSetlistsBySong: mockSearchSetlistsBySong,
   })),
 }))
 
@@ -43,7 +46,6 @@ describe('songFacts', () => {
 
     it('should return empty facts when no songs found', async () => {
       const { resolveSong } = await import('../lib/ids')
-      const { SetlistClientImpl } = await import('../lib/clients/setlist')
       
       vi.mocked(resolveSong).mockResolvedValue({
         normalizedTitle: 'Test Song',
@@ -51,8 +53,7 @@ describe('songFacts', () => {
         confidence: 1.0,
       })
       
-      const mockClient = new SetlistClientImpl()
-      vi.mocked(mockClient.searchSongs).mockResolvedValue([])
+      mockSearchSongs.mockResolvedValue([])
 
       const result = await getFirstLast({
         artistMbid: GRATEFUL_DEAD_MBID,
@@ -123,7 +124,6 @@ describe('songFacts', () => {
       ]
 
       const { resolveSong } = await import('../lib/ids')
-      const { SetlistClientImpl } = await import('../lib/clients/setlist')
       
       vi.mocked(resolveSong).mockResolvedValue({
         normalizedTitle: 'Dark Star',
@@ -131,21 +131,17 @@ describe('songFacts', () => {
         confidence: 1.0,
       })
 
-      const mockClient = {
-        searchSongs: vi.fn().mockResolvedValue([
-          {
-            id: 'song1',
-            name: 'Dark Star',
-            artist: { id: GRATEFUL_DEAD_MBID, name: 'Grateful Dead' },
-          },
-        ]),
-        searchSetlistsBySong: vi.fn()
-          .mockResolvedValueOnce(mockSetlists)
-          .mockResolvedValueOnce([]) // No more pages
-      }
+      mockSearchSongs.mockResolvedValue([
+        {
+          id: 'song1',
+          name: 'Dark Star',
+          artist: { id: GRATEFUL_DEAD_MBID, name: 'Grateful Dead' },
+        },
+      ])
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      vi.mocked(SetlistClientImpl).mockImplementation(() => mockClient as any)
+      mockSearchSetlistsBySong
+        .mockResolvedValueOnce(mockSetlists)
+        .mockResolvedValueOnce([]) // No more pages
 
       const result = await getFirstLast({
         artistMbid: GRATEFUL_DEAD_MBID,
@@ -182,7 +178,6 @@ describe('songFacts', () => {
   describe('getGratefulDeadSongFacts', () => {
     it('should call getFirstLast with correct parameters', async () => {
       const { resolveSong } = await import('../lib/ids')
-      const { SetlistClientImpl } = await import('../lib/clients/setlist')
       
       vi.mocked(resolveSong).mockResolvedValue({
         normalizedTitle: 'Test Song',
@@ -190,8 +185,7 @@ describe('songFacts', () => {
         confidence: 1.0,
       })
 
-      const mockClient = new SetlistClientImpl()
-      vi.mocked(mockClient.searchSongs).mockResolvedValue([])
+      mockSearchSongs.mockResolvedValue([])
 
       const result = await getGratefulDeadSongFacts('Test Song')
 

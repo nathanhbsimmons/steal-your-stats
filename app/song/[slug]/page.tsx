@@ -7,17 +7,25 @@ import { Window, WindowHeader, WindowBody } from '@/components/ui/window'
 import { SongHeader } from '@/components/ui/song-header'
 import { FactRow } from '@/components/ui/fact-row'
 import { Card } from '@/components/ui/card'
-import { getGratefulDeadSongFacts, getGratefulDeadPositionFacts, FirstLastFacts, PositionFacts } from '@/lib/songFacts'
+import { FirstLastFacts, PositionFacts } from '@/lib/songFacts'
 import { Collapse } from '@/components/ui/collapse'
-import { PositionList } from '@/components/ui/position-list'
+import { PaginatedPositionList } from '@/components/ui/paginated-position-list'
 
 // SWR fetcher functions
 async function fetchSongFacts(songTitle: string): Promise<FirstLastFacts> {
-  return getGratefulDeadSongFacts(songTitle)
+  const response = await fetch(`/api/song-facts?songTitle=${encodeURIComponent(songTitle)}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch song facts: ${response.status} ${response.statusText}`)
+  }
+  return response.json()
 }
 
 async function fetchPositionFacts(songTitle: string): Promise<PositionFacts> {
-  return getGratefulDeadPositionFacts(songTitle)
+  const response = await fetch(`/api/position-facts?songTitle=${encodeURIComponent(songTitle)}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch position facts: ${response.status} ${response.statusText}`)
+  }
+  return response.json()
 }
 
 // Loading skeleton component
@@ -78,14 +86,14 @@ export default function SongPage() {
   // Decode the slug to get the song title
   const songTitle = decodeURIComponent(slug)
   
-  // SWR hooks with 24h TTL
+  // SWR hooks with shorter TTL for development
   const { data, error, isLoading, mutate } = useSWR(
     `song-facts-${songTitle}`,
     () => fetchSongFacts(songTitle),
     {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 24 * 60 * 60 * 1000, // 24 hours
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5 * 60 * 1000, // 5 minutes
       errorRetryCount: 3,
       errorRetryInterval: 5000,
     }
@@ -100,9 +108,9 @@ export default function SongPage() {
     `position-facts-${songTitle}`,
     () => fetchPositionFacts(songTitle),
     {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 24 * 60 * 60 * 1000, // 24 hours
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5 * 60 * 1000, // 5 minutes
       errorRetryCount: 3,
       errorRetryInterval: 5000,
     }
@@ -126,10 +134,21 @@ export default function SongPage() {
           
           {data && (
             <>
-              <SongHeader 
-                title={data.songTitle} 
-                aliases={data.aliases} 
-              />
+              <div className="flex items-center justify-between">
+                <SongHeader 
+                  title={data.songTitle} 
+                  aliases={data.aliases} 
+                />
+                <button
+                  onClick={() => {
+                    mutate()
+                    mutatePositions()
+                  }}
+                  className="px-3 py-1 text-xs bg-ink text-paper border-2 border-ink rounded-md hover:bg-paper hover:text-ink transition-colors"
+                >
+                  Refresh Data
+                </button>
+              </div>
               
               <Card className="p-6">
                 <h2 className="text-xl font-serif font-bold text-ink mb-4">
@@ -195,10 +214,11 @@ export default function SongPage() {
                     id="opener-section"
                     defaultOpen={false}
                   >
-                    <PositionList
-                      shows={positionData.opener.shows}
-                      count={positionData.opener.count}
+                    <PaginatedPositionList
+                      songTitle={songTitle}
                       positionType="opener"
+                      initialCount={positionData.opener.count}
+                      initialShows={positionData.opener.shows}
                     />
                   </Collapse>
 
@@ -207,10 +227,11 @@ export default function SongPage() {
                     id="closer-section"
                     defaultOpen={false}
                   >
-                    <PositionList
-                      shows={positionData.closer.shows}
-                      count={positionData.closer.count}
+                    <PaginatedPositionList
+                      songTitle={songTitle}
                       positionType="closer"
+                      initialCount={positionData.closer.count}
+                      initialShows={positionData.closer.shows}
                     />
                   </Collapse>
 
@@ -219,10 +240,11 @@ export default function SongPage() {
                     id="encore-section"
                     defaultOpen={false}
                   >
-                    <PositionList
-                      shows={positionData.encore.shows}
-                      count={positionData.encore.count}
+                    <PaginatedPositionList
+                      songTitle={songTitle}
                       positionType="encore"
+                      initialCount={positionData.encore.count}
+                      initialShows={positionData.encore.shows}
                     />
                   </Collapse>
                 </div>
@@ -239,7 +261,7 @@ export default function SongPage() {
                   >
                     setlist.fm
                   </a>
-                  {' '}• Cached for 24 hours
+                  {' '}• Cached for 5 minutes
                 </p>
               </div>
             </>

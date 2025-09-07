@@ -1,197 +1,97 @@
-// Canonical artist MBIDs and song resolution utilities
+// MusicBrainz IDs for artists
+export const GRATEFUL_DEAD_MBID = '6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6'
 
-// Grateful Dead MusicBrainz ID
-export const GRATEFUL_DEAD_MBID = 'e2bad8c4-8a0b-4a2e-9a2a-2b8b8b8b8b8b'
-
-// Common artist MBIDs for reference
-export const ARTIST_MBIDS = {
-  GRATEFUL_DEAD: GRATEFUL_DEAD_MBID,
-  // Add other artists as needed
-} as const
+// Common song title variations and aliases
+const SONG_ALIASES: Record<string, string[]> = {
+  'dark star': ['dark star', 'darkstar', 'darkstar (live)', 'dark star (live)'],
+  'truckin': ['truckin', 'truckin\'', 'truckin\' (live)', 'truckin (live)'],
+  'sugar magnolia': ['sugar magnolia', 'sugar magnolia (live)', 'sugar mag'],
+  'casey jones': ['casey jones', 'casey jones (live)'],
+  'friend of the devil': ['friend of the devil', 'friend of the devil (live)', 'fotd'],
+  'uncle john\'s band': ['uncle john\'s band', 'uncle johns band', 'ujb', 'uncle john\'s band (live)'],
+  'china cat sunflower': ['china cat sunflower', 'china cat', 'china cat sunflower (live)'],
+  'i know you rider': ['i know you rider', 'i know you rider (live)', 'rider'],
+  'the other one': ['the other one', 'other one', 'the other one (live)'],
+  'st. stephen': ['st. stephen', 'st stephen', 'saint stephen', 'st. stephen (live)'],
+  'fire on the mountain': ['fire on the mountain', 'fire on the mountain (live)', 'fotm'],
+  'scarlet begonias': ['scarlet begonias', 'scarlet begonias (live)', 'scarlet'],
+  'eyes of the world': ['eyes of the world', 'eyes of the world (live)', 'eyes'],
+  'terrapin station': ['terrapin station', 'terrapin station (live)', 'terrapin'],
+  'help on the way': ['help on the way', 'help on the way (live)', 'help'],
+  'slipknot!': ['slipknot!', 'slipknot', 'slipknot! (live)', 'slipknot (live)'],
+  'franklin\'s tower': ['franklin\'s tower', 'franklins tower', 'franklin\'s tower (live)', 'franklin'],
+  'shakedown street': ['shakedown street', 'shakedown street (live)', 'shakedown'],
+  'i need a miracle': ['i need a miracle', 'i need a miracle (live)', 'miracle'],
+  'bertha': ['bertha', 'bertha (live)'],
+  'good lovin\'': ['good lovin\'', 'good lovin', 'good lovin\' (live)', 'good lovin (live)'],
+  'playing in the band': ['playing in the band', 'playing in the band (live)', 'pitb'],
+  'drums': ['drums', 'drums (live)', 'drum solo'],
+  'space': ['space', 'space (live)', 'space jam'],
+  'not fade away': ['not fade away', 'not fade away (live)', 'nfa'],
+  'goin\' down the road feeling bad': ['goin\' down the road feeling bad', 'going down the road feeling bad', 'gdtrfb', 'goin\' down the road feeling bad (live)'],
+  'and we bid you goodnight': ['and we bid you goodnight', 'and we bid you goodnight (live)', 'goodnight'],
+  'the eleven': ['the eleven', 'eleven', 'the eleven (live)'],
+  'alligator': ['alligator', 'alligator (live)'],
+  'caution (do not stop on tracks)': ['caution (do not stop on tracks)', 'caution', 'caution (do not stop on tracks) (live)'],
+  'feedback': ['feedback', 'feedback (live)'],
+  'turn on your lovelight': ['turn on your lovelight', 'turn on your lovelight (live)', 'lovelight'],
+  'good morning little schoolgirl': ['good morning little schoolgirl', 'good morning little schoolgirl (live)', 'schoolgirl'],
+  'it hurts me too': ['it hurts me too', 'it hurts me too (live)', 'hurts me too'],
+  'smokestack lightning': ['smokestack lightning', 'smokestack lightning (live)', 'smokestack'],
+  'big boss man': ['big boss man', 'big boss man (live)', 'boss man'],
+  'next time you see me': ['next time you see me', 'next time you see me (live)', 'next time'],
+  'big railroad blues': ['big railroad blues', 'big railroad blues (live)', 'railroad blues'],
+  'cold rain and snow': ['cold rain and snow', 'cold rain and snow (live)', 'cold rain'],
+  'me and my uncle': ['me and my uncle', 'me and my uncle (live)', 'uncle'],
+  'big river': ['big river', 'big river (live)'],
+  'el paso': ['el paso', 'el paso (live)'],
+  'mama tried': ['mama tried', 'mama tried (live)'],
+  'mexicali blues': ['mexicali blues', 'mexicali blues (live)', 'mexicali'],
+  'tennessee jed': ['tennessee jed', 'tennessee jed (live)', 'tennessee'],
+  'jack straw': ['jack straw', 'jack straw (live)'],
+  'deal': ['deal', 'deal (live)'],
+  'loser': ['loser', 'loser (live)'],
+  'new speedway boogie': ['new speedway boogie', 'new speedway boogie (live)', 'speedway'],
+  'candyman': ['candyman', 'candyman (live)'],
+  'dire wolf': ['dire wolf', 'dire wolf (live)'],
+  'high time': ['high time', 'high time (live)'],
+  'easy wind': ['easy wind', 'easy wind (live)'],
+  'brokedown palace': ['brokedown palace', 'brokedown palace (live)', 'brokedown'],
+  'ripple': ['ripple', 'ripple (live)'],
+  'attics of my life': ['attics of my life', 'attics of my life (live)', 'attics'],
+}
 
 export interface SongResolution {
   normalizedTitle: string
   aliases: string[]
-  mbid?: string
-  confidence: number
-}
-
-export interface SongInput {
-  title: string
-  artistMbid?: string
+  musicbrainzId?: string
 }
 
 /**
- * Normalize a song title for consistent matching
- * - Remove common prefixes/suffixes
- * - Handle medleys and segues
- * - Standardize punctuation
+ * Resolve a song title to its canonical form and aliases
  */
-export function normalizeTitle(title: string): string {
-  if (!title) return ''
-
-  let normalized = title.trim()
-
-  // Remove common prefixes
-  normalized = normalized.replace(/^(the|a|an)\s+/i, '')
+export function resolveSong({ title }: { title: string }): SongResolution {
+  const normalizedTitle = title.toLowerCase().trim()
   
-  // Handle medleys and segues
-  normalized = normalized.replace(/\s*->\s*/g, ' > ')
-  normalized = normalized.replace(/\s*→\s*/g, ' > ')
-  normalized = normalized.replace(/\s*>\s*/g, ' > ')
+  // Find matching aliases
+  const aliases: string[] = []
+  let canonicalTitle = normalizedTitle
   
-  // Handle common suffixes
-  normalized = normalized.replace(/\s*\(reprise\)$/i, '')
-  normalized = normalized.replace(/\s*\(encore\)$/i, '')
-  normalized = normalized.replace(/\s*\(outro\)$/i, '')
-  
-  // Standardize punctuation
-  normalized = normalized.replace(/[''`]/g, "'")
-  normalized = normalized.replace(/[""]/g, '"')
-  normalized = normalized.replace(/\s+/g, ' ')
-  
-  // Remove extra whitespace
-  normalized = normalized.trim()
-  
-  return normalized
-}
-
-/**
- * Generate common aliases for a song title
- * - Original title
- * - Normalized title
- * - Common variations
- */
-export function generateAliases(title: string): string[] {
-  const aliases = new Set<string>()
-  
-  // Add original title
-  aliases.add(title)
-  
-  // Add normalized title
-  const normalized = normalizeTitle(title)
-  aliases.add(normalized)
-  
-  // Add lowercase versions
-  aliases.add(title.toLowerCase())
-  aliases.add(normalized.toLowerCase())
-  
-  // Handle medleys - add individual song parts
-  if (normalized.includes(' > ')) {
-    const parts = normalized.split(' > ')
-    parts.forEach(part => {
-      aliases.add(part.trim())
-      aliases.add(part.trim().toLowerCase())
-    })
-  }
-  
-  // Handle common variations
-  const variations = [
-    title.replace(/[''`]/g, "'"),
-    title.replace(/[''`]/g, ''),
-    title.replace(/[""]/g, '"'),
-    title.replace(/[""]/g, ''),
-  ]
-  
-  variations.forEach(variation => {
-    if (variation !== title) {
-      aliases.add(variation)
-      aliases.add(normalizeTitle(variation))
-    }
-  })
-  
-  return Array.from(aliases).filter(alias => alias.length > 0)
-}
-
-/**
- * Calculate confidence score for title matching
- * - Exact match: 1.0
- * - Normalized match: 0.9
- * - Case-insensitive match: 0.8
- * - Partial match: 0.5-0.7
- */
-export function calculateConfidence(query: string, target: string): number {
-  if (!query || !target) return 0
-  
-  const queryNorm = normalizeTitle(query)
-  const targetNorm = normalizeTitle(target)
-  
-  // Exact match
-  if (query === target) return 1.0
-  
-  // Normalized match
-  if (queryNorm === targetNorm) return 0.9
-  
-  // Case-insensitive match
-  if (query.toLowerCase() === target.toLowerCase()) return 0.8
-  
-  // Partial match
-  const queryWords = queryNorm.toLowerCase().split(/\s+/)
-  const targetWords = targetNorm.toLowerCase().split(/\s+/)
-  
-  const matchingWords = queryWords.filter(word => 
-    targetWords.some(targetWord => 
-      targetWord.includes(word) || word.includes(targetWord)
-    )
-  )
-  
-  const wordMatchRatio = matchingWords.length / Math.max(queryWords.length, targetWords.length)
-  
-  // More flexible scoring for better test compatibility
-  if (wordMatchRatio >= 0.6) return 0.7  // High match
-  if (wordMatchRatio >= 0.5) return 0.6  // Medium match
-  if (wordMatchRatio >= 0.1) return 0.5  // Low match but some overlap
-  
-  return 0
-}
-
-/**
- * Resolve a song to canonical IDs and aliases
- * This is a generic implementation that can be extended with actual API calls
- */
-export async function resolveSong(input: SongInput): Promise<SongResolution> {
-  const { title } = input
-  
-  if (!title) {
-    throw new Error('Song title is required')
-  }
-  
-  const normalizedTitle = normalizeTitle(title)
-  const aliases = generateAliases(title)
-  
-  // For now, return a basic resolution
-  // In a real implementation, this would query MusicBrainz and other sources
-  const resolution: SongResolution = {
-    normalizedTitle,
-    aliases,
-    mbid: undefined, // Would be populated by MusicBrainz lookup
-    confidence: 1.0, // Would be calculated based on API results
-  }
-  
-  return resolution
-}
-
-/**
- * Find the best matching song from a list of candidates
- */
-export function findBestMatch(
-  query: string, 
-  candidates: Array<{ title: string; [key: string]: unknown }>
-): { match: typeof candidates[0] | null; confidence: number } {
-  if (!candidates.length) {
-    return { match: null, confidence: 0 }
-  }
-  
-  let bestMatch = candidates[0]
-  let bestConfidence = calculateConfidence(query, candidates[0].title)
-  
-  for (let i = 1; i < candidates.length; i++) {
-    const confidence = calculateConfidence(query, candidates[i].title)
-    if (confidence > bestConfidence) {
-      bestMatch = candidates[i]
-      bestConfidence = confidence
+  for (const [canonical, variations] of Object.entries(SONG_ALIASES)) {
+    if (variations.some(variation => variation.toLowerCase() === normalizedTitle)) {
+      canonicalTitle = canonical
+      aliases.push(...variations)
+      break
     }
   }
   
-  return { match: bestMatch, confidence: bestConfidence }
+  // If no exact match found, use the input title as canonical
+  if (aliases.length === 0) {
+    aliases.push(title)
+  }
+  
+  return {
+    normalizedTitle: canonicalTitle,
+    aliases: [...new Set(aliases)], // Remove duplicates
+  }
 }

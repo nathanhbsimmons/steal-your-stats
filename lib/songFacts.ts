@@ -1,6 +1,15 @@
-import { SetlistClientImpl } from './clients/setlist'
+import { SetlistClientServer } from './clients/setlist-server'
 import { resolveSong } from './ids'
 import { GRATEFUL_DEAD_MBID } from './ids'
+import { songIndexService } from './song-index'
+
+/**
+ * Parse setlist.fm date format (dd-MM-yyyy) to a proper Date object
+ */
+function parseSetlistDate(dateStr: string): Date {
+  const [day, month, year] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day) // month is 0-indexed in Date constructor
+}
 
 export interface ShowRef {
   id: string
@@ -58,20 +67,18 @@ export async function getFirstLast(input: SongFactsInput): Promise<FirstLastFact
   const normalizedTitle = songResolution.normalizedTitle
   const aliases = songResolution.aliases
 
-  // Initialize clients
-  const setlistClient = new SetlistClientImpl()
-
   try {
-    // Search for the song in setlist.fm to get song ID
-    const songs = await setlistClient.searchSongs(normalizedTitle)
+    // Check if we need to build/rebuild the index
+    if (songIndexService.shouldRebuildIndex()) {
+      console.log('Building song index...')
+      await songIndexService.buildIndex()
+    }
     
-    // Find the best matching song for this artist
-    const artistSongs = (songs || []).filter(song => 
-      song.artist.id === artistMbid || 
-      song.artist.name.toLowerCase().includes('grateful dead')
-    )
-
-    if (artistSongs.length === 0) {
+    // Search for the song in the index
+    const songSlug = normalizedTitle.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-').trim()
+    const songDetails = songIndexService.getSongDetails(songSlug)
+    
+    if (!songDetails) {
       return {
         first: null,
         last: null,
@@ -81,72 +88,33 @@ export async function getFirstLast(input: SongFactsInput): Promise<FirstLastFact
       }
     }
 
-    // Use the first matching song (best match)
-    const song = artistSongs[0]
-    
-    // Get all setlists for this song
-    const allSetlists = []
-    let page = 1
-    let hasMore = true
-
-    while (hasMore) {
-      const setlists = await setlistClient.searchSetlistsBySong(song.id, page)
-      if (setlists.length === 0) {
-        hasMore = false
-      } else {
-        allSetlists.push(...setlists)
-        page++
-        // Limit to prevent infinite loops
-        if (page > 50) {
-          hasMore = false
-        }
-      }
-    }
-
-    if (allSetlists.length === 0) {
-      return {
-        first: null,
-        last: null,
-        totalPerformances: 0,
-        songTitle: normalizedTitle,
-        aliases,
-      }
-    }
-
-    // Sort setlists by date to find first and last
-    const sortedSetlists = allSetlists.sort((a, b) => 
-      new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
-    )
-
-    const firstSetlist = sortedSetlists[0]
-    const lastSetlist = sortedSetlists[sortedSetlists.length - 1]
-
-    const first: ShowRef | null = firstSetlist ? {
-      id: firstSetlist.id,
-      date: firstSetlist.eventDate,
-      venue: firstSetlist.venue.name,
-      city: firstSetlist.venue.city.name,
-      state: firstSetlist.venue.city.state,
-      country: firstSetlist.venue.city.country.name,
-      url: `https://www.setlist.fm/setlist/${firstSetlist.id}`,
+    // Convert indexed data to ShowRef format
+    const first: ShowRef | null = songDetails.firstPerformance ? {
+      id: songDetails.firstPerformance.id,
+      date: songDetails.firstPerformance.date,
+      venue: songDetails.firstPerformance.venue.name,
+      city: songDetails.firstPerformance.venue.city,
+      state: undefined, // Not stored in index
+      country: songDetails.firstPerformance.venue.country,
+      url: `https://www.setlist.fm/setlist/${songDetails.firstPerformance.id}`,
       source: 'setlist.fm'
     } : null
 
-    const last: ShowRef | null = lastSetlist ? {
-      id: lastSetlist.id,
-      date: lastSetlist.eventDate,
-      venue: lastSetlist.venue.name,
-      city: lastSetlist.venue.city.name,
-      state: lastSetlist.venue.city.state,
-      country: lastSetlist.venue.city.country.name,
-      url: `https://www.setlist.fm/setlist/${lastSetlist.id}`,
+    const last: ShowRef | null = songDetails.lastPerformance ? {
+      id: songDetails.lastPerformance.id,
+      date: songDetails.lastPerformance.date,
+      venue: songDetails.lastPerformance.venue.name,
+      city: songDetails.lastPerformance.venue.city,
+      state: undefined, // Not stored in index
+      country: songDetails.lastPerformance.venue.country,
+      url: `https://www.setlist.fm/setlist/${songDetails.lastPerformance.id}`,
       source: 'setlist.fm'
     } : null
 
     return {
       first,
       last,
-      totalPerformances: allSetlists.length,
+      totalPerformances: songDetails.totalPerformances,
       songTitle: normalizedTitle,
       aliases,
     }
@@ -172,20 +140,18 @@ export async function getPositions(input: SongFactsInput): Promise<PositionFacts
   const normalizedTitle = songResolution.normalizedTitle
   const aliases = songResolution.aliases
 
-  // Initialize clients
-  const setlistClient = new SetlistClientImpl()
-
   try {
-    // Search for the song in setlist.fm to get song ID
-    const songs = await setlistClient.searchSongs(normalizedTitle)
+    // Check if we need to build/rebuild the index
+    if (songIndexService.shouldRebuildIndex()) {
+      console.log('Building song index...')
+      await songIndexService.buildIndex()
+    }
     
-    // Find the best matching song for this artist
-    const artistSongs = (songs || []).filter(song => 
-      song.artist.id === artistMbid || 
-      song.artist.name.toLowerCase().includes('grateful dead')
-    )
-
-    if (artistSongs.length === 0) {
+    // Search for the song in the index
+    const songSlug = normalizedTitle.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-').trim()
+    const songDetails = songIndexService.getSongDetails(songSlug)
+    
+    if (!songDetails) {
       return {
         opener: { count: 0, shows: [] },
         closer: { count: 0, shows: [] },
@@ -195,94 +161,39 @@ export async function getPositions(input: SongFactsInput): Promise<PositionFacts
       }
     }
 
-    // Use the first matching song (best match)
-    const song = artistSongs[0]
-    
-    // Get all setlists for this song
-    const allSetlists = []
-    let page = 1
-    let hasMore = true
+    // Convert indexed position data to ShowRef format
+    const openerShows: ShowRef[] = songDetails.openerShows.map(show => ({
+      id: show.id,
+      date: show.date,
+      venue: show.venue.name,
+      city: show.venue.city,
+      state: undefined, // Not stored in index
+      country: show.venue.country,
+      url: `https://www.setlist.fm/setlist/${show.id}`,
+      source: 'setlist.fm'
+    }))
 
-    while (hasMore) {
-      const setlists = await setlistClient.searchSetlistsBySong(song.id, page)
-      if (setlists.length === 0) {
-        hasMore = false
-      } else {
-        allSetlists.push(...setlists)
-        page++
-        // Limit to prevent infinite loops
-        if (page > 50) {
-          hasMore = false
-        }
-      }
-    }
+    const closerShows: ShowRef[] = songDetails.closerShows.map(show => ({
+      id: show.id,
+      date: show.date,
+      venue: show.venue.name,
+      city: show.venue.city,
+      state: undefined, // Not stored in index
+      country: show.venue.country,
+      url: `https://www.setlist.fm/setlist/${show.id}`,
+      source: 'setlist.fm'
+    }))
 
-    if (allSetlists.length === 0) {
-      return {
-        opener: { count: 0, shows: [] },
-        closer: { count: 0, shows: [] },
-        encore: { count: 0, shows: [] },
-        songTitle: normalizedTitle,
-        aliases,
-      }
-    }
-
-    // Analyze positions in each setlist
-    const openerShows: ShowRef[] = []
-    const closerShows: ShowRef[] = []
-    const encoreShows: ShowRef[] = []
-
-    for (const setlist of allSetlists) {
-      const showRef: ShowRef = {
-        id: setlist.id,
-        date: setlist.eventDate,
-        venue: setlist.venue.name,
-        city: setlist.venue.city.name,
-        state: setlist.venue.city.state,
-        country: setlist.venue.city.country.name,
-        url: `https://www.setlist.fm/setlist/${setlist.id}`,
-        source: 'setlist.fm'
-      }
-
-      // Check if song was opener, closer, or in encore
-      let isOpener = false
-      let isCloser = false
-      let isEncore = false
-
-      for (const set of setlist.sets.set) {
-        if (set.song.length === 0) continue
-
-        // Check if song is first in any set (opener)
-        if (set.song[0]?.name.toLowerCase() === normalizedTitle.toLowerCase()) {
-          isOpener = true
-        }
-
-        // Check if song is last in any set (closer)
-        if (set.song[set.song.length - 1]?.name.toLowerCase() === normalizedTitle.toLowerCase()) {
-          isCloser = true
-        }
-
-        // Check if this is an encore set
-        const isEncoreSet = set.name?.toLowerCase().includes('encore') || 
-                           set.name?.toLowerCase().includes('e:') ||
-                           set.name?.toLowerCase().includes('e1') ||
-                           set.name?.toLowerCase().includes('e2')
-
-        if (isEncoreSet) {
-          // Check if song appears in this encore set
-          const songInEncore = set.song.some(s => 
-            s.name.toLowerCase() === normalizedTitle.toLowerCase()
-          )
-          if (songInEncore) {
-            isEncore = true
-          }
-        }
-      }
-
-      if (isOpener) openerShows.push(showRef)
-      if (isCloser) closerShows.push(showRef)
-      if (isEncore) encoreShows.push(showRef)
-    }
+    const encoreShows: ShowRef[] = songDetails.encoreShows.map(show => ({
+      id: show.id,
+      date: show.date,
+      venue: show.venue.name,
+      city: show.venue.city,
+      state: undefined, // Not stored in index
+      country: show.venue.country,
+      url: `https://www.setlist.fm/setlist/${show.id}`,
+      source: 'setlist.fm'
+    }))
 
     return {
       opener: { count: openerShows.length, shows: openerShows },
@@ -316,4 +227,148 @@ export async function getGratefulDeadPositionFacts(songTitle: string): Promise<P
     artistMbid: GRATEFUL_DEAD_MBID,
     songTitleOrId: songTitle,
   })
+}
+
+/**
+ * Get paginated position facts for a specific position type
+ */
+export async function getGratefulDeadPositionFactsPage(
+  songTitle: string, 
+  positionType: 'opener' | 'closer' | 'encore', 
+  page: number = 1
+): Promise<{
+  shows: ShowRef[]
+  hasMore: boolean
+  totalCount: number
+  page: number
+  positionType: string
+}> {
+  const { artistMbid, songTitleOrId } = {
+    artistMbid: GRATEFUL_DEAD_MBID,
+    songTitleOrId: songTitle,
+  }
+
+  if (!artistMbid || !songTitleOrId) {
+    throw new Error('Artist MBID and song title/ID are required')
+  }
+
+  // Resolve the song to get normalized title and aliases
+  const songResolution = await resolveSong({ title: songTitleOrId })
+  const normalizedTitle = songResolution.normalizedTitle
+
+  // Initialize clients
+  const setlistClient = new SetlistClientServer()
+
+  try {
+    // Search for the song in setlist.fm to get song ID
+    const songs = await setlistClient.searchSongs(normalizedTitle)
+    
+    // Find the best matching song for this artist
+    const artistSongs = (songs || []).filter(song => 
+      song.artist.id === artistMbid || 
+      song.artist.name.toLowerCase().includes('grateful dead')
+    )
+
+    if (artistSongs.length === 0) {
+      return {
+        shows: [],
+        hasMore: false,
+        totalCount: 0,
+        page,
+        positionType,
+      }
+    }
+
+    // Use the first matching song (best match)
+    const song = artistSongs[0]
+    
+    // Get setlists for the specific page
+    const setlists = await setlistClient.searchSetlistsBySong(song.name, page)
+    
+    if (setlists.length === 0) {
+      return {
+        shows: [],
+        hasMore: false,
+        totalCount: 0,
+        page,
+        positionType,
+      }
+    }
+
+    // Analyze positions in the setlists for the specific position type
+    const shows: ShowRef[] = []
+
+    for (const setlist of setlists) {
+      const showRef: ShowRef = {
+        id: setlist.id,
+        date: setlist.eventDate,
+        venue: setlist.venue.name,
+        city: setlist.venue.city.name,
+        state: setlist.venue.city.state,
+        country: setlist.venue.city.country.name,
+        url: setlist.url || `https://www.setlist.fm/setlist/${setlist.id}`,
+        source: 'setlist.fm'
+      }
+
+      // Check if song matches the specific position type
+      let matches = false
+
+      for (const set of setlist.sets.set) {
+        if (set.song.length === 0) continue
+
+
+        if (positionType === 'opener') {
+          // Check if song is first in any set (opener)
+          if (set.song[0]?.name.toLowerCase() === normalizedTitle.toLowerCase()) {
+            matches = true
+            break
+          }
+        } else if (positionType === 'closer') {
+          // Check if song is last in any set (closer)
+          if (set.song[set.song.length - 1]?.name.toLowerCase() === normalizedTitle.toLowerCase()) {
+            matches = true
+            break
+          }
+        } else if (positionType === 'encore') {
+          // Check if this is an encore set (use the encore field or fallback to name checking)
+          const isEncoreSet = set.encore !== undefined || 
+                             set.name?.toLowerCase().includes('encore') || 
+                             set.name?.toLowerCase().includes('e:') ||
+                             set.name?.toLowerCase().includes('e1') ||
+                             set.name?.toLowerCase().includes('e2')
+
+          if (isEncoreSet) {
+            // Check if song appears in this encore set
+            const songInEncore = set.song.some(s => 
+              s.name.toLowerCase() === normalizedTitle.toLowerCase()
+            )
+            if (songInEncore) {
+              matches = true
+              break
+            }
+          }
+        }
+      }
+
+      if (matches) {
+        shows.push(showRef)
+      }
+    }
+
+    // Check if there are more pages by trying to fetch the next page
+    const nextPageSetlists = await setlistClient.searchSetlistsBySong(song.name, page + 1)
+    const hasMore = nextPageSetlists.length > 0
+
+    return {
+      shows,
+      hasMore,
+      totalCount: shows.length, // This is just for this page, not total
+      page,
+      positionType,
+    }
+
+  } catch (error) {
+    console.error('Error fetching position facts page:', error)
+    throw new Error(`Failed to fetch position facts page: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
 }

@@ -92,48 +92,91 @@ Keyboard-only selection works; visually matches design language; accessible stat
 ## Agent Task Card 6 — API Clients & Canonical ID Resolution
 
 **Goal Recap**  
-Implement typed clients for setlist.fm, MusicBrainz, Archive.org; resolve a song to canonical IDs/aliases (generic logic).
+Implement typed clients for setlist.fm, MusicBrainz, and Archive.org, then expose them only through a **Repository/Indexer seam** (not directly from UI). Ensure canonical IDs and aliases are resolved consistently.
 
 **Plan**
-1. `lib/http.ts` with caching, retry/backoff, rate-limit header logging.
-2. `clients/setlist.ts` minimal methods: `searchSongs`, `getSetlistsByArtist`, `searchSetlistsBySong`.
-3. `clients/musicbrainz.ts`: `searchWorkByTitle`, `lookupRecordingAliases`.
-4. `clients/archive.ts`: `searchShows`, `listTracks`.
-5. `lib/ids.ts`: constants for artist MBIDs; `resolveSong({title})` → normalized title, aliases, optional MBIDs.
-6. Unit tests for `http` (cache) and `ids` (normalization).
 
-**Acceptance**  
-Clients compile and pass tests; no UI changes beyond wiring.
+1.  Extend `lib/http.ts` to inject:
+    *   `x-api-key` for setlist.fm (from env).
+    *   `User-Agent` for MusicBrainz/Archive.org.
+    *   Cache, retry/backoff, and rate-limit header logging.
+
+2.  Create minimal clients:
+    *   `clients/setlist.ts`: `searchSongs`, `getSetlistsByArtist`, `searchSetlistsBySong`.
+    *   `clients/musicbrainz.ts`: `searchWorkByTitle`, `lookupRecordingAliases`.
+    *   `clients/archive.ts`: `searchShows`, `listTracks`.
+
+3.  Add `lib/ids.ts`: constants for artist MBIDs; `resolveSong({title})` → normalized title, aliases, optional MBIDs.
+
+4.  Repository layer (`FileSongIndexRepository`): implement `upsertFromSetlist(setlistId, raw)` that uses setlist client + resolver to normalize and insert.
+
+5.  Indexer API (`indexer.rebuild()`, `indexer.upsertShow`) orchestrates year-by-year ingestion into repo and snapshot persistence.
+
+6.  Unit tests:
+    *   `http` caching and retry.
+    *   `ids` normalization.
+    *   Repo contract tests (searchSongs, getPositions).
+
+**Acceptance**
+
+*   Clients compile and pass tests.
+*   Repo methods return consistent DTOs (`Song`, `ShowRef`).
+*   No UI calls clients directly — only via the repo/indexer.
 
 ---
 
 ## Agent Task Card 7 — Song Page v1: First/Last Facts
 
 **Goal Recap**  
-For `/song/[slug]`, compute and render first/last performance facts with source links.
+Render first/last performance facts for a song by consuming the **Repository API**, not by querying setlist.fm live.
 
 **Plan**
-1. `lib/songFacts.ts` → `getFirstLast(artistMbid, songTitleOrId)` returning `{first: ShowRef, last: ShowRef}`.
-2. UI: `SongHeader` (title + optional alias hint) and `FactRow` components.
-3. Show source badges; SWR for caching; 24h TTL.
 
-**Acceptance**  
-Page displays first/last with links; skeletons/errors implemented; no content unrelated to song facts.
+1.  Add `SongIndexRepository.getSongByTitle(title)` → returns `Song` with optional `firstLast` facts.
+
+2.  Implement `lib/songFacts.ts` as a thin wrapper:
+    ```ts
+    export async function getFirstLast(songId: string): Promise<FirstLastFacts>
+    ```
+    Internally calls repo.
+
+3.  UI:
+    *   `SongHeader` (title + alias hint).
+    *   `FactRow` (first + last shows).
+    *   Show source badges; 24h SWR cache.
+
+4.  Repo ensures first/last are computed during index build/snapshot load.
+
+**Acceptance**
+
+*   Page displays first/last with links to shows.
+*   Skeleton/error states present.
+*   All facts flow from repo/snapshot (no live fetch per request).
 
 ---
 
 ## Agent Task Card 8 — Opener/Closer/Encore Sections
 
 **Goal Recap**  
-Show counts and paginated lists of shows where the song opened, closed, or encored.
+Expose counts and paginated lists of opener/closer/encore performances via the repository interface, and render them with accessible UI.
 
 **Plan**
-1. `getPositions(artistMbid, song)` → `{opener, closer, encore}` with totals and paged fetchers.
-2. UI: three `Collapse` sections with accessible toggle buttons and “Load more” (SWR infinite).
-3. Maintain deep-linkable anchors.
 
-**Acceptance**  
-Counts render quickly; lists page smoothly; keyboard and screen reader friendly.
+1.  Extend `SongIndexRepository.getPositions(songId)` → returns `PositionFacts` with:
+    *   `openerCount`, `closerCount`, `encoreCount`.
+    *   Paged fetchers (`getOpenerPage`, `getCloserPage`, `getEncorePage`).
+
+2.  Repo populates opener/closer/encore maps during indexing or snapshot load.
+
+3.  UI: three `Collapse` sections with toggle buttons, deep-linkable anchors, and SWR infinite for “Load more”.
+
+4.  Pagination contract: `{items: ShowRef[], nextCursor?}`.
+
+**Acceptance**
+
+*   Counts render from repo quickly.
+*   Lists page smoothly with “Load more”.
+*   Keyboard and screen reader usage is correct.
 
 ---
 

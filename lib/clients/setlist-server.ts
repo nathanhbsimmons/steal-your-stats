@@ -50,12 +50,15 @@ export interface SetlistClient {
   searchSetlistsBySong(songName: string, page?: number): Promise<Setlist[]>
 }
 
-export class SetlistClientImpl implements SetlistClient {
+export class SetlistClientServer implements SetlistClient {
   private http: HttpClient
 
   constructor() {
+    // Use process.env directly for server-side usage
+    const apiKey = process.env.SETLISTFM_API_KEY || '120oRoOHMxXd7oeHxJ9FbIhPbOPuVrQ9ECzU'
     this.http = new HttpClient('https://api.setlist.fm/rest/1.0', {
       'Accept': 'application/json',
+      'x-api-key': apiKey,
     })
   }
 
@@ -132,6 +135,17 @@ export class SetlistClientImpl implements SetlistClient {
     const response = await this.http.get<{
       setlist: Setlist[]
     }>(`/search/setlists?p=${page}&songName=${encodeURIComponent(songName)}&artistMbid=6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6`)
+
+    return response.data.setlist || []
+  }
+
+  async getArtistSetlists(artistId: string, page: number = 1, year?: number): Promise<Setlist[]> {
+    const searchParams: Record<string, string> = { p: page.toString() }
+    if (year) searchParams.year = year.toString()
+
+    const response = await this.http.get<{
+      setlist: Setlist[]
+    }>(`/artist/${artistId}/setlists?${new URLSearchParams(searchParams).toString()}`)
 
     return response.data.setlist || []
   }

@@ -1,0 +1,60 @@
+
+> steal-your-stats@0.1.0 dev /Users/nathansimmons/repos/steal-your-stats
+> next dev --turbopack
+
+   ▲ Next.js 15.5.0 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.68.56:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.2s
+ ○ Compiling /api/position-facts/page ...
+ ✓ Compiled /api/position-facts/page in 3s
+[DEBUG] Found Dark Star in setlist 7bc95e1c (27-06-2015)
+[DEBUG] Set: Set 2:, Songs: [
+  'Cryptical Envelopment',
+  'Dark Star',
+  'St. Stephen',
+  'The Eleven',
+  'Turn On Your Love Light',
+  'Drums',
+  "What's Become of the Baby?",
+  'Space',
+  'The Other One',
+  'Morning Dew'
+]
+ GET /api/position-facts/page?songTitle=Dark%20Star&positionType=opener&page=1 200 in 3704ms
+[DEBUG] Found Dark Star in setlist 7bc95e1c (27-06-2015)
+[DEBUG] Set: Set 2:, Songs: [
+  'Cryptical Envelopment',
+  'Dark Star',
+  'St. Stephen',
+  'The Eleven',
+  'Turn On Your Love Light',
+  'Drums',
+  "What's Become of the Baby?",
+  'Space',
+  'The Other One',
+  'Morning Dew'
+]
+ GET /api/position-facts/page?songTitle=Dark%20Star&positionType=closer&page=1 200 in 413ms
+[DEBUG] Found Dark Star in setlist 7bc95e1c (27-06-2015)
+[DEBUG] Set: Set 2:, Songs: [
+  'Cryptical Envelopment',
+  'Dark Star',
+  'St. Stephen',
+  'The Eleven',
+  'Turn On Your Love Light',
+  'Drums',
+  "What's Become of the Baby?",
+  'Space',
+  'The Other One',
+  'Morning Dew'
+]
+ GET /api/position-facts/page?songTitle=Dark%20Star&positionType=encore&page=1 200 in 368ms
+ ✓ Compiled /api/song-facts in 284ms
+ GET /api/song-facts?songTitle=Dark%20Star 200 in 773ms
+ GET /api/song-facts?songTitle=Dark%20Star 200 in 826ms
+ GET /api/song-facts?songTitle=Dark%20Star 200 in 770ms
+[?25h

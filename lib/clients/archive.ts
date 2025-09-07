@@ -1,41 +1,54 @@
 import { HttpClient } from '../http'
 
-export interface ArchiveItem {
+export interface ArchiveShow {
   identifier: string
   title: string
+  creator: string
+  date: string
   description?: string
-  date?: string
-  creator?: string
   venue?: string
-  location?: string
+  city?: string
+  state?: string
+  country?: string
   'publicdate': string
-  'item_size': number
-  'downloads': number
-  'item_count': number
-  'avg_rating': number
-  'num_reviews': number
-  'collection': string[]
-  'format': string[]
+  'addeddate': string
+  'updatedate': string
   'mediatype': string
-  'metadata': Record<string, string[]>
+  'collection': string[]
+  'subject': string[]
+  'language': string[]
+  'licenseurl': string
+  'rights': string
+  'format': string[]
+  'type': string
+  'files': Array<{
+    name: string
+    source: string
+    format: string
+    length: string
+    md5: string
+    mtime: string
+    size: string
+    crc32: string
+    sha1: string
+  }>
 }
 
 export interface ArchiveTrack {
   name: string
-  title: string
-  length: string
+  source: string
   format: string
-  original: string
-  'track': string
-  'creator': string
-  'album': string
-  'date': string
+  length: string
+  md5: string
+  mtime: string
+  size: string
+  crc32: string
+  sha1: string
 }
 
 export interface ArchiveClient {
-  searchShows(query: string, page?: number): Promise<ArchiveItem[]>
-  listTracks(itemId: string): Promise<ArchiveTrack[]>
-  getStreamingUrl(itemId: string, filename: string): string
+  searchShows(creator: string, date?: string): Promise<ArchiveShow[]>
+  listTracks(identifier: string): Promise<ArchiveTrack[]>
 }
 
 export class ArchiveClientImpl implements ArchiveClient {
@@ -43,55 +56,42 @@ export class ArchiveClientImpl implements ArchiveClient {
 
   constructor() {
     this.http = new HttpClient('https://archive.org', {
-      'Accept': 'application/json',
+      'User-Agent': HttpClient.USER_AGENT,
     })
   }
 
-  async searchShows(query: string, page: number = 1): Promise<ArchiveItem[]> {
+  async searchShows(creator: string, date?: string): Promise<ArchiveShow[]> {
+    const searchParams = new URLSearchParams({
+      q: `creator:${creator}`,
+      output: 'json',
+      rows: '50',
+    })
+    
+    if (date) {
+      searchParams.set('date', date)
+    }
+
     const response = await this.http.get<{
       response: {
-        docs: ArchiveItem[]
+        docs: ArchiveShow[]
         numFound: number
         start: number
       }
-    }>(`/advancedsearch.php?q=${encodeURIComponent(query)}&output=json&rows=50&page=${page}`)
+    }>(`/advancedsearch.php?${searchParams.toString()}`)
 
     return response.data.response.docs || []
   }
 
-  async listTracks(itemId: string): Promise<ArchiveTrack[]> {
+  async listTracks(identifier: string): Promise<ArchiveTrack[]> {
     const response = await this.http.get<{
-      files: Record<string, ArchiveTrack>
-    }>(`/metadata/${itemId}`)
+      files: ArchiveTrack[]
+    }>(`/${identifier}/_files.json`)
 
-    // Filter for audio files and convert to array
-    const tracks: ArchiveTrack[] = []
-    for (const [filename, file] of Object.entries(response.data.files)) {
-      if (file.format && (
-        file.format.includes('VBR MP3') || 
-        file.format.includes('MP3') || 
-        file.format.includes('Flac') ||
-        file.format.includes('Ogg Vorbis')
-      )) {
-        tracks.push({
-          ...file,
-          name: filename,
-        })
-      }
-    }
+    // Filter for audio files only
+    const audioFiles = (response.data.files || []).filter(file => 
+      file.format && ['FLAC', 'MP3', 'VBR MP3', 'Ogg Vorbis'].includes(file.format)
+    )
 
-    return tracks.sort((a, b) => {
-      // Sort by track number if available, otherwise by filename
-      const trackA = parseInt(a.track || '0')
-      const trackB = parseInt(b.track || '0')
-      if (trackA && trackB) {
-        return trackA - trackB
-      }
-      return a.name.localeCompare(b.name)
-    })
-  }
-
-  getStreamingUrl(itemId: string, filename: string): string {
-    return `https://archive.org/download/${itemId}/${filename}`
+    return audioFiles
   }
 }

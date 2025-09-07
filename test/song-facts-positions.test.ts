@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getPositions } from '@/lib/songFacts'
-import { SetlistClientImpl } from '@/lib/clients/setlist'
+import { SetlistClientServer } from '@/lib/clients/setlist-server'
 import { resolveSong } from '@/lib/ids'
 
 // Mock environment variables
@@ -11,7 +11,7 @@ vi.mock('@/lib/env', () => ({
 }))
 
 // Mock the dependencies
-vi.mock('@/lib/clients/setlist')
+vi.mock('@/lib/clients/setlist-server')
 vi.mock('@/lib/ids')
 
 const mockSetlistClient = {
@@ -26,7 +26,7 @@ describe('getPositions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(SetlistClientImpl).mockImplementation(() => mockSetlistClient as any)
+    vi.mocked(SetlistClientServer).mockImplementation(() => mockSetlistClient as any)
   })
 
   it('returns empty results when no songs found', async () => {
@@ -101,7 +101,7 @@ describe('getPositions', () => {
     }
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(SetlistClientImpl).mockImplementation(() => mockClient as any)
+    vi.mocked(SetlistClientServer).mockImplementation(() => mockClient as any)
 
     const mockSetlists = [
       {

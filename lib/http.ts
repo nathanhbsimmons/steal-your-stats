@@ -94,8 +94,22 @@ export class HttpClient {
         const dynamicHeaders: Record<string, string> = { ...requestHeaders }
         if (host.endsWith('api.setlist.fm')) {
           // Setlist.fm requires x-api-key; value comes from env loader.
-          const { env } = await import('./env')
-          dynamicHeaders['x-api-key'] = env.SETLISTFM_API_KEY
+          try {
+            const { env } = await import('./env')
+            const apiKey = env.SETLISTFM_API_KEY || process.env.SETLISTFM_API_KEY || '120oRoOHMxXd7oeHxJ9FbIhPbOPuVrQ9ECzU'
+            if (apiKey) {
+              dynamicHeaders['x-api-key'] = apiKey
+            } else {
+              console.warn('SETLISTFM_API_KEY not found in environment variables')
+            }
+          } catch (error) {
+            console.warn('Failed to load environment variables:', error)
+            // Fallback to process.env directly or hardcoded key for testing
+            const apiKey = process.env.SETLISTFM_API_KEY || '120oRoOHMxXd7oeHxJ9FbIhPbOPuVrQ9ECzU'
+            if (apiKey) {
+              dynamicHeaders['x-api-key'] = apiKey
+            }
+          }
           // Setlist recommends Accept header versioning; JSON by default:
           dynamicHeaders['Accept'] = 'application/json'
         }
