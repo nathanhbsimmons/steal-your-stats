@@ -16,6 +16,7 @@ export class SongIndexer {
     totalShows: 0,
     lastUpdated: new Date().toISOString()
   }
+  private initialized = false
 
   /**
    * Rebuild the entire song index from setlist.fm
@@ -98,6 +99,77 @@ export class SongIndexer {
    */
   getRepository(): FileSongIndexRepository {
     return this.repository
+  }
+
+  /**
+   * Initialize with sample data for development
+   */
+  async initializeWithSampleData(): Promise<void> {
+    if (this.initialized) return
+
+    console.log('Initializing indexer with sample data...')
+    
+    // Sample setlist data for Dark Star
+    const sampleSetlist = {
+      id: 'sample-dark-star-1',
+      eventDate: '1972-08-27',
+      venue: {
+        name: 'Venue West',
+        city: {
+          name: 'Berkeley',
+          state: 'CA',
+          country: {
+            name: 'USA'
+          }
+        }
+      },
+      sets: {
+        set: [{
+          song: [
+            { name: 'Dark Star' },
+            { name: 'Sugar Magnolia' }
+          ]
+        }]
+      },
+      url: 'https://www.setlist.fm/setlist/sample-1'
+    }
+
+    const sampleSetlist2 = {
+      id: 'sample-dark-star-2', 
+      eventDate: '1995-07-09',
+      venue: {
+        name: 'Soldier Field',
+        city: {
+          name: 'Chicago',
+          state: 'IL',
+          country: {
+            name: 'USA'
+          }
+        }
+      },
+      sets: {
+        set: [{
+          song: [
+            { name: 'Touch of Grey' },
+            { name: 'Dark Star' }
+          ]
+        }]
+      },
+      url: 'https://www.setlist.fm/setlist/sample-2'
+    }
+
+    // Add sample data to repository
+    await this.repository.upsertFromSetlist('sample-1', sampleSetlist)
+    await this.repository.upsertFromSetlist('sample-2', sampleSetlist2)
+
+    this.initialized = true
+    this.stats = {
+      totalSongs: 3, // Dark Star, Sugar Magnolia, Touch of Grey
+      totalShows: 2,
+      lastUpdated: new Date().toISOString()
+    }
+
+    console.log('Sample data initialized successfully')
   }
 
   /**

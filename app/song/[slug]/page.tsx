@@ -86,14 +86,14 @@ export default function SongPage() {
   // Decode the slug to get the song title
   const songTitle = decodeURIComponent(slug)
   
-  // SWR hooks with shorter TTL for development
+  // SWR hooks with 24h cache as specified
   const { data, error, isLoading, mutate } = useSWR(
     `song-facts-${songTitle}`,
     () => fetchSongFacts(songTitle),
     {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      dedupingInterval: 5 * 60 * 1000, // 5 minutes
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 24 * 60 * 60 * 1000, // 24 hours
       errorRetryCount: 3,
       errorRetryInterval: 5000,
     }
@@ -108,9 +108,9 @@ export default function SongPage() {
     `position-facts-${songTitle}`,
     () => fetchPositionFacts(songTitle),
     {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      dedupingInterval: 5 * 60 * 1000, // 5 minutes
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 24 * 60 * 60 * 1000, // 24 hours
       errorRetryCount: 3,
       errorRetryInterval: 5000,
     }
@@ -261,7 +261,7 @@ export default function SongPage() {
                   >
                     setlist.fm
                   </a>
-                  {' '}• Cached for 5 minutes
+                  {' '}• Cached for 24 hours
                 </p>
               </div>
             </>

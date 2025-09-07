@@ -89,6 +89,45 @@ Keyboard-only selection works; visually matches design language; accessible stat
 
 ---
 
+## Architecture Overview: Cards 6-8 — Three Seams for Future-Proofing
+
+**Goal:** Introduce three architectural seams to avoid rewrites when scaling from MVP to production.
+
+### The Three Seams
+
+1. **Repository Interface (Port)** - Abstract data access
+   - Define `SongIndexRepository` and `ShowRepository` interfaces consumed by UI/services
+   - Keep current in-memory/file implementation as `FileSongIndexRepository`
+   - Future `PostgresSongIndexRepository` can drop in without changing consumers
+
+2. **Stable Domain DTOs** - Freeze UI contract
+   - Freeze types UI depends on: `Song`, `ShowRef`, `PositionFacts`, `FirstLastFacts`, `VersionTrack`
+   - Add minimal pagination contract `{cursor?: string; pageSize: number}` + `{items: T[]; nextCursor?: string}`
+   - Preserve canonical IDs (MBIDs, setlist.fm IDs) and Archive item identifiers
+
+3. **Thin Indexer API** - Abstract data ingestion
+   - Expose `indexer.upsertShow(showRaw)` and `indexer.rebuild({year?})`
+   - Today: writes to JSON; Tomorrow: writes to DB
+   - Record source metadata (etag, lastFetchedAt, sourceVersion) for incremental updates
+
+### MVP Hardening & Production Readiness
+
+- **File Persistence v1:** Write/read `{version: 1, generatedAt, ...payload}` to `/data/snapshots/song-index.v1.json`
+- **Contract Tests:** Write tests against interfaces (not concrete storage) - same suite passes for File and Postgres repos
+- **Background Task Stub:** Add `scripts/rebuild-index.ts` Node script that calls `indexer.rebuild()`
+- **Monitoring Hooks:** Log rate-limit headers, counts per year, snapshot sizes, basic metrics
+
+### Deliverables Across Cards 6-8
+
+- `lib/repositories/song-index-repo.ts` (interfaces + DTOs)
+- `lib/repositories/file-song-index-repo.ts` (current logic, adapted to interface)
+- `lib/indexer/indexer.ts` (upsert/rebuild API over repo)
+- `data/snapshots/song-index.v1.json` (persisted snapshot)
+- `tests/contracts/song-index.contract.test.ts` (shared suite for any repo impl)
+- `scripts/rebuild-index.ts` (CLI)
+
+---
+
 ## Agent Task Card 6 — API Clients & Canonical ID Resolution
 
 **Goal Recap**  
@@ -152,6 +191,8 @@ Render first/last performance facts for a song by consuming the **Repository API
 *   Page displays first/last with links to shows.
 *   Skeleton/error states present.
 *   All facts flow from repo/snapshot (no live fetch per request).
+
+**Note:** The repository starts empty and needs to be populated with data. For development, sample data is automatically loaded on first access. For production, the indexer needs to be run to populate the repository with real setlist data.
 
 ---
 
