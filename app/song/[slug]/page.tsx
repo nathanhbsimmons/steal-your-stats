@@ -10,6 +10,10 @@ import { Card } from '@/components/ui/card'
 import { FirstLastFacts, PositionFacts } from '@/lib/songFacts'
 import { Collapse } from '@/components/ui/collapse'
 import { PaginatedPositionList } from '@/components/ui/paginated-position-list'
+import { AudioPlayerDock } from '@/components/ui/audio-player-dock'
+import { Queue } from '@/components/ui/queue'
+import { useAudioPlayer } from '@/lib/hooks/use-audio-player'
+import { Track } from '@/components/ui/audio-player-dock'
 
 // SWR fetcher functions
 async function fetchSongFacts(songTitle: string): Promise<FirstLastFacts> {
@@ -24,6 +28,30 @@ async function fetchPositionFacts(songTitle: string): Promise<PositionFacts> {
   const response = await fetch(`/api/position-facts?songTitle=${encodeURIComponent(songTitle)}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch position facts: ${response.status} ${response.statusText}`)
+  }
+  return response.json()
+}
+
+async function resolveArchiveShow(showRef: { date: string; venue: string; city: string }) {
+  const response = await fetch('/api/archive/resolve-show', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(showRef)
+  })
+  if (!response.ok) {
+    throw new Error(`Failed to resolve Archive show: ${response.status} ${response.statusText}`)
+  }
+  return response.json()
+}
+
+async function fetchSongTracks(itemId: string, songTitle: string) {
+  const response = await fetch('/api/archive/song-tracks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ itemId, songTitle })
+  })
+  if (!response.ok) {
+    throw new Error(`Failed to fetch song tracks: ${response.status} ${response.statusText}`)
   }
   return response.json()
 }
@@ -85,6 +113,21 @@ export default function SongPage() {
   
   // Decode the slug to get the song title
   const songTitle = decodeURIComponent(slug)
+  
+  // Audio player state
+  const {
+    currentTrack,
+    isPlaying,
+    queue,
+    play,
+    pause,
+    next,
+    previous,
+    selectTrack,
+    addToQueue,
+    removeFromQueue,
+    clearQueue
+  } = useAudioPlayer()
   
   // SWR hooks with 24h cache as specified
   const { data, error, isLoading, mutate } = useSWR(
@@ -235,6 +278,99 @@ export default function SongPage() {
                   </Collapse>
                 </div>
               )}
+
+              {/* Player Section */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-serif font-bold text-ink">
+                  Audio Player
+                </h2>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <AudioPlayerDock
+                    currentTrack={currentTrack || undefined}
+                    isPlaying={isPlaying}
+                    onPlay={play}
+                    onPause={pause}
+                    onNext={next}
+                    onPrevious={previous}
+                  />
+                  
+                  <Queue
+                    tracks={queue}
+                    currentTrackId={currentTrack?.id}
+                    onTrackSelect={selectTrack}
+                    onTrackRemove={removeFromQueue}
+                    onClearQueue={clearQueue}
+                  />
+                </div>
+
+                {/* Play buttons for first/last shows */}
+                {data && data.first && data.last && (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          if (!data.first) return
+                          
+                          const archiveShow = await resolveArchiveShow({
+                            date: data.first.date,
+                            venue: data.first.venue,
+                            city: data.first.city
+                          })
+                          const { tracks } = await fetchSongTracks(archiveShow.identifier, songTitle)
+                          
+                          const formattedTracks: Track[] = tracks.map((track: { id: string; name: string; url: string; showDate: string; venue: string; city: string; archiveItemId: string; licenseUrl?: string; rights?: string }) => ({
+                            ...track,
+                            showDate: data.first!.date,
+                            venue: data.first!.venue,
+                            city: data.first!.city,
+                            licenseUrl: archiveShow.licenseurl,
+                            rights: archiveShow.rights
+                          }))
+                          
+                          addToQueue(formattedTracks)
+                        } catch (error) {
+                          console.error('Failed to load tracks:', error)
+                        }
+                      }}
+                      className="px-4 py-2 bg-ink text-paper border-2 border-ink rounded-md hover:bg-paper hover:text-ink transition-colors text-sm"
+                    >
+                      Play First Show Versions
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        try {
+                          if (!data.last) return
+                          
+                          const archiveShow = await resolveArchiveShow({
+                            date: data.last.date,
+                            venue: data.last.venue,
+                            city: data.last.city
+                          })
+                          const { tracks } = await fetchSongTracks(archiveShow.identifier, songTitle)
+                          
+                          const formattedTracks: Track[] = tracks.map((track: { id: string; name: string; url: string; showDate: string; venue: string; city: string; archiveItemId: string; licenseUrl?: string; rights?: string }) => ({
+                            ...track,
+                            showDate: data.last!.date,
+                            venue: data.last!.venue,
+                            city: data.last!.city,
+                            licenseUrl: archiveShow.licenseurl,
+                            rights: archiveShow.rights
+                          }))
+                          
+                          addToQueue(formattedTracks)
+                        } catch (error) {
+                          console.error('Failed to load tracks:', error)
+                        }
+                      }}
+                      className="px-4 py-2 bg-ink text-paper border-2 border-ink rounded-md hover:bg-paper hover:text-ink transition-colors text-sm"
+                    >
+                      Play Last Show Versions
+                    </button>
+                  </div>
+                )}
+              </div>
               
               <div className="text-xs text-gray text-center">
                 <p>
@@ -246,6 +382,15 @@ export default function SongPage() {
                     className="underline hover:text-ink transition-colors"
                   >
                     setlist.fm
+                  </a>
+                  {' '}• Audio from{' '}
+                  <a 
+                    href="https://archive.org" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-ink transition-colors"
+                  >
+                    Archive.org
                   </a>
                   {' '}• Cached for 24 hours
                 </p>
