@@ -51,6 +51,7 @@ export interface ArchiveClient {
   listTracks(identifier: string): Promise<ArchiveTrack[]>
   resolveArchiveShow(params: { date: string; venue?: string; city?: string }): Promise<ArchiveShow | null>
   getSongTracks(itemId: string, normalizedTitle: string, aliases: string[]): Promise<ArchiveTrack[]>
+  getAllTracks(itemId: string): Promise<ArchiveTrack[]>
 }
 
 export class ArchiveClientImpl implements ArchiveClient {
@@ -302,5 +303,43 @@ export class ArchiveClientImpl implements ArchiveClient {
     ]
     
     return patterns.some(pattern => pattern.test(trackName))
+  }
+
+  async getAllTracks(itemId: string): Promise<ArchiveTrack[]> {
+    try {
+      const response = await this.http.get(`/metadata/${itemId}`)
+      const data = response.data as { files?: Record<string, unknown> }
+      
+      if (!data.files) {
+        return []
+      }
+      
+      // Filter for audio files and convert to ArchiveTrack format
+      const audioFiles = Object.entries(data.files)
+        .filter(([, file]: [string, unknown]) => {
+          const fileObj = file as { name?: string; format?: string }
+          const fileName = fileObj.name || ''
+          return fileName.match(/\.(mp3|ogg|flac|wav)$/i) && fileObj.format !== 'Metadata'
+        })
+        .map(([, file]: [string, unknown]) => {
+          const fileObj = file as { name: string; length?: string; format?: string; source?: string; md5?: string; mtime?: string; size?: string; crc32?: string; sha1?: string }
+          return {
+            name: fileObj.name,
+            length: fileObj.length || '',
+            format: fileObj.format || '',
+            source: fileObj.source || '',
+            md5: fileObj.md5 || '',
+            mtime: fileObj.mtime || '',
+            size: fileObj.size || '',
+            crc32: fileObj.crc32 || '',
+            sha1: fileObj.sha1 || ''
+          }
+        })
+      
+      return audioFiles
+    } catch (error) {
+      console.error('Error fetching all tracks:', error)
+      return []
+    }
   }
 }

@@ -293,7 +293,7 @@ function processTracksForEnqueue(
     
     // Convert to Track format
     const track: Track = {
-      id: selectedTrack.id,
+      id: `${archiveShow.identifier}-${logicalName.replace(/[^a-zA-Z0-9]/g, '_')}-${processedTracks.length}`,
       name: logicalName, // Use logical name without format
       url: selectedTrack.url,
       duration: selectedTrack.duration,
