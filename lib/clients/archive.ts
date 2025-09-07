@@ -109,9 +109,9 @@ export class ArchiveClientImpl implements ArchiveClient {
       files: ArchiveTrack[]
     }>(`/metadata/${identifier}`)
 
-    // Filter for audio files only
+    // Filter for MP3 files only
     const audioFiles = (response.data.files || []).filter(file => 
-      file.format && ['FLAC', 'MP3', 'VBR MP3', 'Ogg Vorbis'].includes(file.format)
+      file.format && ['MP3', 'VBR MP3'].includes(file.format)
     )
 
     return audioFiles
@@ -314,12 +314,12 @@ export class ArchiveClientImpl implements ArchiveClient {
         return []
       }
       
-      // Filter for audio files and convert to ArchiveTrack format
+      // Filter for MP3 files only and convert to ArchiveTrack format
       const audioFiles = Object.entries(data.files)
         .filter(([, file]: [string, unknown]) => {
           const fileObj = file as { name?: string; format?: string }
           const fileName = fileObj.name || ''
-          return fileName.match(/\.(mp3|ogg|flac|wav)$/i) && fileObj.format !== 'Metadata'
+          return fileName.match(/\.mp3$/i) && fileObj.format !== 'Metadata'
         })
         .map(([, file]: [string, unknown]) => {
           const fileObj = file as { name: string; length?: string; format?: string; source?: string; md5?: string; mtime?: string; size?: string; crc32?: string; sha1?: string }

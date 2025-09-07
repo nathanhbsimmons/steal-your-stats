@@ -154,7 +154,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
   }, [])
 
   const enqueueEntireShow = useCallback(async (showRef: ShowRef, options: EnqueueEntireShowOptions = {}) => {
-    const { preferredFormats = ['mp3', 'ogg', 'flac'], clearExisting = false } = options
+    const { preferredFormats = ['mp3'], clearExisting = false } = options
     
     try {
       // Resolve the Archive.org show
@@ -240,11 +240,16 @@ function processTracksForEnqueue(
   archiveShow: { identifier: string; licenseurl?: string; rights?: string },
   showRef: ShowRef
 ): Track[] {
+  // Filter to only MP3 files
+  const mp3Tracks = tracks.filter(track => 
+    track.name.toLowerCase().endsWith('.mp3')
+  )
+  
   // Group tracks by logical track (remove format suffix)
   const trackGroups = new Map<string, Array<{ id: string; name: string; url: string; duration?: number }>>()
   
-  tracks.forEach(track => {
-    const logicalName = track.name.replace(/\.(mp3|ogg|flac|wav)$/i, '')
+  mp3Tracks.forEach(track => {
+    const logicalName = track.name.replace(/\.mp3$/i, '')
     if (!trackGroups.has(logicalName)) {
       trackGroups.set(logicalName, [])
     }

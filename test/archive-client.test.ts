@@ -104,7 +104,7 @@ describe('ArchiveClientImpl', () => {
       const mockTracks = [
         {
           name: 'Dark Star',
-          format: 'FLAC',
+          format: 'MP3',
           length: '300.5'
         },
         {
@@ -134,7 +134,7 @@ describe('ArchiveClientImpl', () => {
       const mockTracks = [
         {
           name: 'Sugar Magnolia',
-          format: 'FLAC',
+          format: 'MP3',
           length: '240.0'
         }
       ]
