@@ -27,18 +27,26 @@ export async function POST(request: NextRequest) {
       title: show.title,
       creator: show.creator,
       date: show.date,
-      venue: show.venue,
-      city: show.city,
+      venue: show.venue || 'Unknown Venue',
+      city: show.city || 'Unknown City',
       state: show.state,
       country: show.country,
-      licenseurl: show.licenseurl,
-      rights: show.rights,
+      licenseurl: show.licenseurl || '',
+      rights: show.rights || '',
       publicdate: show.publicdate
     })
   } catch (error) {
     console.error('Error resolving Archive show:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    })
     return NextResponse.json(
-      { error: 'Failed to resolve Archive show' },
+      { 
+        error: 'Failed to resolve Archive show',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

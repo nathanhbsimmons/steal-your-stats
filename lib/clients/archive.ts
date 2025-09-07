@@ -66,14 +66,15 @@ export class ArchiveClientImpl implements ArchiveClient {
     const searchParams = new URLSearchParams({
       q: `creator:${creator}`,
       output: 'json',
-      rows: '50',
+      rows: '100', // Get more results to filter by date
     })
-    
-    if (date) {
-      searchParams.set('date', date)
-    }
 
     const response = await this.http.get<{
+      responseHeader: {
+        status: number
+        QTime: number
+        params: Record<string, unknown>
+      }
       response: {
         docs: ArchiveShow[]
         numFound: number
@@ -81,13 +82,30 @@ export class ArchiveClientImpl implements ArchiveClient {
       }
     }>(`/advancedsearch.php?${searchParams.toString()}`)
 
-    return response.data.response.docs || []
+    if (!response.data || !response.data.response) {
+      return []
+    }
+    
+    let shows = response.data.response.docs || []
+    
+    // Filter by date if provided
+    if (date) {
+      shows = shows.filter(show => {
+        if (!show.date) return false
+        
+        // Extract just the date part (YYYY-MM-DD) from ISO format
+        const showDate = show.date.split('T')[0]
+        return showDate === date
+      })
+    }
+    
+    return shows
   }
 
   async listTracks(identifier: string): Promise<ArchiveTrack[]> {
     const response = await this.http.get<{
       files: ArchiveTrack[]
-    }>(`/${identifier}/_files.json`)
+    }>(`/metadata/${identifier}`)
 
     // Filter for audio files only
     const audioFiles = (response.data.files || []).filter(file => 
