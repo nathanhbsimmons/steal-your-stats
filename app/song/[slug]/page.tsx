@@ -134,21 +134,10 @@ export default function SongPage() {
           
           {data && (
             <>
-              <div className="flex items-center justify-between">
-                <SongHeader 
-                  title={data.songTitle} 
-                  aliases={data.aliases} 
-                />
-                <button
-                  onClick={() => {
-                    mutate()
-                    mutatePositions()
-                  }}
-                  className="px-3 py-1 text-xs bg-ink text-paper border-2 border-ink rounded-md hover:bg-paper hover:text-ink transition-colors"
-                >
-                  Refresh Data
-                </button>
-              </div>
+              <SongHeader 
+                title={data.songTitle} 
+                aliases={data.aliases} 
+              />
               
               <Card className="p-6">
                 <h2 className="text-xl font-serif font-bold text-ink mb-4">
@@ -217,7 +206,6 @@ export default function SongPage() {
                     <PaginatedPositionList
                       songTitle={songTitle}
                       positionType="opener"
-                      initialCount={positionData.opener.count}
                       initialShows={positionData.opener.shows}
                     />
                   </Collapse>
@@ -230,7 +218,6 @@ export default function SongPage() {
                     <PaginatedPositionList
                       songTitle={songTitle}
                       positionType="closer"
-                      initialCount={positionData.closer.count}
                       initialShows={positionData.closer.shows}
                     />
                   </Collapse>
@@ -243,7 +230,6 @@ export default function SongPage() {
                     <PaginatedPositionList
                       songTitle={songTitle}
                       positionType="encore"
-                      initialCount={positionData.encore.count}
                       initialShows={positionData.encore.shows}
                     />
                   </Collapse>

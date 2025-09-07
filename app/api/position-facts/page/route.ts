@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getGratefulDeadPositionFacts } from '@/lib/songFacts'
+import { getGratefulDeadPositionPage } from '@/lib/songFacts'
+import { songIndexer } from '@/lib/indexer'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const songTitle = searchParams.get('songTitle')
     const positionType = searchParams.get('positionType') // 'opener', 'closer', 'encore'
+    const page = searchParams.get('page')
+    const pageSize = searchParams.get('pageSize')
     
     if (!songTitle) {
       return NextResponse.json({ error: 'songTitle parameter is required' }, { status: 400 })
@@ -15,15 +18,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'positionType parameter is required' }, { status: 400 })
     }
 
-    const facts = await getGratefulDeadPositionFacts(songTitle)
+    // Initialize with sample data if not already done
+    await songIndexer.initializeWithSampleData()
     
-    // Filter by position type
-    const filteredFacts = {
-      ...facts,
-      [positionType]: facts[positionType as keyof typeof facts]
+    // Get song by title to get the song ID
+    const repository = songIndexer.getRepository()
+    const song = await repository.getSongByTitle(songTitle)
+    
+    if (!song) {
+      return NextResponse.json({ error: 'Song not found' }, { status: 404 })
     }
+
+    // Get paginated position data
+    const result = await getGratefulDeadPositionPage({
+      songId: song.id,
+      positionType: positionType as 'opener' | 'closer' | 'encore',
+      cursor: page || undefined,
+      pageSize: pageSize ? parseInt(pageSize, 10) : 20
+    })
     
-    return NextResponse.json(filteredFacts)
+    return NextResponse.json(result)
   } catch (error) {
     console.error('Error in position-facts page API:', error)
     return NextResponse.json(

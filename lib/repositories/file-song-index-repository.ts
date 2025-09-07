@@ -40,16 +40,36 @@ export interface PositionFacts {
   }
 }
 
+export interface PaginatedResult<T> {
+  items: T[]
+  nextCursor?: string
+  hasMore: boolean
+  totalCount: number
+}
+
+export interface PositionPageParams {
+  songId: string
+  positionType: 'opener' | 'closer' | 'encore'
+  cursor?: string
+  pageSize?: number
+}
+
 export interface SongIndexRepository {
   searchSongs(query: string, limit?: number): Promise<Song[]>
   getSongByTitle(title: string): Promise<Song | null>
   getPositions(songId: string): Promise<PositionFacts | null>
+  getPositionPage(params: PositionPageParams): Promise<PaginatedResult<ShowRef>>
   upsertFromSetlist(setlistId: string, rawSetlist: unknown): Promise<void>
 }
 
 export class FileSongIndexRepository implements SongIndexRepository {
   private songs = new Map<string, Song>()
   private setlistClient = new SetlistClientImpl()
+  private positionMaps = {
+    opener: new Map<string, ShowRef[]>(),
+    closer: new Map<string, ShowRef[]>(),
+    encore: new Map<string, ShowRef[]>()
+  }
 
   async searchSongs(query: string, limit: number = 20): Promise<Song[]> {
     const searchTerm = query.toLowerCase().trim()
@@ -83,21 +103,46 @@ export class FileSongIndexRepository implements SongIndexRepository {
     const song = this.songs.get(songId)
     if (!song) return null
 
-    // This is a simplified implementation
-    // In a real implementation, you'd have separate maps for positions
+    const openerShows = this.positionMaps.opener.get(songId) || []
+    const closerShows = this.positionMaps.closer.get(songId) || []
+    const encoreShows = this.positionMaps.encore.get(songId) || []
+
     return {
       opener: {
         count: song.openerCount,
-        shows: [] // Would be populated from position maps
+        shows: openerShows.slice(0, 10) // Return first 10 for initial display
       },
       closer: {
         count: song.closerCount,
-        shows: [] // Would be populated from position maps
+        shows: closerShows.slice(0, 10) // Return first 10 for initial display
       },
       encore: {
         count: song.encoreCount,
-        shows: [] // Would be populated from position maps
+        shows: encoreShows.slice(0, 10) // Return first 10 for initial display
       }
+    }
+  }
+
+  async getPositionPage(params: PositionPageParams): Promise<PaginatedResult<ShowRef>> {
+    const { songId, positionType, cursor, pageSize = 20 } = params
+    
+    const positionMap = this.positionMaps[positionType]
+    const allShows = positionMap.get(songId) || []
+    
+    // Parse cursor (page number)
+    const currentPage = cursor ? parseInt(cursor, 10) : 0
+    const startIndex = currentPage * pageSize
+    const endIndex = startIndex + pageSize
+    
+    const items = allShows.slice(startIndex, endIndex)
+    const hasMore = endIndex < allShows.length
+    const nextCursor = hasMore ? (currentPage + 1).toString() : undefined
+    
+    return {
+      items,
+      nextCursor,
+      hasMore,
+      totalCount: allShows.length
     }
   }
 
@@ -190,16 +235,28 @@ export class FileSongIndexRepository implements SongIndexRepository {
         // Check if song is opener (first song in first set)
         if (isFirstInSet && set === setlist.sets.set[0] && !isEncoreSet) {
           song.openerCount++
+          // Add to opener position map
+          const openerShows = this.positionMaps.opener.get(song.id) || []
+          openerShows.push(showRef)
+          this.positionMaps.opener.set(song.id, openerShows)
         }
 
         // Check if song is closer (last song in any set)
         if (isLastInSet) {
           song.closerCount++
+          // Add to closer position map
+          const closerShows = this.positionMaps.closer.get(song.id) || []
+          closerShows.push(showRef)
+          this.positionMaps.closer.set(song.id, closerShows)
         }
 
         // Check if song is in encore
         if (isEncoreSet) {
           song.encoreCount++
+          // Add to encore position map
+          const encoreShows = this.positionMaps.encore.get(song.id) || []
+          encoreShows.push(showRef)
+          this.positionMaps.encore.set(song.id, encoreShows)
         }
       }
     }

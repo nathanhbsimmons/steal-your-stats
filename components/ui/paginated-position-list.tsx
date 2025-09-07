@@ -9,16 +9,14 @@ import { Button } from './button'
 interface PaginatedPositionListProps {
   songTitle: string
   positionType: 'opener' | 'closer' | 'encore'
-  initialCount: number
   initialShows: ShowRef[]
 }
 
 interface PositionPageData {
-  shows: ShowRef[]
+  items: ShowRef[]
   hasMore: boolean
   totalCount: number
-  page: number
-  positionType: string
+  nextCursor?: string
 }
 
 // SWR fetcher for paginated position data
@@ -39,7 +37,6 @@ async function fetchPositionPage(
 export function PaginatedPositionList({ 
   songTitle, 
   positionType, 
-  initialCount, 
   initialShows 
 }: PaginatedPositionListProps) {
   const [allShows, setAllShows] = useState<ShowRef[]>(initialShows)
@@ -60,7 +57,7 @@ export function PaginatedPositionList({
 
   const handleLoadMore = useCallback(() => {
     if (data) {
-      setAllShows(prev => [...prev, ...data.shows])
+      setAllShows(prev => [...prev, ...data.items])
       setCurrentPage(prev => prev + 1)
       setHasMore(data.hasMore)
     }

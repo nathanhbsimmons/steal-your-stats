@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getFirstLast, getPositions, getGratefulDeadSongFacts, getGratefulDeadPositionFacts } from '../lib/songFacts'
+import { getFirstLast, getPositions, getPositionPage, getGratefulDeadSongFacts, getGratefulDeadPositionFacts, getGratefulDeadPositionPage } from '../lib/songFacts'
 import { songIndexer } from '../lib/indexer'
 
 // Mock the indexer
@@ -14,6 +14,7 @@ describe('songFacts (new repository-based)', () => {
   const mockRepository = {
     getSongByTitle: vi.fn(),
     getPositions: vi.fn(),
+    getPositionPage: vi.fn(),
     searchSongs: vi.fn(),
     upsertFromSetlist: vi.fn()
   }
@@ -179,6 +180,79 @@ describe('songFacts (new repository-based)', () => {
     })
   })
 
+  describe('getPositionPage', () => {
+    it('should return paginated position data when song exists', async () => {
+      const mockSong = {
+        id: 'dark-star',
+        title: 'Dark Star',
+        normalizedTitle: 'dark star',
+        aliases: ['Dark Star', 'darkstar'],
+        totalPerformances: 100,
+        openerCount: 5,
+        closerCount: 10,
+        encoreCount: 15
+      }
+
+      const mockPageData = {
+        items: [
+          {
+            id: 'show-1',
+            date: '1972-08-27',
+            venue: 'Venue 1',
+            city: 'City 1',
+            country: 'Country 1',
+            url: 'https://www.setlist.fm/setlist/show-1',
+            source: 'setlist.fm' as const
+          },
+          {
+            id: 'show-2',
+            date: '1972-08-28',
+            venue: 'Venue 2',
+            city: 'City 2',
+            country: 'Country 2',
+            url: 'https://www.setlist.fm/setlist/show-2',
+            source: 'setlist.fm' as const
+          }
+        ],
+        hasMore: true,
+        totalCount: 5,
+        nextCursor: '1'
+      }
+
+      mockRepository.getSongByTitle.mockResolvedValue(mockSong)
+      mockRepository.getPositionPage.mockResolvedValue(mockPageData)
+
+      const result = await getPositionPage({
+        songId: 'dark-star',
+        positionType: 'opener',
+        pageSize: 2
+      })
+
+      expect(result).toEqual(mockPageData)
+      expect(mockRepository.getPositionPage).toHaveBeenCalledWith({
+        songId: 'dark-star',
+        positionType: 'opener',
+        pageSize: 2
+      })
+    })
+
+    it('should throw error when songId is empty', async () => {
+      await expect(getPositionPage({
+        songId: '',
+        positionType: 'opener'
+      })).rejects.toThrow('Song ID is required')
+    })
+
+    it('should handle repository errors', async () => {
+      mockRepository.getPositionPage.mockRejectedValue(new Error('Repository error'))
+
+      await expect(getPositionPage({
+        songId: 'dark-star',
+        positionType: 'opener'
+      })).rejects.toThrow('Failed to fetch position page: Repository error')
+    })
+  })
+
   describe('convenience functions', () => {
     it('should call getFirstLast for getGratefulDeadSongFacts', async () => {
       const mockSong = {
@@ -237,6 +311,23 @@ describe('songFacts (new repository-based)', () => {
         songTitle: 'Dark Star',
         aliases: ['Dark Star']
       })
+    })
+
+    it('should call getPositionPage for getGratefulDeadPositionPage', async () => {
+      const mockPageData = {
+        items: [],
+        hasMore: false,
+        totalCount: 0
+      }
+
+      mockRepository.getPositionPage.mockResolvedValue(mockPageData)
+
+      const result = await getGratefulDeadPositionPage({
+        songId: 'dark-star',
+        positionType: 'opener'
+      })
+
+      expect(result).toEqual(mockPageData)
     })
   })
 })

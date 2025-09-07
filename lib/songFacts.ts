@@ -37,6 +37,20 @@ export interface PositionFacts {
   aliases: string[]
 }
 
+export interface PaginatedResult<T> {
+  items: T[]
+  nextCursor?: string
+  hasMore: boolean
+  totalCount: number
+}
+
+export interface PositionPageParams {
+  songId: string
+  positionType: 'opener' | 'closer' | 'encore'
+  cursor?: string
+  pageSize?: number
+}
+
 
 /**
  * Get first and last performance facts for a song
@@ -140,5 +154,32 @@ export async function getGratefulDeadSongFacts(songTitle: string): Promise<First
  */
 export async function getGratefulDeadPositionFacts(songTitle: string): Promise<PositionFacts> {
   return getPositions(songTitle)
+}
+
+/**
+ * Get paginated position data for a song
+ */
+export async function getPositionPage(params: PositionPageParams): Promise<PaginatedResult<ShowRef>> {
+  if (!params.songId) {
+    throw new Error('Song ID is required')
+  }
+
+  try {
+    // Initialize with sample data if not already done
+    await songIndexer.initializeWithSampleData()
+    
+    const repository = songIndexer.getRepository()
+    return await repository.getPositionPage(params)
+  } catch (error) {
+    console.error('Error fetching position page:', error)
+    throw new Error(`Failed to fetch position page: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+/**
+ * Get paginated position data for Grateful Dead (convenience function)
+ */
+export async function getGratefulDeadPositionPage(params: PositionPageParams): Promise<PaginatedResult<ShowRef>> {
+  return getPositionPage(params)
 }
 
