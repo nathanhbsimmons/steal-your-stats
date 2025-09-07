@@ -112,11 +112,11 @@ export class SongIndexer {
     // Sample setlist data for Dark Star
     const sampleSetlist = {
       id: 'sample-dark-star-1',
-      eventDate: '1972-08-27',
+      eventDate: '2016-06-27',
       venue: {
-        name: 'Venue West',
+        name: 'Terrapin Crossroads Bar',
         city: {
-          name: 'Berkeley',
+          name: 'San Rafael',
           state: 'CA',
           country: {
             name: 'USA'
@@ -136,12 +136,12 @@ export class SongIndexer {
 
     const sampleSetlist2 = {
       id: 'sample-dark-star-2', 
-      eventDate: '1995-07-09',
+      eventDate: '1993-09-09',
       venue: {
-        name: 'Soldier Field',
+        name: 'Richfield Coliseum',
         city: {
-          name: 'Chicago',
-          state: 'IL',
+          name: 'Richfield',
+          state: 'OH',
           country: {
             name: 'USA'
           }

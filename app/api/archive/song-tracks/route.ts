@@ -5,7 +5,6 @@ import { resolveSong } from '@/lib/ids'
 export async function POST(request: NextRequest) {
   try {
     const { itemId, songTitle } = await request.json()
-    console.log('Song tracks request:', { itemId, songTitle })
 
     if (!itemId || !songTitle) {
       return NextResponse.json(
@@ -16,14 +15,12 @@ export async function POST(request: NextRequest) {
 
     const archiveClient = new ArchiveClientImpl()
     const resolution = resolveSong({ title: songTitle })
-    console.log('Song resolution:', resolution)
     
     const tracks = await archiveClient.getSongTracks(
       itemId,
       resolution.normalizedTitle,
       resolution.aliases
     )
-    console.log('Found tracks:', tracks.length)
 
     // Convert ArchiveTrack to Track format with proper URLs
     const formattedTracks = tracks.map((track, index) => ({

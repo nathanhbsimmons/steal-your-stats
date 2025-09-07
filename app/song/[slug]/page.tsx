@@ -312,11 +312,18 @@ export default function SongPage() {
                         try {
                           if (!data.first) return
                           
+                          
                           const archiveShow = await resolveArchiveShow({
                             date: data.first.date,
                             venue: data.first.venue,
                             city: data.first.city
                           })
+                          
+                          if (!archiveShow) {
+                            alert('No Archive.org show found for this date. This might be because the show is not available in the Archive, or the date format is different.')
+                            return
+                          }
+                          
                           const { tracks } = await fetchSongTracks(archiveShow.identifier, songTitle)
                           
                           const formattedTracks: Track[] = tracks.map((track: { id: string; name: string; url: string; showDate: string; venue: string; city: string; archiveItemId: string; licenseUrl?: string; rights?: string }) => ({
@@ -343,11 +350,18 @@ export default function SongPage() {
                         try {
                           if (!data.last) return
                           
+                          
                           const archiveShow = await resolveArchiveShow({
                             date: data.last.date,
                             venue: data.last.venue,
                             city: data.last.city
                           })
+                          
+                          if (!archiveShow) {
+                            alert('No Archive.org show found for this date. This might be because the show is not available in the Archive, or the date format is different.')
+                            return
+                          }
+                          
                           const { tracks } = await fetchSongTracks(archiveShow.identifier, songTitle)
                           
                           const formattedTracks: Track[] = tracks.map((track: { id: string; name: string; url: string; showDate: string; venue: string; city: string; archiveItemId: string; licenseUrl?: string; rights?: string }) => ({
