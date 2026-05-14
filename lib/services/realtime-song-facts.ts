@@ -69,9 +69,13 @@ export class RealtimeSongFactsService {
 
   async getFirstLast(songTitle: string): Promise<FirstLastFacts> {
     const resolution = resolveSong({ title: songTitle })
-    const allShows = await this.getAllShowsForSong(songTitle)
-    
-    if (allShows.length === 0) {
+
+    // Page 1 = most recent shows + total count; last page = oldest shows.
+    // This gives accurate first/last with just 2 API calls regardless of how
+    // many total performances exist.
+    const page1 = await this.setlistClient.searchSetlistsBySongPage(songTitle, 1)
+
+    if (page1.setlists.length === 0) {
       return {
         first: null,
         last: null,
@@ -81,13 +85,43 @@ export class RealtimeSongFactsService {
       }
     }
 
-    // Sort by date (YYYY-MM-DD string comparison is correct for ISO dates)
-    const sortedShows = [...allShows].sort((a, b) => a.date.localeCompare(b.date))
-    
+    const total = page1.total
+    const itemsPerPage = page1.itemsPerPage || 20
+    const lastPageNum = Math.ceil(total / itemsPerPage)
+
+    let oldestSetlists = page1.setlists
+    if (lastPageNum > 1) {
+      const lastPage = await this.setlistClient.searchSetlistsBySongPage(songTitle, lastPageNum)
+      if (lastPage.setlists.length > 0) {
+        oldestSetlists = lastPage.setlists
+      }
+    }
+
+    const toShowRef = (setlist: (typeof page1.setlists)[0]): ShowRef => ({
+      id: setlist.id,
+      date: fromSetlistDate(setlist.eventDate),
+      venue: setlist.venue.name,
+      city: setlist.venue.city.name,
+      state: setlist.venue.city.state,
+      country: setlist.venue.city.country.name,
+      url: setlist.url || `https://www.setlist.fm/setlist/${setlist.id}`,
+      source: 'setlist.fm'
+    })
+
+    // Most recent first: page 1 sorted descending → last performance
+    const recentSorted = [...page1.setlists]
+      .map(toShowRef)
+      .sort((a, b) => b.date.localeCompare(a.date))
+
+    // Oldest first: last page sorted ascending → first performance
+    const oldestSorted = [...oldestSetlists]
+      .map(toShowRef)
+      .sort((a, b) => a.date.localeCompare(b.date))
+
     return {
-      first: sortedShows[0],
-      last: sortedShows[sortedShows.length - 1],
-      totalPerformances: allShows.length,
+      first: oldestSorted[0],
+      last: recentSorted[0],
+      totalPerformances: total,
       songTitle: resolution.normalizedTitle,
       aliases: resolution.aliases
     }

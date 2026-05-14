@@ -44,10 +44,18 @@ export interface Setlist {
   }
 }
 
+export interface SetlistSearchResult {
+  setlists: Setlist[]
+  total: number
+  page: number
+  itemsPerPage: number
+}
+
 export interface SetlistClient {
   searchSongs(query: string): Promise<SetlistSong[]>
   getSetlistsByArtist(artistId: string, page?: number): Promise<Setlist[]>
   searchSetlistsBySong(songName: string, page?: number): Promise<Setlist[]>
+  searchSetlistsBySongPage(songName: string, page?: number): Promise<SetlistSearchResult>
   getSetlistsByDate(date: string): Promise<Setlist[]>
 }
 
@@ -130,11 +138,24 @@ export class SetlistClientImpl implements SetlistClient {
   }
 
   async searchSetlistsBySong(songName: string, page: number = 1): Promise<Setlist[]> {
+    const result = await this.searchSetlistsBySongPage(songName, page)
+    return result.setlists
+  }
+
+  async searchSetlistsBySongPage(songName: string, page: number = 1): Promise<SetlistSearchResult> {
     const response = await this.http.get<{
       setlist: Setlist[]
+      total: number
+      page: number
+      itemsPerPage: number
     }>(`/search/setlists?p=${page}&songName=${encodeURIComponent(songName)}&artistMbid=6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6`)
 
-    return response.data.setlist || []
+    return {
+      setlists: response.data.setlist || [],
+      total: response.data.total || 0,
+      page: response.data.page || page,
+      itemsPerPage: response.data.itemsPerPage || 20,
+    }
   }
 
   async getSetlistsByDate(date: string): Promise<Setlist[]> {

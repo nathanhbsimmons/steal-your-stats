@@ -64,11 +64,11 @@ export class ArchiveClientImpl implements ArchiveClient {
   }
 
   async searchShows(creator: string, date?: string): Promise<ArchiveShow[]> {
-    // Search for Grateful Dead shows with more flexible matching
+    // Archive.org GD shows live in the GratefulDead collection
     const searchParams = new URLSearchParams({
-      q: `(creator:Grateful*Dead OR creator:Grateful*Mondays OR title:Grateful*Dead OR title:*Terrapin*Crossroads* OR identifier:GratefulMondays*) AND mediatype:audio`,
+      q: `collection:GratefulDead AND mediatype:audio`,
       output: 'json',
-      rows: '100', // Get more results to filter by date
+      rows: '100',
     })
 
     const response = await this.http.get<{
@@ -121,7 +121,7 @@ export class ArchiveClientImpl implements ArchiveClient {
     const { date, venue, city } = params
 
     const searchParams = new URLSearchParams({
-      q: `(creator:Grateful*Dead OR creator:Grateful*Mondays OR identifier:GratefulMondays*) AND date:${date} AND mediatype:audio`,
+      q: `collection:GratefulDead AND date:${date} AND mediatype:audio`,
       output: 'json',
       rows: '20',
     })
