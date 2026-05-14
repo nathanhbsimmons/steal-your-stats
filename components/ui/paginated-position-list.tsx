@@ -10,6 +10,7 @@ interface PaginatedPositionListProps {
   songTitle: string
   positionType: 'opener' | 'closer' | 'encore'
   initialShows: ShowRef[]
+  totalCount: number
 }
 
 interface PositionPageData {
@@ -34,14 +35,15 @@ async function fetchPositionPage(
   return response.json()
 }
 
-export function PaginatedPositionList({ 
-  songTitle, 
-  positionType, 
-  initialShows 
+export function PaginatedPositionList({
+  songTitle,
+  positionType,
+  initialShows,
+  totalCount
 }: PaginatedPositionListProps) {
   const [allShows, setAllShows] = useState<ShowRef[]>(initialShows)
   const [currentPage, setCurrentPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const [hasMore, setHasMore] = useState(initialShows.length < totalCount)
 
   const { data, error, isLoading, mutate } = useSWR(
     hasMore ? `position-page-${songTitle}-${positionType}-${currentPage + 1}` : null,

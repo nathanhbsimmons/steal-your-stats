@@ -18,29 +18,11 @@ export async function GET(request: NextRequest) {
     // Get versions from real-time service
     const versionsFacts = await realtimeSongFactsService.getVersions(songTitle)
     
-    if (versionsFacts.tracks.length === 0) {
-      return NextResponse.json({
-        tracks: [],
-        extremes: undefined,
-        songTitle: versionsFacts.songTitle
-      })
-    }
-
-    // For now, return tracks without duration data to make the API faster
-    // Archive.org integration can be added later as an enhancement
-    const allTracks = versionsFacts.tracks.map(track => ({
-      ...track,
-      archiveItemId: undefined,
-      durationSec: undefined,
-      url: undefined
-    }))
-
-    // No extremes data without duration information
-    const extremes = undefined
-
+    // Return empty tracks — Archive.org duration/URL enrichment is not yet implemented.
+    // Returning placeholder rows with no audio data creates noise in the UI.
     return NextResponse.json({
-      tracks: allTracks,
-      extremes,
+      tracks: [],
+      extremes: undefined,
       songTitle: versionsFacts.songTitle
     })
   } catch (error) {

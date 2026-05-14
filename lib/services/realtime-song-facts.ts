@@ -1,5 +1,6 @@
 import { SetlistClientImpl } from '../clients/setlist'
 import { resolveSong } from '../ids'
+import { fromSetlistDate } from '../utils'
 
 export interface ShowRef {
   id: string
@@ -80,18 +81,8 @@ export class RealtimeSongFactsService {
       }
     }
 
-    // Sort by date to find first and last (parse dates for proper sorting)
-    const sortedShows = allShows.sort((a, b) => {
-      // Parse DD-MM-YYYY format from setlist.fm
-      const parseDate = (dateStr: string) => {
-        const [day, month, year] = dateStr.split('-')
-        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
-      }
-      
-      const dateA = parseDate(a.date)
-      const dateB = parseDate(b.date)
-      return dateA.getTime() - dateB.getTime()
-    })
+    // Sort by date (YYYY-MM-DD string comparison is correct for ISO dates)
+    const sortedShows = [...allShows].sort((a, b) => a.date.localeCompare(b.date))
     
     return {
       first: sortedShows[0],
@@ -169,7 +160,7 @@ export class RealtimeSongFactsService {
         for (const setlist of setlists) {
           const showRef: ShowRef = {
             id: setlist.id,
-            date: setlist.eventDate,
+            date: fromSetlistDate(setlist.eventDate),
             venue: setlist.venue.name,
             city: setlist.venue.city.name,
             state: setlist.venue.city.state,

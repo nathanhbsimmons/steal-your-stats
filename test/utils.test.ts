@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeExtremes, formatDuration } from '../lib/utils'
+import { computeExtremes, formatDuration, fromSetlistDate, toSetlistDate } from '../lib/utils'
 import { VersionTrack } from '../lib/songFacts'
 
 describe('computeExtremes', () => {
@@ -201,5 +201,32 @@ describe('formatDuration', () => {
   it('handles decimal seconds', () => {
     expect(formatDuration(30.7)).toBe('0:30')
     expect(formatDuration(90.9)).toBe('1:30')
+  })
+})
+
+describe('fromSetlistDate', () => {
+  it('converts DD-MM-YYYY to YYYY-MM-DD', () => {
+    expect(fromSetlistDate('08-05-1977')).toBe('1977-05-08')
+    expect(fromSetlistDate('01-01-1968')).toBe('1968-01-01')
+    expect(fromSetlistDate('29-03-1995')).toBe('1995-03-29')
+  })
+
+  it('returns the input unchanged when already YYYY-MM-DD', () => {
+    expect(fromSetlistDate('1977-05-08')).toBe('1977-05-08')
+  })
+
+  it('returns the input unchanged for unexpected formats', () => {
+    expect(fromSetlistDate('invalid')).toBe('invalid')
+  })
+})
+
+describe('toSetlistDate', () => {
+  it('converts YYYY-MM-DD to DD-MM-YYYY', () => {
+    expect(toSetlistDate('1977-05-08')).toBe('08-05-1977')
+    expect(toSetlistDate('1968-01-01')).toBe('01-01-1968')
+  })
+
+  it('returns the input unchanged when already DD-MM-YYYY', () => {
+    expect(toSetlistDate('08-05-1977')).toBe('08-05-1977')
   })
 })

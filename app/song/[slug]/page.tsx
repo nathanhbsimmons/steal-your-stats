@@ -319,6 +319,7 @@ export default function SongPage() {
                       songTitle={songTitle}
                       positionType="opener"
                       initialShows={positionData.opener.shows}
+                      totalCount={positionData.opener.count}
                     />
                   </Collapse>
 
@@ -331,6 +332,7 @@ export default function SongPage() {
                       songTitle={songTitle}
                       positionType="closer"
                       initialShows={positionData.closer.shows}
+                      totalCount={positionData.closer.count}
                     />
                   </Collapse>
 
@@ -343,6 +345,7 @@ export default function SongPage() {
                       songTitle={songTitle}
                       positionType="encore"
                       initialShows={positionData.encore.shows}
+                      totalCount={positionData.encore.count}
                     />
                   </Collapse>
                 </div>
