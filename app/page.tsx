@@ -1,120 +1,131 @@
-import { AppShell, AppShellNavigation, AppShellContent } from '@/components/app-shell';
-import { Window, WindowHeader, WindowBody, WindowFooter } from '@/components/ui/window';
-import { Sidebar, NavSection, NavItem } from '@/components/ui/sidebar';
-import { Pill } from '@/components/ui/pill';
-import { DisplayHeading, Subhead, BodyText } from '@/components/ui/typography';
+'use client'
+
+import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Window, WindowHeader, WindowBody } from '@/components/ui/window'
+import { Card } from '@/components/ui/card'
+
+interface ShowOnThisDay {
+  date: string
+  year: number
+  venue: string
+  city: string
+  state?: string
+  country: string
+  songs: string[]
+  setlistUrl?: string
+}
+
+function formatMonthDay(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+}
 
 export default function Home() {
+  const [shows, setShows] = useState<ShowOnThisDay[]>([])
+  const [currentDate, setCurrentDate] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/on-this-day')
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to load')
+        return r.json()
+      })
+      .then(data => {
+        setShows(data.shows || [])
+        setCurrentDate(data.date || '')
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const displayDate = currentDate ? formatMonthDay(currentDate) : ''
+
   return (
-    <AppShell>
-      <AppShellNavigation>
-        <Window>
-          <header className="border-b-2 border-ink bg-ink text-paper px-3 py-2 rounded-t-radius-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                {/* No icon for navigation */}
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="font-mono text-sm">Navigation</span>
-              </div>
+    <Window>
+      <WindowHeader>
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-lg font-serif font-bold">On This Day</h1>
+          {displayDate && (
+            <span className="text-sm font-mono text-gray">{displayDate}</span>
+          )}
+        </div>
+      </WindowHeader>
+      <WindowBody>
+        <div className="space-y-4">
+          {loading && (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-20 bg-gray/30 animate-pulse rounded border-2 border-gray" />
+              ))}
+              <p className="text-xs text-gray font-mono text-center">Searching {new Date().getFullYear() - 1965} years of shows…</p>
             </div>
-          </header>
-          <WindowBody>
-            <Sidebar>
-              <NavSection title="Main">
-                <NavItem href="/" isActive>
-                  Dashboard
-                </NavItem>
-                <NavItem href="/search">
-                  Search Songs
-                </NavItem>
-                <NavItem href="/recent">
-                  Recent Shows
-                </NavItem>
-              </NavSection>
-              
-              <NavSection title="Browse">
-                <NavItem href="/artists">
-                  Artists
-                </NavItem>
-                <NavItem href="/venues">
-                  Venues
-                </NavItem>
-                <NavItem href="/eras">
-                  Eras
-                </NavItem>
-              </NavSection>
-              
-              <NavSection title="Tools">
-                <NavItem href="/stats">
-                  Statistics
-                </NavItem>
-                <NavItem href="/export">
-                  Export Data
-                </NavItem>
-              </NavSection>
-            </Sidebar>
-          </WindowBody>
-        </Window>
-      </AppShellNavigation>
-      
-      <AppShellContent>
-        <Window>
-          <WindowHeader>
-            <span className="font-mono text-sm">Main Content</span>
-          </WindowHeader>
-          <WindowBody>
-            <div className="space-y-6">
-              <div>
-                <DisplayHeading>Steal Your Stats</DisplayHeading>
-                <Subhead>
-                  Explore the complete performance history of your favorite songs with detailed statistics, 
-                  audio playback, and comprehensive show data.
-                </Subhead>
-              </div>
-              
-              <div className="space-y-4">
-                <BodyText size="lg">
-                  This app provides deep insights into live music performances, tracking everything from 
-                  first and last shows to encore appearances and venue statistics.
-                </BodyText>
-                
-                <div className="flex flex-wrap gap-2">
-                  <Pill variant="active">Live Music</Pill>
-                  <Pill variant="outline">Statistics</Pill>
-                  <Pill variant="outline">Audio Archive</Pill>
-                  <Pill variant="outline">Show History</Pill>
+          )}
+
+          {error && (
+            <Card className="p-6 text-center">
+              <p className="text-sm text-gray">Could not load shows. Check your API key.</p>
+            </Card>
+          )}
+
+          {!loading && !error && shows.length === 0 && (
+            <Card className="p-6 text-center">
+              <p className="font-serif text-lg text-ink">No shows on {displayDate}</p>
+              <p className="text-sm text-gray mt-1">The Grateful Dead didn&apos;t play on this date.</p>
+            </Card>
+          )}
+
+          {!loading && shows.map(show => (
+            <Card key={show.date} className="p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-mono text-lg font-bold text-ink">{show.year}</span>
+                    <span className="text-sm text-gray">
+                      {show.venue}, {show.city}
+                      {show.state ? `, ${show.state}` : ''}
+                    </span>
+                  </div>
+
+                  {show.songs.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {show.songs.slice(0, 8).map((song, i) => (
+                        <Link
+                          key={i}
+                          href={`/song/${encodeURIComponent(song)}`}
+                          className="text-xs font-mono border border-gray px-1.5 py-0.5 rounded hover:border-ink hover:bg-ink hover:text-paper transition-colors"
+                        >
+                          {song}
+                        </Link>
+                      ))}
+                      {show.songs.length > 8 && (
+                        <span className="text-xs font-mono text-gray px-1.5 py-0.5">
+                          +{show.songs.length - 8} more
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                <Link
+                  href={`/show/${show.date}`}
+                  className="flex-shrink-0 text-xs font-mono border-2 border-ink px-2 py-1 hover:bg-ink hover:text-paper transition-colors"
+                >
+                  Full Show →
+                </Link>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border-2 border-ink rounded-radius-md p-4">
-                  <DisplayHeading as="h3" className="text-2xl lg:text-3xl mb-2">Quick Stats</DisplayHeading>
-                  <BodyText size="sm">
-                    Get started by searching for a song to see its performance history.
-                  </BodyText>
-                </div>
-                
-                <div className="border-2 border-ink rounded-radius-md p-4">
-                  <DisplayHeading as="h3" className="text-2xl lg:text-3xl mb-2">Recent Activity</DisplayHeading>
-                  <BodyText size="sm">
-                    View the latest shows and performances added to the database.
-                  </BodyText>
-                </div>
-              </div>
-            </div>
-          </WindowBody>
-          <WindowFooter>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-ink/60">Ready for development</p>
-              <div className="flex gap-2">
-                <Pill variant="outline" size="sm">v0.1.0</Pill>
-                <Pill variant="outline" size="sm">Beta</Pill>
-              </div>
-            </div>
-          </WindowFooter>
-        </Window>
-      </AppShellContent>
-    </AppShell>
-  );
+            </Card>
+          ))}
+
+          {!loading && shows.length > 0 && (
+            <p className="text-xs text-gray font-mono text-center">
+              {shows.length} show{shows.length !== 1 ? 's' : ''} on {displayDate} • Data from setlist.fm
+            </p>
+          )}
+        </div>
+      </WindowBody>
+    </Window>
+  )
 }

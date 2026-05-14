@@ -108,7 +108,7 @@ export function formatDuration(seconds: number): string {
 // Parse duration from Archive.org length field
 export function parseArchiveDuration(lengthStr: string): number | undefined {
   const trimmed = lengthStr.trim()
-  
+
   // Check if it's in HH:MM:SS format
   if (trimmed.includes(':')) {
     const parts = trimmed.split(':')
@@ -125,8 +125,44 @@ export function parseArchiveDuration(lengthStr: string): number | undefined {
       return minutes * 60 + seconds
     }
   }
-  
+
   // Try to parse as a number (seconds)
   const parsed = parseFloat(trimmed)
   return isNaN(parsed) ? undefined : parsed
+}
+
+// Date format conversion utilities
+// setlist.fm uses DD-MM-YYYY; we store as YYYY-MM-DD internally
+
+export function fromSetlistDate(setlistDate: string): string {
+  const parts = setlistDate.split('-')
+  if (parts.length === 3 && parts[2].length === 4) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`
+  }
+  return setlistDate
+}
+
+export function toSetlistDate(isoDate: string): string {
+  const parts = isoDate.split('-')
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`
+  }
+  return isoDate
+}
+
+export function formatShowDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  })
+}
+
+export function toTitleCase(str: string): string {
+  const minor = new Set(['a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'by', 'in', 'of', 'up'])
+  return str.split(' ').map((word, i) => {
+    if (i === 0 || !minor.has(word.toLowerCase())) {
+      return word.charAt(0).toUpperCase() + word.slice(1)
+    }
+    return word.toLowerCase()
+  }).join(' ')
 }

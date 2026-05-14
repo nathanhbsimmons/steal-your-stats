@@ -61,6 +61,14 @@ const SONG_ALIASES: Record<string, string[]> = {
   'attics of my life': ['attics of my life', 'attics of my life (live)', 'attics'],
 }
 
+export function getSongCatalog(): { title: string; displayTitle: string; aliases: string[] }[] {
+  return Object.entries(SONG_ALIASES).map(([key, aliases]) => {
+    const displayAliases = aliases
+      .filter(a => a !== key && !a.toLowerCase().includes('(live)'))
+    return { title: key, displayTitle: key, aliases: displayAliases }
+  }).sort((a, b) => a.title.localeCompare(b.title))
+}
+
 export interface SongResolution {
   normalizedTitle: string
   aliases: string[]
