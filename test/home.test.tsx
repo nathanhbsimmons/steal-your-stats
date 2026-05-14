@@ -9,6 +9,6 @@ describe('Home', () => {
 
   it('renders the app description', () => {
     render(<Home />)
-    expect(screen.getByText('App shell ready for development.')).toBeInTheDocument()
+    expect(screen.getByText('Explore the complete performance history of your favorite songs with detailed statistics, audio playback, and comprehensive show data.')).toBeInTheDocument()
   })
 })

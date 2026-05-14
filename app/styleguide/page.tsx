@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { SearchBar } from '@/components/ui/search-bar';
+import { SearchResults, SearchState, SearchResult } from '@/components/ui/search-results';
+import { mockSearch } from '@/lib/sample-data';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -37,6 +40,39 @@ export default function StyleguidePage() {
     const t = setTimeout(() => setLiveMsg('Async data loaded'), 1500);
     return () => clearTimeout(t);
   }, []);
+
+  // Search demo
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchState, setSearchState] = useState<SearchState>('idle');
+  const [selectedResult, setSelectedResult] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setSearchState('idle');
+      return;
+    }
+
+    setSearchState('loading');
+    mockSearch(searchQuery)
+      .then((results) => {
+        setSearchResults(results);
+        setSearchState(results.length > 0 ? 'success' : 'empty');
+      })
+      .catch(() => {
+        setSearchState('error');
+      });
+  }, [searchQuery]);
+
+  const handleSearchClear = () => {
+    setSearchQuery('');
+    setSelectedResult(null);
+  };
+
+  const handleResultSelect = (result: SearchResult) => {
+    setSelectedResult(result.title);
+  };
 
   return (
     <main className="p-6 md:p-10 space-y-10 bg-[var(--color-paper)] text-[var(--color-ink)]">
@@ -288,7 +324,41 @@ export default function StyleguidePage() {
         </div>
       </Section>
 
-      {/* 11) Accessibility Demos */}
+      {/* 11) Search Components */}
+      <Section title="Search Components">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onClear={handleSearchClear}
+              placeholder="Search for tracks..."
+              label="Search tracks"
+              aria-describedby="search-help"
+            />
+            <p id="search-help" className="text-sm text-[var(--color-gray)] font-body">
+              Try searching for &quot;light&quot;, &quot;electric&quot;, or &quot;ocean&quot; to see results.
+            </p>
+          </div>
+          
+          <SearchResults
+            results={searchResults}
+            state={searchState}
+            onSelect={handleResultSelect}
+            aria-labelledby="search-results-label"
+          />
+          
+          {selectedResult && (
+            <div className="rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] p-3 bg-[var(--color-gray)]/20">
+              <p className="text-sm font-body">
+                <strong>Selected:</strong> {selectedResult}
+              </p>
+            </div>
+          )}
+        </div>
+      </Section>
+
+      {/* 12) Accessibility Demos */}
       <Section title="Accessibility Demos">
         <div className="space-y-3">
           <div

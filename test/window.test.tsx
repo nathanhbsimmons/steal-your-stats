@@ -38,15 +38,18 @@ describe('Window Components', () => {
       expect(header).toHaveClass('border-b-2', 'border-ink', 'bg-ink', 'text-paper');
     });
 
-    it('includes stripe pattern for retro chrome look', () => {
+    it('includes GD icon for retro chrome look', () => {
       render(
         <WindowHeader>
           <span>Header Title</span>
         </WindowHeader>
       );
       
-      const stripes = document.querySelectorAll('.w-3.h-3.bg-paper.rounded-sm');
-      expect(stripes).toHaveLength(3);
+      const gdIcon = document.querySelector('svg');
+      expect(gdIcon).toBeInTheDocument();
+      expect(gdIcon).toHaveAttribute('width', '32');
+      expect(gdIcon).toHaveAttribute('height', '32');
+      expect(gdIcon).toHaveClass('text-paper');
     });
   });
 
