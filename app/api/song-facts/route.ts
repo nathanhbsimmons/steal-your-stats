@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getGratefulDeadSongFacts } from '@/lib/songFacts'
+import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +10,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'songTitle parameter is required' }, { status: 400 })
     }
 
-    const facts = await getGratefulDeadSongFacts(songTitle)
+    console.log(`Fetching real-time song facts for: ${songTitle}`)
+    const facts = await realtimeSongFactsService.getFirstLast(songTitle)
     return NextResponse.json(facts)
   } catch (error) {
     console.error('Error in song-facts API:', error)

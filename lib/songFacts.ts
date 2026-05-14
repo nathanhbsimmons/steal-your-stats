@@ -51,6 +51,27 @@ export interface PositionPageParams {
   pageSize?: number
 }
 
+export interface VersionTrack {
+  id: string
+  showDate: string
+  venue: string
+  city: string
+  state?: string
+  country: string
+  archiveItemId?: string
+  durationSec?: number
+  url?: string
+}
+
+export interface VersionsFacts {
+  tracks: VersionTrack[]
+  extremes?: {
+    longest?: VersionTrack
+    shortest?: VersionTrack
+  }
+  songTitle: string
+}
+
 
 /**
  * Get first and last performance facts for a song
@@ -181,5 +202,46 @@ export async function getPositionPage(params: PositionPageParams): Promise<Pagin
  */
 export async function getGratefulDeadPositionPage(params: PositionPageParams): Promise<PaginatedResult<ShowRef>> {
   return getPositionPage(params)
+}
+
+/**
+ * Get all versions of a song with durations
+ */
+export async function getVersions(songId: string): Promise<VersionsFacts> {
+  if (!songId) {
+    throw new Error('Song ID is required')
+  }
+
+  try {
+    // Initialize with sample data if not already done
+    await songIndexer.initializeWithSampleData()
+    
+    const repository = songIndexer.getRepository()
+    const song = await repository.getSongByTitle(songId)
+    
+    if (!song) {
+      return {
+        tracks: [],
+        songTitle: songId,
+      }
+    }
+
+    const versions = await repository.getVersions(song.id)
+    
+    return {
+      tracks: versions,
+      songTitle: song.title,
+    }
+  } catch (error) {
+    console.error('Error fetching versions:', error)
+    throw new Error(`Failed to fetch versions: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+/**
+ * Get versions for Grateful Dead (convenience function)
+ */
+export async function getGratefulDeadVersions(songTitle: string): Promise<VersionsFacts> {
+  return getVersions(songTitle)
 }
 

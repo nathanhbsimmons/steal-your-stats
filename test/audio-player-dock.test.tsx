@@ -6,6 +6,7 @@ import { AudioPlayerDock, Track } from '../components/ui/audio-player-dock'
 const mockAudio = {
   play: vi.fn().mockResolvedValue(undefined),
   pause: vi.fn(),
+  load: vi.fn(),
   addEventListener: vi.fn(),
   removeEventListener: vi.fn(),
   currentTime: 0,
@@ -21,6 +22,11 @@ Object.defineProperty(HTMLMediaElement.prototype, 'play', {
 Object.defineProperty(HTMLMediaElement.prototype, 'pause', {
   writable: true,
   value: mockAudio.pause
+})
+
+Object.defineProperty(HTMLMediaElement.prototype, 'load', {
+  writable: true,
+  value: mockAudio.load
 })
 
 Object.defineProperty(HTMLMediaElement.prototype, 'addEventListener', {

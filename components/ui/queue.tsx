@@ -53,7 +53,7 @@ export function Queue({
             variant="outline"
             size="sm"
             onClick={onClearQueue}
-            disabled={tracks.length === 0}
+            className="text-xs"
           >
             Clear
           </Button>

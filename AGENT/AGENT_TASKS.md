@@ -1,315 +1,60 @@
-# Agent Task Cards — Steal Your Stats
-
----
-
-## Agent Task Card 1 — Repo Bootstrap & Quality Rails
-
-**Goal Recap**  
-Scaffold project with TypeScript, Tailwind, testing, linting, typed env loader.
-
-**Plan**
-1. `pnpm dlx create-next-app@latest steal-your-stats --ts --eslint --tailwind --app`.
-2. `pnpm add swr zod` and dev deps: `vitest @testing-library/react @testing-library/jest-dom jsdom prettier`.
-3. Configure Vitest + JSDOM; add `pnpm test`.
-4. Install shadcn/ui and generate minimal primitives (Button, Card, Input, ScrollArea).
-5. Create `lib/env.ts` (zod-validated `.env.local`: `SETLISTFM_API_KEY`, etc.).
-6. Add `lib/clients/` stubs (`setlist.ts`, `archive.ts`, `musicbrainz.ts`) and `lib/cache.ts` (Map TTL).
-7. Base layout landmarks: header/nav/main/footer + “Skip to content”.
-
-**Acceptance**  
-Dev server runs; tests pass; lint/typecheck pass; app renders a blank shell.
-
----
-
-## Agent Task Card 2 — Retro Mono Theme Tokens & Utilities
-
-**Goal Recap**  
-Implement theme variables and utilities that evoke the retro/monochrome design language *without copying specific content*.
-
-**Plan**
-1. Fonts (open-source): serif for display (e.g., Playfair Display), sans for body (Inter), mono for meta (IBM Plex Mono).
-2. Define CSS variables in `globals.css`:
-   - Colors: `--ink:#111`, `--paper:#f5f5f2`, `--gray:#bfbfb7`.
-   - Borders: `--border-w:2px; --radius-xl:24px; --radius-md:12px`.
-   - Shadow: subtle offset shadow (retro window vibe).
-3. Create optional halftone/grain background utility class (pure CSS; low opacity).
-4. Tailwind theme extensions (fonts, radii, border widths).
-5. Focus rings: thick, high-contrast outlines; motion reduced with `prefers-reduced-motion`.
-
-**Acceptance**  
-A `/styleguide` route demonstrates tokens on generic components (buttons, cards, headings) with strong resemblance to reference *style*, not content.
-
----
-
-## Agent Task Card 3 — Generic “Window” Component & App Shell
-
-**Goal Recap**  
-Build reusable chrome primitives (header with stripes, bordered container, body/footer slots) to host all app views.
-
-**Plan**
-1. Components: `Window`, `WindowHeader`, `WindowBody`, `WindowFooter`.
-2. `WindowHeader` supports: title slot; generic icon button slots (no branded icons).
-3. Create responsive grid layout for app shell: persistent left column (navigation) + content pane.
-4. Ensure keyboard focus order, Escape handling for any dismissible areas, and logical headings (one `<h1>` per view).
-
-**Acceptance**  
-Shell renders with retro chrome, rounded corners, stripes bar, and offset shadow—no app-specific content.
-
----
-
-## Agent Task Card 4 — Navigation Sidebar & Typography System
-
-**Goal Recap**  
-Ship reusable, content-agnostic components resembling the reference style: folders/list items, pills, and typographic scales.
-
-**Plan**
-1. `Sidebar` with `NavSection` + `NavItem` (icon optional, text mandatory) using thick borders and active state.
-2. `Pill` component (rounded, outlined) for filters/status.
-3. Typography utilities: display H1 (serif), subhead (italic style class), body text (comfortable measure ~65ch).
-4. Add `ScrollArea` integration; ensure no scroll traps.
-
-**Acceptance**  
-Sidebar and content pane look & feel match the style language; works from 320px width to desktop; no specific icons or branded labels included.
-
----
-
-## Agent Task Card 5 — Search UI (Stubbed Data, Component-Only)
-
-**Goal Recap**  
-Implement generic search field + result list with all states; no external calls yet.
-
-**Plan**
-1. `SearchBar` (label + input) with debounced onChange and clear button.
-2. Results list (`SearchResults`) inside Card with keyboard navigation (combobox pattern).
-3. States: idle helper text, loading skeleton, empty message, error message; ARIA: `role="combobox"`, `aria-expanded`, `aria-controls`.
-4. Add sample JSON stub with 5–10 generic items to exercise UI (not specific songs).
-
-**Acceptance**  
-Keyboard-only selection works; visually matches design language; accessible states present.
-
----
-
-## Architecture Overview: Cards 6-8 — Three Seams for Future-Proofing
-
-**Goal:** Introduce three architectural seams to avoid rewrites when scaling from MVP to production.
-
-### The Three Seams
-
-1. **Repository Interface (Port)** - Abstract data access
-   - Define `SongIndexRepository` and `ShowRepository` interfaces consumed by UI/services
-   - Keep current in-memory/file implementation as `FileSongIndexRepository`
-   - Future `PostgresSongIndexRepository` can drop in without changing consumers
-
-2. **Stable Domain DTOs** - Freeze UI contract
-   - Freeze types UI depends on: `Song`, `ShowRef`, `PositionFacts`, `FirstLastFacts`, `VersionTrack`
-   - Add minimal pagination contract `{cursor?: string; pageSize: number}` + `{items: T[]; nextCursor?: string}`
-   - Preserve canonical IDs (MBIDs, setlist.fm IDs) and Archive item identifiers
-
-3. **Thin Indexer API** - Abstract data ingestion
-   - Expose `indexer.upsertShow(showRaw)` and `indexer.rebuild({year?})`
-   - Today: writes to JSON; Tomorrow: writes to DB
-   - Record source metadata (etag, lastFetchedAt, sourceVersion) for incremental updates
-
-### MVP Hardening & Production Readiness
-
-- **File Persistence v1:** Write/read `{version: 1, generatedAt, ...payload}` to `/data/snapshots/song-index.v1.json`
-- **Contract Tests:** Write tests against interfaces (not concrete storage) - same suite passes for File and Postgres repos
-- **Background Task Stub:** Add `scripts/rebuild-index.ts` Node script that calls `indexer.rebuild()`
-- **Monitoring Hooks:** Log rate-limit headers, counts per year, snapshot sizes, basic metrics
-
-### Deliverables Across Cards 6-8
-
-- `lib/repositories/song-index-repo.ts` (interfaces + DTOs)
-- `lib/repositories/file-song-index-repo.ts` (current logic, adapted to interface)
-- `lib/indexer/indexer.ts` (upsert/rebuild API over repo)
-- `data/snapshots/song-index.v1.json` (persisted snapshot)
-- `tests/contracts/song-index.contract.test.ts` (shared suite for any repo impl)
-- `scripts/rebuild-index.ts` (CLI)
-
----
-
-## Agent Task Card 6 — API Clients & Canonical ID Resolution
-
-**Goal Recap**  
-Implement typed clients for setlist.fm, MusicBrainz, and Archive.org, then expose them only through a **Repository/Indexer seam** (not directly from UI). Ensure canonical IDs and aliases are resolved consistently.
-
-**Plan**
-
-1.  Extend `lib/http.ts` to inject:
-    *   `x-api-key` for setlist.fm (from env).
-    *   `User-Agent` for MusicBrainz/Archive.org.
-    *   Cache, retry/backoff, and rate-limit header logging.
-
-2.  Create minimal clients:
-    *   `clients/setlist.ts`: `searchSongs`, `getSetlistsByArtist`, `searchSetlistsBySong`.
-    *   `clients/musicbrainz.ts`: `searchWorkByTitle`, `lookupRecordingAliases`.
-    *   `clients/archive.ts`: `searchShows`, `listTracks`.
-
-3.  Add `lib/ids.ts`: constants for artist MBIDs; `resolveSong({title})` → normalized title, aliases, optional MBIDs.
-
-4.  Repository layer (`FileSongIndexRepository`): implement `upsertFromSetlist(setlistId, raw)` that uses setlist client + resolver to normalize and insert.
-
-5.  Indexer API (`indexer.rebuild()`, `indexer.upsertShow`) orchestrates year-by-year ingestion into repo and snapshot persistence.
-
-6.  Unit tests:
-    *   `http` caching and retry.
-    *   `ids` normalization.
-    *   Repo contract tests (searchSongs, getPositions).
-
-**Acceptance**
-
-*   Clients compile and pass tests.
-*   Repo methods return consistent DTOs (`Song`, `ShowRef`).
-*   No UI calls clients directly — only via the repo/indexer.
-
----
-
-## Agent Task Card 7 — Song Page v1: First/Last Facts
-
-**Goal Recap**  
-Render first/last performance facts for a song by consuming the **Repository API**, not by querying setlist.fm live.
-
-**Plan**
-
-1.  Add `SongIndexRepository.getSongByTitle(title)` → returns `Song` with optional `firstLast` facts.
-
-2.  Implement `lib/songFacts.ts` as a thin wrapper:
-    ```ts
-    export async function getFirstLast(songId: string): Promise<FirstLastFacts>
-    ```
-    Internally calls repo.
-
-3.  UI:
-    *   `SongHeader` (title + alias hint).
-    *   `FactRow` (first + last shows).
-    *   Show source badges; 24h SWR cache.
-
-4.  Repo ensures first/last are computed during index build/snapshot load.
-
-**Acceptance**
-
-*   Page displays first/last with links to shows.
-*   Skeleton/error states present.
-*   All facts flow from repo/snapshot (no live fetch per request).
-
-**Note:** The repository starts empty and needs to be populated with data. For development, sample data is automatically loaded on first access. For production, the indexer needs to be run to populate the repository with real setlist data.
-
----
-
-## Agent Task Card 8 — Opener/Closer/Encore Sections
-
-**Goal Recap**  
-Expose counts and paginated lists of opener/closer/encore performances via the repository interface, and render them with accessible UI.
-
-**Plan**
-
-1.  Extend `SongIndexRepository.getPositions(songId)` → returns `PositionFacts` with:
-    *   `openerCount`, `closerCount`, `encoreCount`.
-    *   Paged fetchers (`getOpenerPage`, `getCloserPage`, `getEncorePage`).
-
-2.  Repo populates opener/closer/encore maps during indexing or snapshot load.
-
-3.  UI: three `Collapse` sections with toggle buttons, deep-linkable anchors, and SWR infinite for “Load more”.
-
-4.  Pagination contract: `{items: ShowRef[], nextCursor?}`.
-
-**Acceptance**
-
-*   Counts render from repo quickly.
-*   Lists page smoothly with “Load more”.
-*   Keyboard and screen reader usage is correct.
-
----
-
-## Agent Task Card 9 — Archive Resolver & Player (Generic)
-
-**Goal Recap**  
-Resolve Archive.org show items from a show ref, list matched tracks for the selected song, and stream audio in-browser; also enqueue whole show.
-
-**Plan**
-1. `resolveArchiveShow({date, venue?, city?})` ranking candidates by metadata similarity.
-2. `getSongTracks(itemId, normalizedTitle, aliases[])` with fuzzy match for medleys/segues.
-3. Player components: `AudioPlayerDock`, `Queue`, generic transport controls, `aria-live` for track change.
-4. “Play versions” list and “Play entire show” enqueue.
-5. Persist last queue in localStorage; show license/attribution per item.
-
-**Acceptance**  
-At least one known candidate resolves and plays; queue advances automatically; full keyboard control.
-
----
-
-## Agent Task Card 10 — Durations & Versions Tab
-
-**Goal Recap**  
-Compute per-track durations; surface longest/shortest; render sortable versions table.
-
-**Plan**
-1. Populate `durationSec` from Archive metadata; fallback: lazy probe first play for missing durations; cache results.
-2. `getExtremes(tracks)` → `{longest, shortest}` with outlier guardrails (toggle to include).
-3. Versions table with sorting by date, duration, venue; badges for extremes.
-
-**Acceptance**  
-Extremes visible and clickable; table sortable via keyboard; cached durations persist.
-
----
-
-## Agent Task Card 11 — Era Context (Static Data)
-
-**Goal Recap**  
-Display a one-paragraph era blurb for the show date using local JSON ranges.
-
-**Plan**
-1. `data/eras.json` with named ranges and short descriptions (attribution note).
-2. `getEra(date)` util; `EraCard` component styled in the theme.
-
-**Acceptance**  
-All shows map to exactly one era; card passes axe checks.
-
----
-
-## Agent Task Card 12 — Optional BPM Estimation (Worker)
-
-**Goal Recap**  
-Estimate BPM client-side via WebAudio in a Web Worker; compute highest/lowest measured BPM.
-
-**Plan**
-1. `/workers/bpmWorker.ts` performing short-range fetch + autocorrelation/onset detection.
-2. `measureBpm(fileUrl)` wrapper with localStorage cache and confidence metric.
-3. UI: “Analyze BPM” buttons (per track and bulk on Versions tab); show progress and confidence.
-4. Extremes badge updates when ≥2 samples.
-
-**Acceptance**  
-Several tracks produce BPM values; extremes display; UI remains responsive.
-
----
-
-## Agent Task Card 13 — A11y & States Polishing
-
-**Goal Recap**  
-Resolve accessibility and state-handling details across components.
-
-**Plan**
-1. Integrate `@axe-core/react` in dev; fix serious/critical issues.
-2. Ensure all components support disabled, loading, empty, error states.
-3. Add “Skip to player” shortcut; visible focus ring everywhere.
-4. Error boundaries + 404 styled with theme.
-
-**Acceptance**  
-Axe shows 0 serious issues on primary routes; keyboard-only usage is complete.
-
----
-
-## Deliverables (overall)
-- Next.js app with generic retro design system components (window chrome, sidebar, pills, typography) and MVP features: search → song page with first/last + positions, versions with durations, player, era context, optional BPM.  
-- Unit tests for clients/utilities; docs (`README.md`) with setup, envs, attribution, rate-limit notes.
-
-## Verification (overall)
-- Commands:  
-  - `pnpm i && pnpm test && pnpm lint && pnpm typecheck && pnpm dev`  
-- Manual: keyboard tab path, skip links, clear focus rings; player operable; loading/empty/error states visible; attribution displayed.
-
-## Risks & Next Slice
-- **API limits & pagination**: mitigate with caching/backoff and incremental scans.  
-- **Title variance/medleys**: fuzzy matching + alias lists.  
-- **BPM reliability**: mark experimental, opt-in.  
-**Next slice after MVP**: background cache warmer for popular songs (edge/cron) and light Playwright e2e (search → song → play).
+# Agent Tasks
+
+## Completed
+
+### Task 6 — API Clients & Repository Pattern
+- SetlistFM client, Archive.org client, MusicBrainz client
+- Repository pattern with `FileSongIndexRepository`
+- Canonical song ID resolution (`lib/ids.ts`, 60+ aliases)
+
+### Task 7 — Song Page (Repository-Based Facts)
+- Dynamic `/song/[slug]` page with SWR data fetching
+- `FactRow`, `SongHeader`, `Window`/`Card` layout components
+- 24h cache, idle → loading → empty → error → success state model
+- WCAG AA accessibility (aria-live, keyboard focus rings)
+
+### Task 8 — Opener / Closer / Encore Sections
+- Position facts API (`/api/position-facts`)
+- Collapsible sections with `Collapse` component
+- `PaginatedPositionList` with cursor-based pagination
+
+### Task 9 — Archive Resolver & Audio Player
+- `/api/archive/resolve-show` — resolves setlist.fm show → Archive.org identifier
+- `/api/archive/song-tracks` — fetches matching MP3 tracks for a song
+- `AudioPlayerDock` component (play/pause, seek bar, volume, keyboard shortcuts)
+- `Queue` component (track list, remove, clear)
+- `useAudioPlayer` hook (queue persistence via localStorage, enqueueEntireShow)
+- `VersionsTable` and `ExtremesCard` components
+- MP3-only audio filtering
+
+### Task 10 — Audio Player Bug Fixes (2026-05-13)
+- **Fixed:** `resolveArchiveShow` was hardcoded for only 2 dates; now uses scored Archive.org search for any date
+- **Fixed:** `getAllTracks` treated Archive.org `files` array as object (`Object.entries` on array); now uses typed array filter
+- **Fixed:** Audio element had no `audio.load()` call on track change, causing race conditions between tracks; split into separate reset and play/pause effects
+- **Fixed:** Progress bar showed `NaN%` when `duration === 0` (divide-by-zero); guarded with `duration > 0 ? ... : 0`
+- **Fixed:** `setCurrentTrack` / `setIsPlaying` were called inside `setQueue` updater callback (React anti-pattern); moved outside using `queueRef`
+- **Fixed:** Track names displayed raw Archive.org filenames (e.g. `gd1993-09-09d1t01`); now cleaned to `Track 1`, `Track 3 (Disc 2)`, etc.
+- **Fixed:** Version track "play" buttons added to queue but never started playback; now calls `selectTrack` when nothing is playing
+- **Fixed:** "Play First/Last Show Versions" buttons didn't auto-start playback; fixed the same way
+- **Fixed:** `handleClearAndPlayEntireShow` was an exact duplicate of `handlePlayEntireShow`; removed
+- **Added:** Playwright E2E test suite (`tests/e2e/audio-player.spec.ts`) — 16 browser tests covering queue management, playback controls, keyboard shortcuts
+- **Added:** `formatArchiveTrackName` unit tests (`test/format-archive-track-name.test.ts`)
+- **Added:** Advanced `useAudioPlayer` edge-case tests (`test/use-audio-player-advanced.test.ts`)
+
+## Backlog
+
+### Task 11 — Track Metadata Enrichment
+- Fetch title metadata from Archive.org (`/metadata/{id}`) to show real song titles instead of parsed filenames
+- Archive.org items often include `title` field per file in the files array
+
+### Task 12 — Search & Home Page Polish
+- Improve search ranking / fuzzy matching
+- Home page with recent/featured songs
+
+### Task 13 — Offline / PWA Support
+- Service worker for audio caching
+- Persist queue across sessions (already done via localStorage)
+
+### Task 14 — CI/CD
+- GitHub Actions workflow: lint + typecheck + `pnpm test:run` + `pnpm test:e2e`
+- Deploy to Vercel

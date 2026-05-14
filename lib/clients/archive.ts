@@ -118,67 +118,36 @@ export class ArchiveClientImpl implements ArchiveClient {
   }
 
   async resolveArchiveShow(params: { date: string; venue?: string; city?: string }): Promise<ArchiveShow | null> {
-    const { date } = params
-    
-    // Handle known shows directly for now
-    if (date === '2016-06-27') {
-      return {
-        identifier: 'GratefulMondays2016-06-27',
-        title: 'Grateful Mondays Live at The Terrapin Crossroads Bar on 2016-06-27',
-        creator: 'Grateful Mondays',
-        date: '2016-06-27T00:00:00Z',
-        venue: 'The Terrapin Crossroads Bar',
-        city: 'San Rafael',
-        state: 'CA',
-        country: 'USA',
-        licenseurl: 'https://creativecommons.org/licenses/by-nd/4.0/',
-        rights: '',
-        publicdate: '2017-12-05T16:23:00Z',
-        addeddate: '2017-12-05T16:23:00Z',
-        updatedate: '2017-12-05T16:23:00Z',
-        mediatype: 'audio',
-        collection: ['opensource_audio'],
-        subject: ['Grateful Dead', 'Live Music'],
-        language: ['English'],
-        format: ['VBR MP3', 'FLAC'],
-        type: 'live',
-        files: []
-      }
-    }
-    
-    if (date === '1993-09-09') {
-      return {
-        identifier: 'gd93-09-09.akg.gardner.5440.sbeok.shnf',
-        title: 'Grateful Dead Live at Richfield Coliseum on 1993-09-09',
-        creator: 'Grateful Dead',
-        date: '1993-09-09T00:00:00Z',
-        venue: 'Richfield Coliseum',
-        city: 'Richfield',
-        state: 'OH',
-        country: 'USA',
-        licenseurl: 'https://creativecommons.org/licenses/by-nd/4.0/',
-        rights: '',
-        publicdate: '2004-05-15T10:07:18Z',
-        addeddate: '2004-05-15T10:07:18Z',
-        updatedate: '2004-05-15T10:07:18Z',
-        mediatype: 'audio',
-        collection: ['opensource_audio'],
-        subject: ['Grateful Dead', 'Live Music'],
-        language: ['English'],
-        format: ['VBR MP3', 'FLAC'],
-        type: 'live',
-        files: []
-      }
-    }
-    
-    // For other dates, try the search
-    const shows = await this.searchShows('Grateful Dead', date)
-    
-    if (shows.length === 0) {
+    const { date, venue, city } = params
+
+    const searchParams = new URLSearchParams({
+      q: `(creator:Grateful*Dead OR creator:Grateful*Mondays OR identifier:GratefulMondays*) AND date:${date} AND mediatype:audio`,
+      output: 'json',
+      rows: '20',
+    })
+
+    try {
+      const response = await this.http.get<{
+        responseHeader: { status: number; QTime: number; params: Record<string, unknown> }
+        response: { docs: ArchiveShow[]; numFound: number; start: number }
+      }>(`/advancedsearch.php?${searchParams.toString()}`)
+
+      if (!response.data?.response) return null
+
+      const shows = response.data.response.docs || []
+
+      if (shows.length === 0) return null
+      if (shows.length === 1) return shows[0]
+
+      // Score results by venue/city match and return best match
+      const scored = shows
+        .map(show => ({ show, score: this.calculateMatchScore(show, { venue, city }) }))
+        .sort((a, b) => b.score - a.score)
+
+      return scored[0].show
+    } catch {
       return null
     }
-    
-    return shows[0]
   }
 
   async getSongTracks(itemId: string, normalizedTitle: string, aliases: string[]): Promise<ArchiveTrack[]> {
@@ -307,36 +276,11 @@ export class ArchiveClientImpl implements ArchiveClient {
 
   async getAllTracks(itemId: string): Promise<ArchiveTrack[]> {
     try {
-      const response = await this.http.get(`/metadata/${itemId}`)
-      const data = response.data as { files?: Record<string, unknown> }
-      
-      if (!data.files) {
-        return []
-      }
-      
-      // Filter for MP3 files only and convert to ArchiveTrack format
-      const audioFiles = Object.entries(data.files)
-        .filter(([, file]: [string, unknown]) => {
-          const fileObj = file as { name?: string; format?: string }
-          const fileName = fileObj.name || ''
-          return fileName.match(/\.mp3$/i) && fileObj.format !== 'Metadata'
-        })
-        .map(([, file]: [string, unknown]) => {
-          const fileObj = file as { name: string; length?: string; format?: string; source?: string; md5?: string; mtime?: string; size?: string; crc32?: string; sha1?: string }
-          return {
-            name: fileObj.name,
-            length: fileObj.length || '',
-            format: fileObj.format || '',
-            source: fileObj.source || '',
-            md5: fileObj.md5 || '',
-            mtime: fileObj.mtime || '',
-            size: fileObj.size || '',
-            crc32: fileObj.crc32 || '',
-            sha1: fileObj.sha1 || ''
-          }
-        })
-      
-      return audioFiles
+      const response = await this.http.get<{ files?: ArchiveTrack[] }>(`/metadata/${itemId}`)
+      const files = response.data?.files || []
+      return files.filter(file =>
+        file.name?.match(/\.mp3$/i) && file.format !== 'Metadata'
+      )
     } catch (error) {
       console.error('Error fetching all tracks:', error)
       return []

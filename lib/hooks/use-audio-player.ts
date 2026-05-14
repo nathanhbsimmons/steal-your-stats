@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Track } from '@/components/ui/audio-player-dock'
 
 const QUEUE_STORAGE_KEY = 'steal-your-stats-audio-queue'
@@ -36,6 +36,12 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [queue, setQueue] = useState<Track[]>([])
+
+  // Ref so stable callbacks can read the latest queue without stale closures
+  const queueRef = useRef<Track[]>([])
+  useEffect(() => {
+    queueRef.current = queue
+  }, [queue])
 
   // Load queue from localStorage on mount
   useEffect(() => {
@@ -115,7 +121,12 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
   }, [])
 
   const addToQueue = useCallback((tracks: Track[]) => {
-    setQueue(prev => [...prev, ...tracks])
+    setQueue(prev => {
+      // Filter out tracks that already exist in the queue to prevent duplicates
+      const existingIds = new Set(prev.map(track => track.id))
+      const newTracks = tracks.filter(track => !existingIds.has(track.id))
+      return [...prev, ...newTracks]
+    })
   }, [])
 
   const removeFromQueue = useCallback((trackId: string) => {
@@ -196,15 +207,12 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
           setIsPlaying(true)
         }
       } else {
-        setQueue(prev => {
-          const newQueue = [...prev, ...processedTracks]
-          // If queue was empty, start playing
-          if (prev.length === 0 && newQueue.length > 0) {
-            setCurrentTrack(newQueue[0])
-            setIsPlaying(true)
-          }
-          return newQueue
-        })
+        const wasEmpty = queueRef.current.length === 0
+        setQueue(prev => [...prev, ...processedTracks])
+        if (wasEmpty && processedTracks.length > 0) {
+          setCurrentTrack(processedTracks[0])
+          setIsPlaying(true)
+        }
       }
       
       // Announce via aria-live (this will be handled by the component)
@@ -231,6 +239,21 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     playEntireShow,
     enqueueEntireShow
   }
+}
+
+// Converts raw Archive.org filenames (e.g. "gd1993-09-09d1t01") into readable labels
+export function formatArchiveTrackName(filename: string): string {
+  const dtMatch = filename.match(/d(\d+)t(\d+)/i)
+  if (dtMatch) {
+    const disc = parseInt(dtMatch[1])
+    const track = parseInt(dtMatch[2])
+    return disc > 1 ? `Track ${track} (Disc ${disc})` : `Track ${track}`
+  }
+  const cleaned = filename
+    .replace(/^[a-z]+\d{4}-\d{2}-\d{2}[-_.]+/i, '')
+    .replace(/[-_.]+/g, ' ')
+    .trim()
+  return cleaned || filename
 }
 
 // Helper function to process tracks with format preferences and deduplication
@@ -299,7 +322,7 @@ function processTracksForEnqueue(
     // Convert to Track format
     const track: Track = {
       id: `${archiveShow.identifier}-${logicalName.replace(/[^a-zA-Z0-9]/g, '_')}-${processedTracks.length}`,
-      name: logicalName, // Use logical name without format
+      name: formatArchiveTrackName(logicalName),
       url: selectedTrack.url,
       duration: selectedTrack.duration,
       showDate: showRef.date,

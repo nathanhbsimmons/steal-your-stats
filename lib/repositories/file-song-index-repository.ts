@@ -1,5 +1,6 @@
 import { SetlistClientImpl } from '../clients/setlist'
 import { resolveSong } from '../ids'
+import { VersionTrack } from '../songFacts'
 
 export interface Song {
   id: string
@@ -59,6 +60,7 @@ export interface SongIndexRepository {
   getSongByTitle(title: string): Promise<Song | null>
   getPositions(songId: string): Promise<PositionFacts | null>
   getPositionPage(params: PositionPageParams): Promise<PaginatedResult<ShowRef>>
+  getVersions(songId: string): Promise<VersionTrack[]>
   upsertFromSetlist(setlistId: string, rawSetlist: unknown): Promise<void>
 }
 
@@ -144,6 +146,37 @@ export class FileSongIndexRepository implements SongIndexRepository {
       hasMore,
       totalCount: allShows.length
     }
+  }
+
+  async getVersions(songId: string): Promise<VersionTrack[]> {
+    const song = this.songs.get(songId)
+    if (!song) return []
+
+    // Get all shows where this song was performed
+    const allShows = [
+      ...(this.positionMaps.opener.get(songId) || []),
+      ...(this.positionMaps.closer.get(songId) || []),
+      ...(this.positionMaps.encore.get(songId) || [])
+    ]
+
+    // Remove duplicates based on show ID and date
+    const uniqueShows = Array.from(
+      new Map(allShows.map(show => [`${show.id}-${show.date}`, show])).values()
+    )
+
+    // Convert ShowRef to VersionTrack format
+    return uniqueShows.map((show, index) => ({
+      id: `${songId}-${show.id}-${show.date}-${index}`,
+      showDate: show.date,
+      venue: show.venue,
+      city: show.city,
+      state: show.state,
+      country: show.country,
+      // Archive item ID and duration will be populated by the API layer
+      archiveItemId: undefined,
+      durationSec: undefined,
+      url: undefined
+    }))
   }
 
   async upsertFromSetlist(setlistId: string, rawSetlist: unknown): Promise<void> {

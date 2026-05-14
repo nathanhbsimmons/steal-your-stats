@@ -61,17 +61,35 @@ export function AudioPlayerDock({
     }
   }, [currentTrack])
 
+  // Reset state and reload audio when track changes
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    setCurrentTime(0)
+    setDuration(0)
+    audio.load()
+  }, [currentTrack?.url])
+
   // Handle play/pause
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
     if (isPlaying) {
-      audio.play().catch(console.error)
+      const promise = audio.play()
+      if (promise !== undefined) {
+        promise.catch((err: Error) => {
+          // AbortError is expected when track changes mid-play; suppress it
+          if (err.name !== 'AbortError') {
+            console.error('Audio playback error:', err)
+            onPause()
+          }
+        })
+      }
     } else {
       audio.pause()
     }
-  }, [isPlaying, currentTrack])
+  }, [isPlaying, currentTrack?.url, onPause])
 
   // Handle volume changes
   useEffect(() => {
@@ -152,6 +170,8 @@ export function AudioPlayerDock({
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
+
   if (!currentTrack) {
     return (
       <Card className={`p-4 ${className}`}>
@@ -218,7 +238,7 @@ export function AudioPlayerDock({
             onChange={handleSeek}
             className="flex-1 h-1 bg-gray rounded-lg appearance-none cursor-pointer"
             style={{
-              background: `linear-gradient(to right, #111 0%, #111 ${(currentTime / duration) * 100}%, #bfbfb7 ${(currentTime / duration) * 100}%, #bfbfb7 100%)`
+              background: `linear-gradient(to right, #111 0%, #111 ${progressPercent}%, #bfbfb7 ${progressPercent}%, #bfbfb7 100%)`
             }}
           />
           <span>{formatTime(duration)}</span>
