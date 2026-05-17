@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Icon, ICONS } from '@/components/glass/icons'
 import {
-  getSongHints, makeEntry, formatDurationShort, totalDuration,
+  makeEntry, formatDurationShort, totalDuration,
   EMPTY_SETLIST, SETLIST_STORAGE_KEY,
   type SetKey, type SetlistEntry, type SetlistState, type SongHints,
 } from '@/lib/setlist-builder'
@@ -92,14 +92,13 @@ interface DragSource { setKey: SetKey; idx: number }
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 interface SongResultProps {
-  title: string
   displayTitle: string
   hints: SongHints
   onAdd: () => void
   isDuplicate: boolean
 }
 
-function SongResult({ title, displayTitle, hints, onAdd, isDuplicate }: SongResultProps) {
+function SongResult({ displayTitle, hints, onAdd, isDuplicate }: SongResultProps) {
   const { pairing, positionHints, avgDurationSec } = hints
 
   return (
@@ -558,7 +557,6 @@ export function SetlistBuilder() {
             {results.map(song => (
               <SongResult
                 key={song.title}
-                title={song.title}
                 displayTitle={song.displayTitle}
                 hints={song.hints}
                 onAdd={() => addSong(song)}
@@ -570,7 +568,7 @@ export function SetlistBuilder() {
 
         {query && !searching && results.length === 0 && (
           <div className="glass" style={{ padding: '20px 16px', textAlign: 'center' }}>
-            <span className="t-small">No songs found for "{query}"</span>
+            <span className="t-small">No songs found for &ldquo;{query}&rdquo;</span>
             <div style={{ marginTop: 10 }}>
               <button
                 className="btn"
@@ -582,7 +580,7 @@ export function SetlistBuilder() {
                   setResults([])
                 }}
               >
-                <Icon d={ICONS.plus} size={12} /> Add "{query}" anyway
+                <Icon d={ICONS.plus} size={12} /> Add &ldquo;{query}&rdquo; anyway
               </button>
             </div>
           </div>
