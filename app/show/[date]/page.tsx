@@ -1,13 +1,12 @@
 'use client'
 
 import React from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import useSWR from 'swr'
-import { Window, WindowHeader, WindowBody } from '@/components/ui/window'
-import { Card } from '@/components/ui/card'
-import { AudioPlayerDock } from '@/components/ui/audio-player-dock'
-import { Queue } from '@/components/ui/queue'
+import { Icon, ICONS } from '@/components/glass/icons'
+import { AttributionFooter, GlassSkeleton } from '@/components/glass/primitives'
+import { PlayerDock } from '@/components/glass/player-dock'
 import { useAudioPlayer } from '@/lib/hooks/use-audio-player'
 
 interface ShowSet {
@@ -36,12 +35,17 @@ async function fetchShow(date: string): Promise<ShowDetail> {
 function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number)
   return new Date(year, month - 1, day).toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   })
+}
+
+function formatDateDots(isoDate: string): string {
+  return isoDate.replace(/-/g, '·')
 }
 
 export default function ShowPage() {
   const params = useParams()
+  const router = useRouter()
   const date = params.date as string
 
   const { data, error, isLoading } = useSWR(
@@ -51,144 +55,158 @@ export default function ShowPage() {
   )
 
   const {
-    currentTrack,
-    isPlaying,
-    queue,
-    play,
-    pause,
-    next,
-    previous,
-    selectTrack,
-    removeFromQueue,
-    clearQueue,
-    enqueueEntireShow,
+    currentTrack, isPlaying, queue,
+    play, pause, next, previous,
+    selectTrack, removeFromQueue, clearQueue, enqueueEntireShow,
   } = useAudioPlayer()
 
   const handlePlayShow = async () => {
     if (!data) return
     try {
-      await enqueueEntireShow({ date, venue: data.venue, city: data.city }, { clearExisting: true })
+      const songs = data.sets.flatMap(s => s.songs)
+      await enqueueEntireShow({ date, venue: data.venue, city: data.city }, { clearExisting: true, songs })
     } catch {
-      // ignore
+      // Archive.org may not have a recording for every show
     }
   }
 
+  const handleClearAndPlay = async () => {
+    clearQueue()
+    await handlePlayShow()
+  }
+
+  const venue = data?.venue ?? ''
+  const location = data
+    ? `${data.city}${data.state ? `, ${data.state}` : ''} · ${data.country}`
+    : ''
+
   return (
-    <Window>
-      <WindowHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-serif font-bold">
-              {data ? formatDate(data.date) : date}
-            </h1>
-            {data && (
-              <p className="text-xs font-mono text-gray mt-0.5">
-                {data.venue} • {data.city}{data.state ? `, ${data.state}` : ''} • {data.country}
-              </p>
-            )}
-          </div>
-          <Link
-            href="/"
-            className="text-xs font-mono border-2 border-gray px-2 py-1 hover:border-ink hover:bg-ink hover:text-paper transition-colors"
-          >
-            ← Back
-          </Link>
+    <>
+      {/* Breadcrumb */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '18px 28px 0', flexShrink: 0 }}>
+        <button className="btn icon" style={{ width: 32, height: 32 }} onClick={() => router.back()}>
+          <Icon d={ICONS.chevLeft} size={14} />
+        </button>
+        <span className="t-eyebrow" style={{ fontSize: 10.5 }}>
+          SHOWS / {date}
+        </span>
+        <span style={{ flex: 1 }} />
+        {data?.setlistUrl && (
+          <a href={data.setlistUrl} target="_blank" rel="noopener noreferrer" className="btn" style={{ fontSize: 12 }}>
+            setlist.fm <Icon d={ICONS.external} size={12} />
+          </a>
+        )}
+      </div>
+
+      {/* Show header */}
+      <header style={{ padding: '20px 28px 18px', display: 'flex', alignItems: 'flex-end', gap: 24, flexShrink: 0 }}>
+        <div style={{
+          width: 92, height: 92, flex: '0 0 92px',
+          borderRadius: 'var(--r-lg)',
+          background: 'radial-gradient(circle at 30% 30%, rgba(240,176,74,0.6), rgba(107,61,18,0.8) 70%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 12px 30px -10px rgba(240,176,74,0.3)',
+        }}>
+          <Icon d={ICONS.calendar} size={36} />
         </div>
-      </WindowHeader>
-      <WindowBody>
-        <div className="space-y-6">
-          {isLoading && (
-            <div className="space-y-3">
-              <div className="h-6 w-32 bg-gray/30 animate-pulse rounded" />
-              <div className="h-32 bg-gray/30 animate-pulse rounded border-2 border-gray" />
-            </div>
-          )}
 
-          {error && (
-            <Card className="p-6 text-center">
-              <p className="text-sm text-gray">Show not found. No setlist data available for this date.</p>
-            </Card>
-          )}
-
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <span className="t-eyebrow">Show · Grateful Dead</span>
+          <h1 className="t-display" style={{ fontSize: 38, letterSpacing: '-0.025em', lineHeight: 1.05 }}>
+            {isLoading ? formatDateDots(date) : data ? formatDate(data.date) : date}
+          </h1>
           {data && (
-            <>
-              {/* Play show button */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePlayShow}
-                  className="px-4 py-2 bg-ink text-paper border-2 border-ink text-sm font-mono hover:bg-paper hover:text-ink transition-colors"
-                >
-                  ▶ Play Entire Show
-                </button>
-                {data.setlistUrl && (
-                  <a
-                    href={data.setlistUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-mono border-2 border-gray px-2 py-1 hover:border-ink transition-colors text-gray hover:text-ink"
-                  >
-                    View on setlist.fm ↗
-                  </a>
-                )}
-              </div>
-
-              {/* Setlist */}
-              <div className="space-y-4">
-                {data.sets.map((set, i) => (
-                  <Card key={i} className="p-4">
-                    <h2 className="text-sm font-mono font-bold text-ink mb-3 border-b-2 border-gray pb-2">
-                      {set.name}
-                    </h2>
-                    <ol className="space-y-1">
-                      {set.songs.map((song, j) => (
-                        <li key={j} className="flex items-center gap-2">
-                          <span className="text-xs font-mono text-gray w-5 text-right flex-shrink-0">
-                            {j + 1}.
-                          </span>
-                          <Link
-                            href={`/song/${encodeURIComponent(song)}`}
-                            className="text-sm text-ink hover:underline"
-                          >
-                            {song}
-                          </Link>
-                        </li>
-                      ))}
-                    </ol>
-                  </Card>
-                ))}
-              </div>
-
-              <p className="text-xs font-mono text-gray">
-                {data.totalSongs} songs total
-              </p>
-            </>
+            <span className="t-small">{venue} · {location}</span>
           )}
-
-          {/* Audio Player */}
-          <div className="space-y-3">
-            <h2 className="text-sm font-mono font-bold text-ink">Audio Player</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <AudioPlayerDock
-                currentTrack={currentTrack || undefined}
-                isPlaying={isPlaying}
-                onPlay={play}
-                onPause={pause}
-                onNext={next}
-                onPrevious={previous}
-                onPlayEntireShow={data ? handlePlayShow : undefined}
-              />
-              <Queue
-                tracks={queue}
-                currentTrackId={currentTrack?.id}
-                onTrackSelect={selectTrack}
-                onTrackRemove={removeFromQueue}
-                onClearQueue={clearQueue}
-                onClearAndPlayEntireShow={data ? handlePlayShow : undefined}
-              />
-            </div>
-          </div>
         </div>
-      </WindowBody>
-    </Window>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+          <button className="btn primary lg" onClick={handlePlayShow}>
+            <Icon d={ICONS.play} size={14} fill="currentColor" stroke={0} /> Play entire show
+          </button>
+          {data && (
+            <span className="t-small">{data.totalSongs} songs</span>
+          )}
+        </div>
+      </header>
+
+      {/* Scrollable content */}
+      <div className="scroll-hide" style={{ flex: 1, overflow: 'auto', padding: '0 28px 18px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+        {isLoading && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <GlassSkeleton height={44} />
+            <GlassSkeleton height={200} />
+            <GlassSkeleton height={160} />
+          </div>
+        )}
+
+        {error && (
+          <div className="glass" style={{ padding: '28px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+            <Icon d={ICONS.calendar} size={28} />
+            <span className="t-h3">Show not found</span>
+            <span className="t-small">No setlist data available for {date}</span>
+            <button className="btn" style={{ marginTop: 8 }} onClick={() => router.back()}>
+              <Icon d={ICONS.chevLeft} size={13} /> Go back
+            </button>
+          </div>
+        )}
+
+        {data && (
+          <>
+            {/* Sets */}
+            {data.sets.map((set, si) => (
+              <section key={si} className="glass" style={{ display: 'flex', flexDirection: 'column' }}>
+                <header style={{ padding: '14px 20px 10px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--glass-border)' }}>
+                  <span className="t-eyebrow" style={{ color: set.encore ? 'var(--accent-strong)' : 'var(--fg-3)' }}>
+                    {set.encore ? 'Encore' : set.name}
+                  </span>
+                  <span className="t-mono" style={{ fontSize: 11, color: 'var(--fg-4)' }}>
+                    {set.songs.length} songs
+                  </span>
+                </header>
+                <ol style={{ padding: '8px 0 12px', display: 'flex', flexDirection: 'column' }}>
+                  {set.songs.map((song, ji) => (
+                    <li key={ji} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '8px 20px' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--glass-bg)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <span className="t-mono" style={{ fontSize: 11, color: 'var(--fg-4)', width: 24, flexShrink: 0 }}>
+                        {String(ji + 1).padStart(2, '0')}
+                      </span>
+                      <Link
+                        href={`/song/${encodeURIComponent(song)}`}
+                        style={{ flex: 1, fontSize: 14, color: 'var(--fg)', textDecoration: 'none' }}
+                        onMouseEnter={e => ((e.target as HTMLElement).style.color = 'var(--accent)')}
+                        onMouseLeave={e => ((e.target as HTMLElement).style.color = 'var(--fg)')}
+                      >
+                        {song}
+                      </Link>
+                      <Icon d={ICONS.arrowR} size={13} />
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            ))}
+
+            <AttributionFooter />
+          </>
+        )}
+      </div>
+
+      <PlayerDock
+        currentTrack={currentTrack}
+        isPlaying={isPlaying}
+        queue={queue}
+        onPlay={play}
+        onPause={pause}
+        onNext={next}
+        onPrevious={previous}
+        onSelectTrack={selectTrack}
+        onRemoveFromQueue={removeFromQueue}
+        onClearQueue={clearQueue}
+        onClearAndPlayEntireShow={handleClearAndPlay}
+      />
+    </>
   )
 }

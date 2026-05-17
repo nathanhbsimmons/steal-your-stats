@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSongCatalog } from '@/lib/ids'
+import { getSongHints } from '@/lib/setlist-builder'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -12,5 +13,10 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  return NextResponse.json({ songs, total: songs.length })
+  const withHints = songs.map(s => ({
+    ...s,
+    hints: getSongHints(s.title),
+  }))
+
+  return NextResponse.json({ songs: withHints, total: withHints.length })
 }

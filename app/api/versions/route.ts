@@ -18,11 +18,9 @@ export async function GET(request: NextRequest) {
     // Get versions from real-time service
     const versionsFacts = await realtimeSongFactsService.getVersions(songTitle)
     
-    // Return empty tracks — Archive.org duration/URL enrichment is not yet implemented.
-    // Returning placeholder rows with no audio data creates noise in the UI.
     return NextResponse.json({
-      tracks: [],
-      extremes: undefined,
+      tracks: versionsFacts.tracks,
+      extremes: versionsFacts.extremes,
       songTitle: versionsFacts.songTitle
     })
   } catch (error) {

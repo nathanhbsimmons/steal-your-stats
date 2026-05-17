@@ -4,6 +4,26 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { Track } from '@/components/ui/audio-player-dock'
 
 const QUEUE_STORAGE_KEY = 'steal-your-stats-audio-queue'
+export const PLAY_LOG_KEY = 'steal-your-stats-play-log'
+
+export interface PlayLogEntry {
+  timestamp: number
+  trackName: string
+  showDate: string
+  venue: string
+  city: string
+  archiveItemId?: string
+  duration?: number
+}
+
+function appendPlayLog(entry: PlayLogEntry) {
+  try {
+    const stored = localStorage.getItem(PLAY_LOG_KEY)
+    const log: PlayLogEntry[] = stored ? JSON.parse(stored) : []
+    log.unshift(entry)
+    localStorage.setItem(PLAY_LOG_KEY, JSON.stringify(log.slice(0, 200)))
+  } catch {}
+}
 
 export interface ShowRef {
   date: string
@@ -14,6 +34,7 @@ export interface ShowRef {
 export interface EnqueueEntireShowOptions {
   preferredFormats?: string[]
   clearExisting?: boolean
+  songs?: string[]
 }
 
 export interface UseAudioPlayerReturn {
@@ -42,6 +63,23 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
   useEffect(() => {
     queueRef.current = queue
   }, [queue])
+
+  // Log to play history whenever a new track starts
+  const prevTrackIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (currentTrack && isPlaying && currentTrack.id !== prevTrackIdRef.current) {
+      appendPlayLog({
+        timestamp: Date.now(),
+        trackName: currentTrack.name,
+        showDate: currentTrack.showDate || '',
+        venue: currentTrack.venue || '',
+        city: currentTrack.city || '',
+        archiveItemId: currentTrack.archiveItemId,
+        duration: currentTrack.duration,
+      })
+    }
+    if (currentTrack) prevTrackIdRef.current = currentTrack.id
+  }, [currentTrack, isPlaying])
 
   // Load queue from localStorage on mount
   useEffect(() => {
@@ -198,7 +236,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
       const { tracks } = await tracksResponse.json()
       
       // Process and deduplicate tracks
-      const processedTracks = processTracksForEnqueue(tracks, preferredFormats, archiveShow, showRef)
+      const processedTracks = processTracksForEnqueue(tracks, preferredFormats, archiveShow, showRef, options.songs)
       
       if (clearExisting) {
         setQueue(processedTracks)
@@ -243,14 +281,23 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
 
 // Converts raw Archive.org filenames (e.g. "gd1993-09-09d1t01") into readable labels
 export function formatArchiveTrackName(filename: string): string {
+  // disc-based: gd74-05-14d1t01 → "Track 1", d2t03 → "Track 3 (Disc 2)"
   const dtMatch = filename.match(/d(\d+)t(\d+)/i)
   if (dtMatch) {
     const disc = parseInt(dtMatch[1])
     const track = parseInt(dtMatch[2])
     return disc > 1 ? `Track ${track} (Disc ${disc})` : `Track ${track}`
   }
+  // set-based: gd75-04-14.s1t01 → "Track 1", s2t03 → "Track 3 (Set 2)"
+  const stMatch = filename.match(/s(\d+)t(\d+)/i)
+  if (stMatch) {
+    const set = parseInt(stMatch[1])
+    const track = parseInt(stMatch[2])
+    return set > 1 ? `Track ${track} (Set ${set})` : `Track ${track}`
+  }
+  // strip leading date prefix (2 or 4 digit year) then clean separators
   const cleaned = filename
-    .replace(/^[a-z]+\d{4}-\d{2}-\d{2}[-_.]+/i, '')
+    .replace(/^[a-z]+\d{2,4}[-_.]\d{2}[-_.]\d{2}[-_.]+/i, '')
     .replace(/[-_.]+/g, ' ')
     .trim()
   return cleaned || filename
@@ -261,7 +308,8 @@ function processTracksForEnqueue(
   tracks: Array<{ id: string; name: string; url: string; duration?: number }>,
   preferredFormats: string[],
   archiveShow: { identifier: string; licenseurl?: string; rights?: string },
-  showRef: ShowRef
+  showRef: ShowRef,
+  songs?: string[]
 ): Track[] {
   // Filter to only MP3 files
   const mp3Tracks = tracks.filter(track => 
@@ -319,10 +367,15 @@ function processTracksForEnqueue(
       }
     }
     
+    const trackIndex = processedTracks.length
+    const songName = songs && songs[trackIndex]
+      ? songs[trackIndex]
+      : formatArchiveTrackName(logicalName)
+
     // Convert to Track format
     const track: Track = {
-      id: `${archiveShow.identifier}-${logicalName.replace(/[^a-zA-Z0-9]/g, '_')}-${processedTracks.length}`,
-      name: formatArchiveTrackName(logicalName),
+      id: `${archiveShow.identifier}-${logicalName.replace(/[^a-zA-Z0-9]/g, '_')}-${trackIndex}`,
+      name: songName,
       url: selectedTrack.url,
       duration: selectedTrack.duration,
       showDate: showRef.date,

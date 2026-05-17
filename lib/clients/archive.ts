@@ -44,6 +44,10 @@ export interface ArchiveTrack {
   size: string
   crc32: string
   sha1: string
+  title?: string
+  track?: string
+  creator?: string
+  album?: string
 }
 
 export interface ArchiveClient {
@@ -66,7 +70,7 @@ export class ArchiveClientImpl implements ArchiveClient {
   async searchShows(creator: string, date?: string): Promise<ArchiveShow[]> {
     // Archive.org GD shows live in the GratefulDead collection
     const searchParams = new URLSearchParams({
-      q: `collection:GratefulDead AND mediatype:audio`,
+      q: `collection:GratefulDead AND mediatype:etree`,
       output: 'json',
       rows: '100',
     })
@@ -121,7 +125,7 @@ export class ArchiveClientImpl implements ArchiveClient {
     const { date, venue, city } = params
 
     const searchParams = new URLSearchParams({
-      q: `collection:GratefulDead AND date:${date} AND mediatype:audio`,
+      q: `collection:GratefulDead AND date:${date} AND mediatype:etree`,
       output: 'json',
       rows: '20',
     })
@@ -160,24 +164,24 @@ export class ArchiveClientImpl implements ArchiveClient {
     // Create a set of all possible titles to match against
     const searchTitles = [normalizedTitle, ...aliases].map(title => title.toLowerCase())
     
-    // Find tracks that match any of the song titles
+    // Find tracks that match any of the song titles (check both filename and title metadata)
     const matchingTracks = allTracks.filter(track => {
       const trackName = track.name.toLowerCase()
-      
-      // Check for exact matches first
+      const trackTitle = (track.title || '').toLowerCase()
+
       for (const searchTitle of searchTitles) {
-        if (trackName.includes(searchTitle)) {
+        if (trackName.includes(searchTitle) || trackTitle.includes(searchTitle)) {
           return true
         }
       }
-      
-      // Check for fuzzy matches (handles medleys, segues, etc.)
+
+      // Fuzzy match on filename and title
       for (const searchTitle of searchTitles) {
-        if (this.fuzzyMatch(trackName, searchTitle)) {
+        if (this.fuzzyMatch(trackName, searchTitle) || (trackTitle && this.fuzzyMatch(trackTitle, searchTitle))) {
           return true
         }
       }
-      
+
       return false
     })
     

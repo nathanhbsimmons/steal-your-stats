@@ -1,11 +1,16 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
-import { Window, WindowHeader, WindowBody } from '@/components/ui/window'
-import { Card } from '@/components/ui/card'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { Icon, ICONS } from '@/components/glass/icons'
+import { ShowRow } from '@/components/glass/primitives'
 
-type Mode = 'single' | 'pair'
+interface SongResult {
+  title: string
+  displayTitle: string
+  aliases: string[]
+}
 
 interface ShowResult {
   date: string
@@ -14,175 +19,271 @@ interface ShowResult {
   state?: string
   country: string
   songs: string[]
-  setlistUrl?: string
 }
 
-function formatDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split('-').map(Number)
-  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'short', day: 'numeric'
-  })
+function highlight(text: string, match: string) {
+  if (!match) return <>{text}</>
+  const idx = text.toLowerCase().indexOf(match.toLowerCase())
+  if (idx < 0) return <>{text}</>
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark style={{ background: 'var(--accent-soft)', color: 'var(--accent-strong)', padding: '0 2px', borderRadius: 3 }}>
+        {text.slice(idx, idx + match.length)}
+      </mark>
+      {text.slice(idx + match.length)}
+    </>
+  )
+}
+
+function useDebounce<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delayMs)
+    return () => clearTimeout(t)
+  }, [value, delayMs])
+  return debounced
+}
+
+function SearchContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const [query, setQuery] = useState(searchParams.get('q') || '')
+  const [activeFilter, setActiveFilter] = useState<'songs' | 'shows'>('songs')
+
+  const [songs, setSongs] = useState<SongResult[]>([])
+  const [songTotal, setSongTotal] = useState(0)
+  const [songsLoading, setSongsLoading] = useState(false)
+
+  const [shows, setShows] = useState<ShowResult[]>([])
+  const [showsLoading, setShowsLoading] = useState(false)
+
+  const debouncedQuery = useDebounce(query, 250)
+
+  // Focus input on mount
+  useEffect(() => { inputRef.current?.focus() }, [])
+
+  // Escape to blur
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') inputRef.current?.blur() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  // Fetch songs whenever debounced query changes
+  useEffect(() => {
+    if (!debouncedQuery) {
+      setSongs([])
+      setSongTotal(0)
+      return
+    }
+    setSongsLoading(true)
+    fetch(`/api/songs?q=${encodeURIComponent(debouncedQuery)}`)
+      .then(r => r.json())
+      .then(data => {
+        setSongs(data.songs || [])
+        setSongTotal(data.total || 0)
+      })
+      .catch(() => {})
+      .finally(() => setSongsLoading(false))
+  }, [debouncedQuery])
+
+  // Fetch shows for the top song match
+  const fetchShows = useCallback((songTitle: string) => {
+    setShowsLoading(true)
+    setShows([])
+    fetch(`/api/search/shows-with-songs?songs[]=${encodeURIComponent(songTitle)}`)
+      .then(r => r.json())
+      .then(data => setShows((data.shows || []).slice(0, 8)))
+      .catch(() => {})
+      .finally(() => setShowsLoading(false))
+  }, [])
+
+  // When songs load, auto-fetch shows for the first result
+  useEffect(() => {
+    if (songs.length > 0) {
+      fetchShows(songs[0].displayTitle)
+    } else {
+      setShows([])
+    }
+  }, [songs, fetchShows])
+
+  return (
+    <>
+      {/* Header */}
+      <div style={{ padding: '20px 28px 0', flexShrink: 0 }}>
+        <span className="t-eyebrow">Search</span>
+        <h1 className="t-display t-h2" style={{ marginTop: 4 }}>Find any song, show, or jam.</h1>
+      </div>
+
+      <div className="scroll-hide" style={{ flex: 1, overflow: 'auto', padding: '18px 28px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+        {/* Hero input */}
+        <div className="glass strong" style={{
+          padding: '14px 22px',
+          display: 'flex', alignItems: 'center', gap: 14,
+          borderRadius: 'var(--r-xl)',
+        }}>
+          <span style={{ color: 'var(--fg-3)' }}>
+            <Icon d={ICONS.search} size={20} stroke={1.8} />
+          </span>
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && query) router.push(`/search?q=${encodeURIComponent(query)}`)
+            }}
+            style={{ flex: 1, background: 'transparent', border: 0, outline: 'none', color: 'var(--fg)', fontSize: 18 }}
+            placeholder="Songs, venues, dates…"
+          />
+          {query ? (
+            <button
+              onClick={() => setQuery('')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-4)', padding: 4 }}
+            >
+              <Icon d={ICONS.close} size={16} />
+            </button>
+          ) : (
+            <span className="kbd">Esc</span>
+          )}
+        </div>
+
+        {/* Filter chips */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <span
+            className={`pill${activeFilter === 'songs' ? ' accent' : ''}`}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setActiveFilter('songs')}
+          >
+            <Icon d={ICONS.music} size={11} /> Songs{songTotal > 0 ? ` · ${songTotal}` : ''}
+          </span>
+          <span
+            className={`pill${activeFilter === 'shows' ? ' accent' : ''}`}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setActiveFilter('shows')}
+          >
+            Shows{shows.length > 0 ? ` · ${shows.length}` : ''}
+          </span>
+        </div>
+
+        {/* Empty prompt */}
+        {!query && (
+          <div className="glass" style={{ padding: '40px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', color: 'var(--fg-3)' }}>
+            <Icon d={ICONS.search} size={32} />
+            <span className="t-h3">Start typing to search</span>
+            <span className="t-small">Search by song name, venue, or year</span>
+          </div>
+        )}
+
+        {/* Results grid */}
+        {query && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+
+            {/* Songs panel */}
+            <section className="glass" style={{ padding: 4, display: 'flex', flexDirection: 'column' }}>
+              <header style={{ padding: '14px 18px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 className="t-h3">Songs</h3>
+                {!songsLoading && (
+                  <span className="t-eyebrow">{songTotal} result{songTotal !== 1 ? 's' : ''}</span>
+                )}
+              </header>
+              <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 4px 8px' }}>
+                {songsLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="skeleton" style={{ height: 52, margin: '3px 8px', borderRadius: 'var(--r-md)' }} />
+                  ))
+                ) : songs.length === 0 ? (
+                  <div style={{ padding: '20px 18px', color: 'var(--fg-4)', fontSize: 13 }}>No songs found.</div>
+                ) : (
+                  songs.slice(0, 8).map((s, i) => {
+                    const display = s.displayTitle
+                    return (
+                      <Link
+                        key={s.title}
+                        href={`/song/${encodeURIComponent(display)}`}
+                        className="nav-item"
+                        style={{
+                          padding: '12px 14px',
+                          background: i === 0 ? 'var(--glass-bg-strong)' : 'transparent',
+                        }}
+                      >
+                        <span className="nav-icon" style={{ color: i === 0 ? 'var(--accent)' : 'var(--fg-4)' }}>
+                          <Icon d={ICONS.music} size={15} />
+                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25, flex: 1, minWidth: 0 }}>
+                          <span style={{ fontSize: 13.5, color: 'var(--fg)' }}>
+                            {highlight(display, query)}
+                          </span>
+                          {s.aliases.length > 0 && (
+                            <span className="t-small" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              aka {s.aliases.slice(0, 2).join(', ')}
+                            </span>
+                          )}
+                        </div>
+                        {i === 0 && <span className="kbd" style={{ color: 'var(--accent)' }}>↵</span>}
+                      </Link>
+                    )
+                  })
+                )}
+              </div>
+            </section>
+
+            {/* Shows panel */}
+            <section className="glass" style={{ padding: 4, display: 'flex', flexDirection: 'column' }}>
+              <header style={{ padding: '14px 18px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 className="t-h3">Shows</h3>
+                {!showsLoading && shows.length > 0 && (
+                  <span className="t-eyebrow">featuring {songs[0]?.displayTitle}</span>
+                )}
+              </header>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {showsLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="skeleton" style={{ height: 48, margin: '3px 8px', borderRadius: 'var(--r-md)' }} />
+                  ))
+                ) : shows.length === 0 && !showsLoading ? (
+                  <div style={{ padding: '20px 18px', color: 'var(--fg-4)', fontSize: 13 }}>
+                    {songs.length === 0 ? 'Search for a song to find shows.' : 'No shows found.'}
+                  </div>
+                ) : (
+                  shows.map(s => (
+                    <ShowRow
+                      key={s.date}
+                      date={s.date}
+                      venue={s.venue}
+                      city={`${s.city}${s.state ? `, ${s.state}` : ''}`}
+                      country={s.country}
+                      badge={s.date.split('-')[0]}
+                    />
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* Tip */}
+        <div className="glass faint" style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 14, fontSize: 12.5, color: 'var(--fg-3)' }}>
+          <Icon d={ICONS.bolt} size={14} />
+          <span>
+            Tip — try searching for{' '}
+            <code className="t-mono" style={{ color: 'var(--accent)' }}>Dark Star</code>,{' '}
+            <code className="t-mono" style={{ color: 'var(--accent)' }}>Scarlet</code>, or{' '}
+            <code className="t-mono" style={{ color: 'var(--accent)' }}>Althea</code>.
+          </span>
+        </div>
+      </div>
+    </>
+  )
 }
 
 export default function SearchPage() {
-  const [mode, setMode] = useState<Mode>('single')
-  const [song1, setSong1] = useState('')
-  const [song2, setSong2] = useState('')
-  const [results, setResults] = useState<ShowResult[] | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleSearch = async () => {
-    const songs = mode === 'single' ? [song1] : [song1, song2]
-    if (!song1.trim()) return
-    if (mode === 'pair' && !song2.trim()) return
-
-    setLoading(true)
-    setError(null)
-    setResults(null)
-
-    try {
-      const params = songs.map(s => `songs[]=${encodeURIComponent(s.trim())}`).join('&')
-      const r = await fetch(`/api/search/shows-with-songs?${params}`)
-      if (!r.ok) throw new Error('Search failed')
-      const data = await r.json()
-      setResults(data.shows || [])
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Search failed')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSearch()
-  }
-
   return (
-    <Window>
-      <WindowHeader>
-        <h1 className="text-lg font-serif font-bold">Search</h1>
-      </WindowHeader>
-      <WindowBody>
-        <div className="space-y-6">
-          {/* Mode toggle */}
-          <div className="flex border-2 border-ink inline-flex">
-            <button
-              onClick={() => { setMode('single'); setResults(null) }}
-              className={`px-4 py-2 text-sm font-mono transition-colors ${
-                mode === 'single' ? 'bg-ink text-paper' : 'bg-paper text-ink hover:bg-gray/20'
-              }`}
-            >
-              Song in Show
-            </button>
-            <button
-              onClick={() => { setMode('pair'); setResults(null) }}
-              className={`px-4 py-2 text-sm font-mono transition-colors border-l-2 border-ink ${
-                mode === 'pair' ? 'bg-ink text-paper' : 'bg-paper text-ink hover:bg-gray/20'
-              }`}
-            >
-              Songs Played Together
-            </button>
-          </div>
-
-          {/* Inputs */}
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={song1}
-              onChange={e => setSong1(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={mode === 'single' ? 'Song name…' : 'First song…'}
-              className="w-full border-2 border-ink rounded-radius-md px-3 py-2 font-sans text-sm bg-paper text-ink placeholder:text-gray focus:outline-none focus:ring-2 focus:ring-ink"
-            />
-            {mode === 'pair' && (
-              <input
-                type="text"
-                value={song2}
-                onChange={e => setSong2(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Second song…"
-                className="w-full border-2 border-ink rounded-radius-md px-3 py-2 font-sans text-sm bg-paper text-ink placeholder:text-gray focus:outline-none focus:ring-2 focus:ring-ink"
-              />
-            )}
-            <button
-              onClick={handleSearch}
-              disabled={loading || !song1.trim() || (mode === 'pair' && !song2.trim())}
-              className="px-4 py-2 bg-ink text-paper border-2 border-ink text-sm font-mono hover:bg-paper hover:text-ink transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Searching…' : 'Search'}
-            </button>
-          </div>
-
-          {/* Helper text */}
-          {!results && !loading && (
-            <p className="text-sm text-gray font-mono">
-              {mode === 'single'
-                ? 'Find every show where a song appeared in the setlist.'
-                : 'Find shows where both songs appeared on the same night.'}
-            </p>
-          )}
-
-          {/* Error */}
-          {error && (
-            <Card className="p-4 text-center">
-              <p className="text-sm text-gray">{error}</p>
-            </Card>
-          )}
-
-          {/* Loading */}
-          {loading && (
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-16 bg-gray/20 animate-pulse rounded border-2 border-gray" />
-              ))}
-              <p className="text-xs text-gray font-mono text-center">Searching setlist.fm…</p>
-            </div>
-          )}
-
-          {/* Results */}
-          {results !== null && !loading && (
-            <>
-              <p className="text-sm font-mono text-gray">
-                {results.length === 0
-                  ? 'No shows found.'
-                  : `${results.length} show${results.length !== 1 ? 's' : ''} found`}
-              </p>
-              <div className="space-y-2">
-                {results.map((show, i) => (
-                  <Card key={i} className="p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2">
-                          <span className="font-mono text-sm font-bold text-ink">
-                            {formatDate(show.date)}
-                          </span>
-                          <span className="text-xs text-gray truncate">
-                            {show.venue}, {show.city}
-                            {show.state ? `, ${show.state}` : ''}
-                          </span>
-                        </div>
-                        {show.songs.length > 0 && (
-                          <p className="text-xs text-gray font-mono mt-1 truncate">
-                            {show.songs.slice(0, 6).join(' → ')}
-                            {show.songs.length > 6 ? ` +${show.songs.length - 6}` : ''}
-                          </p>
-                        )}
-                      </div>
-                      <Link
-                        href={`/show/${show.date}`}
-                        className="flex-shrink-0 text-xs font-mono border-2 border-gray px-2 py-1 hover:border-ink hover:bg-ink hover:text-paper transition-colors"
-                      >
-                        View →
-                      </Link>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </WindowBody>
-    </Window>
+    <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-3)' }}>Loading…</div>}>
+      <SearchContent />
+    </Suspense>
   )
 }

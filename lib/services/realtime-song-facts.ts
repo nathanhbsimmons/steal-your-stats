@@ -1,6 +1,7 @@
-import { SetlistClientImpl } from '../clients/setlist'
+import { SetlistClientImpl, Setlist } from '../clients/setlist'
+import { ArchiveClientImpl } from '../clients/archive'
 import { resolveSong } from '../ids'
-import { fromSetlistDate } from '../utils'
+import { fromSetlistDate, parseArchiveDuration, toTitleCase } from '../utils'
 
 export interface ShowRef {
   id: string
@@ -59,45 +60,83 @@ export interface VersionsFacts {
   songTitle: string
 }
 
+// Cache of all GD setlists. Populated once on first request, reused for all
+// subsequent song queries. The songName filter on setlist.fm's API is broken
+// (always returns all GD shows), so we fetch every page and filter client-side.
+interface AllSetlistsCache {
+  setlists: Setlist[]
+  cachedAt: number
+}
+
+interface VersionsCache {
+  facts: VersionsFacts
+  cachedAt: number
+}
+
+const ALL_SETLISTS_TTL = 4 * 60 * 60 * 1000 // 4 hours
+const VERSIONS_TTL = 24 * 60 * 60 * 1000     // 24 hours
+const RATE_LIMIT_DELAY = 350 // ms between batches of parallel requests
+const ENRICH_TIMEOUT_MS = 12_000 // max time to spend fetching Archive.org durations
+
 export class RealtimeSongFactsService {
   private setlistClient: SetlistClientImpl
+  private archiveClient: ArchiveClientImpl
   private readonly GRATEFUL_DEAD_MBID = '6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6'
+  private allSetlistsCache: AllSetlistsCache | null = null
+  private versionsCache = new Map<string, VersionsCache>()
+  private buildPromise: Promise<Setlist[]> | null = null
 
   constructor() {
     this.setlistClient = new SetlistClientImpl()
+    this.archiveClient = new ArchiveClientImpl()
   }
 
-  async getFirstLast(songTitle: string): Promise<FirstLastFacts> {
-    const resolution = resolveSong({ title: songTitle })
-
-    // Page 1 = most recent shows + total count; last page = oldest shows.
-    // This gives accurate first/last with just 2 API calls regardless of how
-    // many total performances exist.
-    const page1 = await this.setlistClient.searchSetlistsBySongPage(songTitle, 1)
-
-    if (page1.setlists.length === 0) {
-      return {
-        first: null,
-        last: null,
-        totalPerformances: 0,
-        songTitle: resolution.normalizedTitle,
-        aliases: resolution.aliases
-      }
+  // Returns all GD setlists, fetching from setlist.fm if needed.
+  // Concurrent callers share the same in-flight promise so the API is only
+  // called once. Results are cached for 4 hours.
+  private async getAllGDSetlists(): Promise<Setlist[]> {
+    if (this.allSetlistsCache && Date.now() - this.allSetlistsCache.cachedAt < ALL_SETLISTS_TTL) {
+      return this.allSetlistsCache.setlists
     }
 
-    const total = page1.total
-    const itemsPerPage = page1.itemsPerPage || 20
-    const lastPageNum = Math.ceil(total / itemsPerPage)
+    if (this.buildPromise) return this.buildPromise
 
-    let oldestSetlists = page1.setlists
-    if (lastPageNum > 1) {
-      const lastPage = await this.setlistClient.searchSetlistsBySongPage(songTitle, lastPageNum)
-      if (lastPage.setlists.length > 0) {
-        oldestSetlists = lastPage.setlists
-      }
+    this.buildPromise = this.fetchAllPages().then(setlists => {
+      this.allSetlistsCache = { setlists, cachedAt: Date.now() }
+      this.buildPromise = null
+      return setlists
+    }).catch(err => {
+      this.buildPromise = null
+      throw err
+    })
+
+    return this.buildPromise
+  }
+
+  private async fetchAllPages(): Promise<Setlist[]> {
+    const page1 = await this.setlistClient.getArtistSetlistsPage(this.GRATEFUL_DEAD_MBID, 1)
+    const totalPages = page1.total > 0 ? Math.ceil(page1.total / (page1.itemsPerPage || 20)) : 120
+
+    const all: Setlist[] = [...page1.setlists]
+
+    // Fetch remaining pages 2 at a time to stay within rate limits
+    for (let page = 2; page <= totalPages; page += 2) {
+      const batch = [
+        this.setlistClient.getArtistSetlistsPage(this.GRATEFUL_DEAD_MBID, page),
+        page + 1 <= totalPages
+          ? this.setlistClient.getArtistSetlistsPage(this.GRATEFUL_DEAD_MBID, page + 1)
+          : Promise.resolve({ setlists: [], total: 0, itemsPerPage: 20 }),
+      ]
+      const results = await Promise.all(batch)
+      for (const r of results) all.push(...r.setlists)
+      if (page + 1 < totalPages) await new Promise(r => setTimeout(r, RATE_LIMIT_DELAY))
     }
 
-    const toShowRef = (setlist: (typeof page1.setlists)[0]): ShowRef => ({
+    return all
+  }
+
+  private toShowRef(setlist: Setlist): ShowRef {
+    return {
       id: setlist.id,
       date: fromSetlistDate(setlist.eventDate),
       venue: setlist.venue.name,
@@ -105,126 +144,338 @@ export class RealtimeSongFactsService {
       state: setlist.venue.city.state,
       country: setlist.venue.city.country.name,
       url: setlist.url || `https://www.setlist.fm/setlist/${setlist.id}`,
-      source: 'setlist.fm'
-    })
+      source: 'setlist.fm',
+    }
+  }
 
-    // Most recent first: page 1 sorted descending → last performance
-    const recentSorted = [...page1.setlists]
-      .map(toShowRef)
-      .sort((a, b) => b.date.localeCompare(a.date))
+  private buildSearchNames(songTitle: string): Set<string> {
+    const resolution = resolveSong({ title: songTitle })
+    return new Set([resolution.normalizedTitle, ...resolution.aliases].map(a => a.toLowerCase()))
+  }
 
-    // Oldest first: last page sorted ascending → first performance
-    const oldestSorted = [...oldestSetlists]
-      .map(toShowRef)
-      .sort((a, b) => a.date.localeCompare(b.date))
+  private setlistContainsSong(setlist: Setlist, searchNames: Set<string>): boolean {
+    return setlist.sets.set.some(set =>
+      set.song.some(song => searchNames.has(song.name.toLowerCase()))
+    )
+  }
+
+  async getFirstLast(songTitle: string): Promise<FirstLastFacts> {
+    const resolution = resolveSong({ title: songTitle })
+    const searchNames = this.buildSearchNames(songTitle)
+    const allSetlists = await this.getAllGDSetlists()
+
+    const matching = allSetlists.filter(s => this.setlistContainsSong(s, searchNames))
+
+    if (matching.length === 0) {
+      return { first: null, last: null, totalPerformances: 0, songTitle: resolution.normalizedTitle, aliases: resolution.aliases }
+    }
+
+    const refs = matching.map(s => this.toShowRef(s)).sort((a, b) => a.date.localeCompare(b.date))
 
     return {
-      first: oldestSorted[0],
-      last: recentSorted[0],
-      totalPerformances: total,
+      first: refs[0],
+      last: refs[refs.length - 1],
+      totalPerformances: matching.length,
       songTitle: resolution.normalizedTitle,
-      aliases: resolution.aliases
+      aliases: resolution.aliases,
     }
   }
 
   async getPositions(songTitle: string): Promise<PositionFacts> {
     const resolution = resolveSong({ title: songTitle })
-    const allShows = await this.getAllShowsForSong(songTitle)
-    
+    const searchNames = this.buildSearchNames(songTitle)
+    const allSetlists = await this.getAllGDSetlists()
+
     const openerShows: ShowRef[] = []
     const closerShows: ShowRef[] = []
     const encoreShows: ShowRef[] = []
 
-    // TODO: Fetch full setlist data to determine positions
-    // For MVP, we'll return empty arrays and note this limitation
-    void allShows
+    for (const setlist of allSetlists) {
+      const sets = setlist.sets?.set || []
+      if (sets.length === 0) continue
+      if (!this.setlistContainsSong(setlist, searchNames)) continue
+
+      const regularSets = sets.filter(s => !s.encore)
+      const encoreSets = sets.filter(s => s.encore)
+      const showRef = this.toShowRef(setlist)
+
+      for (const set of encoreSets) {
+        if (set.song.some(s => searchNames.has(s.name.toLowerCase()))) {
+          encoreShows.push(showRef)
+          break
+        }
+      }
+
+      if (regularSets.length > 0 && regularSets[0].song.length > 0) {
+        if (searchNames.has(regularSets[0].song[0].name.toLowerCase())) {
+          openerShows.push(showRef)
+        }
+      }
+
+      const lastRegular = regularSets[regularSets.length - 1]
+      if (lastRegular && lastRegular.song.length > 0) {
+        const lastSong = lastRegular.song[lastRegular.song.length - 1]
+        if (searchNames.has(lastSong.name.toLowerCase())) {
+          closerShows.push(showRef)
+        }
+      }
+    }
 
     return {
-      opener: { count: openerShows.length, shows: openerShows.slice(0, 10) },
-      closer: { count: closerShows.length, shows: closerShows.slice(0, 10) },
-      encore: { count: encoreShows.length, shows: encoreShows.slice(0, 10) },
+      opener: { count: openerShows.length, shows: openerShows },
+      closer: { count: closerShows.length, shows: closerShows },
+      encore: { count: encoreShows.length, shows: encoreShows },
       songTitle: resolution.normalizedTitle,
-      aliases: resolution.aliases
+      aliases: resolution.aliases,
     }
+  }
+
+  // Resolve a single track's Archive.org duration and URL.
+  // Skips silently on any error (show may not be on Archive.org).
+  private async enrichTrack(
+    track: VersionTrack,
+    normalizedTitle: string,
+    aliases: string[],
+  ): Promise<void> {
+    try {
+      const show = await this.archiveClient.resolveArchiveShow({
+        date: track.showDate,
+        venue: track.venue,
+        city: track.city,
+      })
+      if (!show) return
+
+      track.archiveItemId = show.identifier
+
+      const allTracks = await this.archiveClient.listTracks(show.identifier)
+      if (allTracks.length === 0) return
+
+      const searchTitles = [normalizedTitle, ...aliases].map(t => t.toLowerCase())
+      const matched = allTracks.filter(t => {
+        const nameHit = searchTitles.some(st => t.name.toLowerCase().includes(st))
+        const titleHit = t.title && searchTitles.some(st => t.title!.toLowerCase().includes(st))
+        return nameHit || titleHit
+      })
+      const best = matched[0]
+      if (!best?.length) return
+
+      const dur = parseArchiveDuration(best.length)
+      if (dur) track.durationSec = dur
+      track.url = `https://archive.org/download/${show.identifier}/${best.name}`
+    } catch {
+      // Archive.org unavailable for this show — leave fields undefined
+    }
+  }
+
+  // Enrich up to SAMPLE_SIZE evenly-distributed tracks with Archive.org durations.
+  // Races against ENRICH_TIMEOUT_MS so we never block the response indefinitely.
+  private async enrichSample(tracks: VersionTrack[], normalizedTitle: string, aliases: string[]): Promise<void> {
+    const SAMPLE_SIZE = 8
+
+    const indices: number[] = []
+    if (tracks.length <= SAMPLE_SIZE) {
+      indices.push(...tracks.map((_, i) => i))
+    } else {
+      const step = Math.floor(tracks.length / SAMPLE_SIZE)
+      for (let i = 0; i < SAMPLE_SIZE; i++) indices.push(i * step)
+    }
+
+    const work = Promise.allSettled(
+      indices.map(idx => this.enrichTrack(tracks[idx], normalizedTitle, aliases))
+    )
+    const timeout = new Promise<void>(resolve => setTimeout(resolve, ENRICH_TIMEOUT_MS))
+    await Promise.race([work, timeout])
   }
 
   async getVersions(songTitle: string): Promise<VersionsFacts> {
     const resolution = resolveSong({ title: songTitle })
-    const allShows = await this.getAllShowsForSong(songTitle)
-    
-    // Convert shows to version tracks
-    const tracks: VersionTrack[] = allShows.map((show, index) => ({
-      id: `${resolution.normalizedTitle}-${show.id}-${index}`,
-      showDate: show.date,
-      venue: show.venue,
-      city: show.city,
-      state: show.state,
-      country: show.country,
-      archiveItemId: undefined,
-      durationSec: undefined,
-      url: undefined
-    }))
+    const cacheKey = resolution.normalizedTitle.toLowerCase()
 
-    // For now, we can't get duration data from setlist.fm directly
-    // This would require integration with Archive.org API
-    
+    // Return cached enriched result if still fresh
+    const cached = this.versionsCache.get(cacheKey)
+    if (cached && Date.now() - cached.cachedAt < VERSIONS_TTL) {
+      return cached.facts
+    }
+
+    const searchNames = this.buildSearchNames(songTitle)
+    const allSetlists = await this.getAllGDSetlists()
+
+    const matching = allSetlists.filter(s => this.setlistContainsSong(s, searchNames))
+
+    const tracks: VersionTrack[] = matching
+      .map((setlist, index) => {
+        const ref = this.toShowRef(setlist)
+        return {
+          id: `${resolution.normalizedTitle}-${ref.id}-${index}`,
+          showDate: ref.date,
+          venue: ref.venue,
+          city: ref.city,
+          state: ref.state,
+          country: ref.country,
+          archiveItemId: undefined,
+          durationSec: undefined,
+          url: undefined,
+        }
+      })
+      .sort((a, b) => b.showDate.localeCompare(a.showDate))
+
+    await this.enrichSample(tracks, resolution.normalizedTitle, resolution.aliases)
+
+    const withDuration = tracks.filter(t => t.durationSec !== undefined)
+    const extremes = withDuration.length >= 2
+      ? {
+          longest: withDuration.reduce((a, b) => (b.durationSec! > a.durationSec! ? b : a)),
+          shortest: withDuration.reduce((a, b) => (b.durationSec! < a.durationSec! ? b : a)),
+        }
+      : undefined
+
+    const facts: VersionsFacts = { tracks, extremes, songTitle: resolution.normalizedTitle }
+    this.versionsCache.set(cacheKey, { facts, cachedAt: Date.now() })
+    return facts
+  }
+
+  async getVenueStats(): Promise<VenueStat[]> {
+    const allSetlists = await this.getAllGDSetlists()
+
+    const venueMap = new Map<string, VenueStat>()
+    for (const setlist of allSetlists) {
+      const { venue } = setlist
+      const key = `${venue.name}||${venue.city.name}`
+      const isoDate = fromSetlistDate(setlist.eventDate)
+      const year = parseInt(isoDate.split('-')[0])
+
+      if (venueMap.has(key)) {
+        const v = venueMap.get(key)!
+        v.showCount++
+        if (year < v.firstYear) v.firstYear = year
+        if (year > v.lastYear) v.lastYear = year
+      } else {
+        venueMap.set(key, {
+          name: venue.name,
+          city: venue.city.name,
+          state: venue.city.state,
+          country: venue.city.country.name,
+          showCount: 1,
+          firstYear: year,
+          lastYear: year,
+        })
+      }
+    }
+
+    return [...venueMap.values()].sort((a, b) => b.showCount - a.showCount)
+  }
+
+  async getSummaryStats(): Promise<SummaryStats> {
+    const allSetlists = await this.getAllGDSetlists()
+
+    const songNames = new Set<string>()
+    for (const setlist of allSetlists) {
+      for (const set of setlist.sets.set) {
+        for (const song of set.song) {
+          if (song.name) songNames.add(song.name.toLowerCase())
+        }
+      }
+    }
+
     return {
-      tracks,
-      songTitle: resolution.normalizedTitle
+      totalShows: allSetlists.length,
+      uniqueSongs: songNames.size,
+      hoursArchived: Math.round(allSetlists.length * 2.7),
+      lastUpdated: this.allSetlistsCache?.cachedAt ?? null,
     }
   }
 
-  private async getAllShowsForSong(songTitle: string): Promise<ShowRef[]> {
-    const allShows: ShowRef[] = []
-    let page = 1
-    const maxPages = 5 // Reduced limit for faster initial load
-    
-    while (page <= maxPages) {
-      try {
-        console.log(`Fetching page ${page} for ${songTitle}...`)
-        
-        const setlists = await this.setlistClient.searchSetlistsBySong(songTitle, page)
-        
-        if (setlists.length === 0) {
-          console.log(`No more setlists found on page ${page}`)
-          break
+  async getShowsByYearRange(yearFrom: number, yearTo: number, page = 1, perPage = 25): Promise<{ shows: ShowRef[]; total: number; page: number; perPage: number }> {
+    const allSetlists = await this.getAllGDSetlists()
+    const filtered = allSetlists.filter(s => {
+      const year = parseInt(fromSetlistDate(s.eventDate).split('-')[0])
+      return year >= yearFrom && year <= yearTo
+    }).sort((a, b) => fromSetlistDate(a.eventDate).localeCompare(fromSetlistDate(b.eventDate)))
+
+    const total = filtered.length
+    const start = (page - 1) * perPage
+    const shows = filtered.slice(start, start + perPage).map(s => this.toShowRef(s))
+    return { shows, total, page, perPage }
+  }
+
+  async getTopSongsByYearRange(yearFrom: number, yearTo: number, limit = 20): Promise<{ name: string; count: number }[]> {
+    const allSetlists = await this.getAllGDSetlists()
+    const inRange = allSetlists.filter(s => {
+      const year = parseInt(fromSetlistDate(s.eventDate).split('-')[0])
+      return year >= yearFrom && year <= yearTo
+    })
+    const counts = new Map<string, number>()
+    for (const setlist of inRange) {
+      for (const set of setlist.sets.set) {
+        for (const song of set.song) {
+          if (!song.name) continue
+          const key = toTitleCase(resolveSong({ title: song.name }).normalizedTitle)
+          counts.set(key, (counts.get(key) || 0) + 1)
         }
-        
-        // Convert setlists to ShowRef format
-        for (const setlist of setlists) {
-          const showRef: ShowRef = {
-            id: setlist.id,
-            date: fromSetlistDate(setlist.eventDate),
-            venue: setlist.venue.name,
-            city: setlist.venue.city.name,
-            state: setlist.venue.city.state,
-            country: setlist.venue.city.country.name,
-            url: setlist.url || `https://www.setlist.fm/setlist/${setlist.id}`,
-            source: 'setlist.fm'
-          }
-          allShows.push(showRef)
-        }
-        
-        // Rate limiting: wait 500ms between pages
-        if (page < maxPages) {
-          await new Promise(resolve => setTimeout(resolve, 500))
-        }
-        
-        page++
-        
-      } catch (error) {
-        console.error(`Error fetching page ${page}:`, error)
-        if (error instanceof Error && error.message.includes('429')) {
-          console.log('Rate limited, waiting 5 seconds...')
-          await new Promise(resolve => setTimeout(resolve, 5000))
-        }
-        break
       }
     }
-    
-    return allShows
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([name, count]) => ({ name, count }))
+  }
+
+  async getGlobalStats(): Promise<GlobalStats> {
+    const allSetlists = await this.getAllGDSetlists()
+
+    const yearMap = new Map<number, number>()
+    for (const setlist of allSetlists) {
+      const isoDate = fromSetlistDate(setlist.eventDate)
+      const year = parseInt(isoDate.split('-')[0])
+      if (!isNaN(year) && year >= 1965 && year <= 1995) {
+        yearMap.set(year, (yearMap.get(year) || 0) + 1)
+      }
+    }
+    const showsPerYear = Array.from({ length: 31 }, (_, i) => {
+      const year = 1965 + i
+      return { year, count: yearMap.get(year) || 0 }
+    })
+
+    const songCounts = new Map<string, number>()
+    for (const setlist of allSetlists) {
+      for (const set of setlist.sets.set) {
+        for (const song of set.song) {
+          if (!song.name) continue
+          const resolution = resolveSong({ title: song.name })
+          const key = resolution.normalizedTitle
+          songCounts.set(key, (songCounts.get(key) || 0) + 1)
+        }
+      }
+    }
+    const sorted = [...songCounts.entries()].sort((a, b) => b[1] - a[1])
+    const maxCount = sorted[0]?.[1] ?? 1
+    const leaderboard = sorted.slice(0, 20).map(([name, count]) => ({
+      name: toTitleCase(name),
+      count,
+      pct: Math.round((count / maxCount) * 100),
+    }))
+
+    return { showsPerYear, leaderboard }
   }
 }
 
-// Export singleton instance
+export interface VenueStat {
+  name: string
+  city: string
+  state?: string
+  country: string
+  showCount: number
+  firstYear: number
+  lastYear: number
+}
+
+export interface SummaryStats {
+  totalShows: number
+  uniqueSongs: number
+  hoursArchived: number
+  lastUpdated: number | null
+}
+
+export interface GlobalStats {
+  showsPerYear: { year: number; count: number }[]
+  leaderboard: { name: string; count: number; pct: number }[]
+}
+
 export const realtimeSongFactsService = new RealtimeSongFactsService()

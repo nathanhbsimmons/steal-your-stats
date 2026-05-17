@@ -137,6 +137,20 @@ export class SetlistClientImpl implements SetlistClient {
     return response.data.setlist || []
   }
 
+  async getArtistSetlistsPage(artistId: string, page: number = 1): Promise<{ setlists: Setlist[]; total: number; itemsPerPage: number }> {
+    const response = await this.http.get<{
+      setlist: Setlist[]
+      total: number
+      itemsPerPage: number
+    }>(`/artist/${artistId}/setlists?p=${page}`)
+
+    return {
+      setlists: response.data.setlist || [],
+      total: response.data.total || 0,
+      itemsPerPage: response.data.itemsPerPage || 20,
+    }
+  }
+
   async searchSetlistsBySong(songName: string, page: number = 1): Promise<Setlist[]> {
     const result = await this.searchSetlistsBySongPage(songName, page)
     return result.setlists
