@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import useSWR from 'swr'
@@ -74,6 +74,19 @@ export default function ShowPage() {
     clearQueue()
     await handlePlayShow()
   }
+
+  // Auto-play when navigated here with ?autoplay=1 (e.g. from "Play the show" on home)
+  const autoplayedRef = useRef(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const autoplay = new URLSearchParams(window.location.search).get('autoplay') === '1'
+    if (autoplay && data && !autoplayedRef.current) {
+      autoplayedRef.current = true
+      void handlePlayShow()
+    }
+  // handlePlayShow is stable per render cycle; data is the trigger
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
 
   const venue = data?.venue ?? ''
   const location = data

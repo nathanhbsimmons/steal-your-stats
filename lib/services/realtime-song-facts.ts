@@ -1,5 +1,6 @@
 import { SetlistClientImpl, Setlist } from '../clients/setlist'
 import { ArchiveClientImpl } from '../clients/archive'
+import { HttpError } from '../http'
 import { resolveSong } from '../ids'
 import { fromSetlistDate, parseArchiveDuration, toTitleCase } from '../utils'
 
@@ -75,7 +76,7 @@ interface VersionsCache {
 
 const ALL_SETLISTS_TTL = 4 * 60 * 60 * 1000 // 4 hours
 const VERSIONS_TTL = 24 * 60 * 60 * 1000     // 24 hours
-const RATE_LIMIT_DELAY = 350 // ms between batches of parallel requests
+const RATE_LIMIT_DELAY = 800 // ms between sequential page requests
 const ENRICH_TIMEOUT_MS = 12_000 // max time to spend fetching Archive.org durations
 
 export class RealtimeSongFactsService {
@@ -102,6 +103,7 @@ export class RealtimeSongFactsService {
     if (this.buildPromise) return this.buildPromise
 
     this.buildPromise = this.fetchAllPages().then(setlists => {
+      // Cache result regardless of whether it's partial (rate-limited) or complete
       this.allSetlistsCache = { setlists, cachedAt: Date.now() }
       this.buildPromise = null
       return setlists
@@ -119,17 +121,20 @@ export class RealtimeSongFactsService {
 
     const all: Setlist[] = [...page1.setlists]
 
-    // Fetch remaining pages 2 at a time to stay within rate limits
-    for (let page = 2; page <= totalPages; page += 2) {
-      const batch = [
-        this.setlistClient.getArtistSetlistsPage(this.GRATEFUL_DEAD_MBID, page),
-        page + 1 <= totalPages
-          ? this.setlistClient.getArtistSetlistsPage(this.GRATEFUL_DEAD_MBID, page + 1)
-          : Promise.resolve({ setlists: [], total: 0, itemsPerPage: 20 }),
-      ]
-      const results = await Promise.all(batch)
-      for (const r of results) all.push(...r.setlists)
-      if (page + 1 < totalPages) await new Promise(r => setTimeout(r, RATE_LIMIT_DELAY))
+    // Fetch remaining pages sequentially to avoid rate limiting
+    for (let page = 2; page <= totalPages; page++) {
+      await new Promise(r => setTimeout(r, RATE_LIMIT_DELAY))
+      try {
+        const result = await this.setlistClient.getArtistSetlistsPage(this.GRATEFUL_DEAD_MBID, page)
+        all.push(...result.setlists)
+      } catch (err) {
+        if (err instanceof HttpError && err.status === 429) {
+          // Rate limited — cache and return what we have rather than failing entirely
+          console.warn(`Rate limited at page ${page}; returning ${all.length} partial setlists`)
+          return all
+        }
+        throw err
+      }
     }
 
     return all

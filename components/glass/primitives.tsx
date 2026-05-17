@@ -9,12 +9,16 @@ interface StatTileProps {
   value: string
   sub?: string
   accent?: boolean
+  loading?: boolean
 }
-export function StatTile({ label, value, sub, accent }: StatTileProps) {
+export function StatTile({ label, value, sub, accent, loading }: StatTileProps) {
   return (
     <div className="glass" style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 6 }}>
       <span className="t-eyebrow">{label}</span>
-      <span className="t-stat" style={{ fontSize: 32, color: accent ? 'var(--accent)' : 'var(--fg)' }}>{value}</span>
+      {loading
+        ? <div className="skeleton" style={{ height: 38, width: 80, borderRadius: 6 }} />
+        : <span className="t-stat" style={{ fontSize: 32, color: accent ? 'var(--accent)' : 'var(--fg)' }}>{value}</span>
+      }
       {sub && <span className="t-small">{sub}</span>}
     </div>
   )

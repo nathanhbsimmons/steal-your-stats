@@ -35,6 +35,7 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState('')
   const [loading, setLoading] = useState(true)
   const [kpi, setKpi] = useState<SummaryStats | null>(null)
+  const [kpiLoading, setKpiLoading] = useState(true)
   const [mostPlayed, setMostPlayed] = useState<MostPlayedEntry[]>([])
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export default function Home() {
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setKpi(data) })
       .catch(() => {})
+      .finally(() => setKpiLoading(false))
   }, [])
 
   useEffect(() => {
@@ -95,11 +97,7 @@ export default function Home() {
 
   return (
     <>
-      <TopBar eyebrow="Welcome back" title="Pull up a tape, dust off the deck.">
-        <button className="btn primary">
-          <Icon d={ICONS.play} size={13} fill="currentColor" stroke={0} /> Today&apos;s tape
-        </button>
-      </TopBar>
+      <TopBar eyebrow="Welcome back" title="Pull up a tape, dust off the deck." />
 
       <div className="scroll-hide" style={{ flex: 1, overflow: 'auto', padding: '0 28px 24px', display: 'flex', flexDirection: 'column', gap: 22 }}>
 
@@ -158,15 +156,19 @@ export default function Home() {
 
             <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
               {featured ? (
-                <Link href={`/show/${featured.date}`} className="btn primary lg">
+                <Link href={`/show/${featured.date}?autoplay=1`} className="btn primary lg">
                   <Icon d={ICONS.play} size={14} fill="currentColor" stroke={0} /> Play the show
                 </Link>
               ) : (
-                <button className="btn primary lg">
+                <button className="btn primary lg" disabled>
                   <Icon d={ICONS.play} size={14} fill="currentColor" stroke={0} /> Play the show
                 </button>
               )}
-              <button className="btn lg">Open setlist</button>
+              {featured ? (
+                <Link href={`/show/${featured.date}`} className="btn lg">Open setlist</Link>
+              ) : (
+                <button className="btn lg" disabled>Open setlist</button>
+              )}
             </div>
           </div>
 
@@ -178,25 +180,37 @@ export default function Home() {
             border: '1px solid var(--glass-border)',
             position: 'relative', zIndex: 1,
           }}>
-            <span className="t-eyebrow" style={{ textAlign: 'center' }}>{loading ? '…' : featuredVenue}</span>
-            <span className="t-mono" style={{ fontSize: 13, color: 'var(--fg-3)', marginTop: 4, textAlign: 'center' }}>
-              {featuredCity}
-            </span>
-            <div style={{ display: 'flex', gap: 18, marginTop: 14, alignItems: 'baseline' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span className="t-mono" style={{ fontSize: 11, color: 'var(--fg-4)' }}>{heroMonthName}</span>
-                <span className="t-mono" style={{ fontSize: 56, color: 'var(--accent)', lineHeight: 1, letterSpacing: '-0.04em', fontWeight: 500 }}>
-                  {heroDay}
+            {loading ? (
+              <>
+                <div className="skeleton" style={{ height: 12, width: 120, borderRadius: 6 }} />
+                <div className="skeleton" style={{ height: 12, width: 100, borderRadius: 6, marginTop: 8 }} />
+                <div className="skeleton" style={{ height: 72, width: 110, borderRadius: 8, marginTop: 14 }} />
+                <div className="divider" style={{ width: '80%', margin: '14px 0 10px' }} />
+                <div className="skeleton" style={{ height: 12, width: 100, borderRadius: 6 }} />
+              </>
+            ) : (
+              <>
+                <span className="t-eyebrow" style={{ textAlign: 'center' }}>{featuredVenue}</span>
+                <span className="t-mono" style={{ fontSize: 13, color: 'var(--fg-3)', marginTop: 4, textAlign: 'center' }}>
+                  {featuredCity}
                 </span>
-              </div>
-              <span className="t-mono" style={{ fontSize: 32, color: 'var(--fg-3)', letterSpacing: '-0.03em' }}>
-                &apos;{String(featuredYear).slice(2)}
-              </span>
-            </div>
-            <div className="divider" style={{ width: '80%', margin: '14px 0 10px' }} />
-            <span className="t-small" style={{ textAlign: 'center', fontSize: 11 }}>
-              {yearsAgo} years ago today
-            </span>
+                <div style={{ display: 'flex', gap: 18, marginTop: 14, alignItems: 'baseline' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <span className="t-mono" style={{ fontSize: 11, color: 'var(--fg-4)' }}>{heroMonthName}</span>
+                    <span className="t-mono" style={{ fontSize: 56, color: 'var(--accent)', lineHeight: 1, letterSpacing: '-0.04em', fontWeight: 500 }}>
+                      {heroDay}
+                    </span>
+                  </div>
+                  <span className="t-mono" style={{ fontSize: 32, color: 'var(--fg-3)', letterSpacing: '-0.03em' }}>
+                    &apos;{String(featuredYear).slice(2)}
+                  </span>
+                </div>
+                <div className="divider" style={{ width: '80%', margin: '14px 0 10px' }} />
+                <span className="t-small" style={{ textAlign: 'center', fontSize: 11 }}>
+                  {yearsAgo} years ago today
+                </span>
+              </>
+            )}
           </div>
         </section>
 
@@ -206,17 +220,20 @@ export default function Home() {
             label="Shows indexed"
             value={kpi ? kpi.totalShows.toLocaleString() : '—'}
             sub="from setlist.fm"
+            loading={kpiLoading}
           />
           <StatTile
             label="Unique songs"
             value={kpi ? kpi.uniqueSongs.toLocaleString() : '—'}
             sub="GD catalog"
+            loading={kpiLoading}
           />
           <StatTile
             label="Hours archived"
             value={kpi ? kpi.hoursArchived.toLocaleString() : '—'}
             sub="est. at 2.7h/show"
             accent
+            loading={kpiLoading}
           />
           <StatTile
             label="Last refresh"
@@ -227,6 +244,7 @@ export default function Home() {
                 })()
               : '—'}
             sub="Auto-refreshes daily"
+            loading={kpiLoading}
           />
         </section>
 
@@ -236,9 +254,9 @@ export default function Home() {
           {/* Recent activity */}
           <section className="glass" style={{ padding: 4, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <header style={{ display: 'flex', alignItems: 'center', padding: '14px 18px 10px', gap: 12 }}>
-              <h3 className="t-h3">Recent Activity</h3>
+              <h3 className="t-h3">On This Day</h3>
               <span className="pill" style={{ fontSize: 10.5, padding: '2px 8px', fontFamily: 'var(--font-mono)' }}>
-                {loading ? '…' : `${shows.length} NEW`}
+                {loading ? '…' : `${shows.length} SHOW${shows.length !== 1 ? 'S' : ''}`}
               </span>
               <span style={{ flex: 1 }} />
               <Link href="/recent" className="btn" style={{ padding: '6px 12px', fontSize: 12 }}>View all</Link>
