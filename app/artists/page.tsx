@@ -26,10 +26,12 @@ function ArtistCard({
   member,
   shows,
   feature,
+  loading,
 }: {
   member: typeof LINEUP[0]
   shows: number | null
   feature?: boolean
+  loading?: boolean
 }) {
   const years = member.startYear === member.endYear
     ? `${member.startYear}`
@@ -70,9 +72,13 @@ function ArtistCard({
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span className="t-eyebrow">shows</span>
-          <span className="t-mono" style={{ fontSize: 17, color: 'var(--fg)' }}>
-            {shows !== null ? shows.toLocaleString() : '—'}
-          </span>
+          {loading ? (
+            <div className="skeleton" style={{ height: 22, width: 48, borderRadius: 6, marginTop: 2 }} />
+          ) : (
+            <span className="t-mono" style={{ fontSize: 17, color: 'var(--fg)' }}>
+              {shows !== null ? shows.toLocaleString() : '—'}
+            </span>
+          )}
         </div>
         <div style={{ flex: 1 }} />
         <span className="t-mono" style={{ fontSize: 11, color: 'var(--fg-3)' }}>{years}</span>
@@ -83,12 +89,14 @@ function ArtistCard({
 
 export default function ArtistsPage() {
   const [showsPerYear, setShowsPerYear] = useState<YearCount[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/stats')
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.showsPerYear) setShowsPerYear(data.showsPerYear) })
       .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const memberShows = LINEUP.map(m =>
@@ -101,12 +109,12 @@ export default function ArtistsPage() {
       <div className="scroll-hide" style={{ flex: 1, overflow: 'auto', padding: '0 28px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           {LINEUP.slice(0, 6).map((m, i) => (
-            <ArtistCard key={i} member={m} shows={memberShows[i]} feature />
+            <ArtistCard key={i} member={m} shows={memberShows[i]} feature loading={loading} />
           ))}
         </section>
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
           {LINEUP.slice(6).map((m, i) => (
-            <ArtistCard key={i} member={m} shows={memberShows[i + 6]} />
+            <ArtistCard key={i} member={m} shows={memberShows[i + 6]} loading={loading} />
           ))}
         </section>
       </div>

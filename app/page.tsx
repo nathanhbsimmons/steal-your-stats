@@ -30,15 +30,12 @@ interface MostPlayedEntry {
   pct: number
 }
 
-type RebuildState = 'idle' | 'loading' | 'success' | 'error'
-
 export default function Home() {
   const [shows, setShows] = useState<ShowOnThisDay[]>([])
   const [currentDate, setCurrentDate] = useState('')
   const [loading, setLoading] = useState(true)
   const [kpi, setKpi] = useState<SummaryStats | null>(null)
   const [mostPlayed, setMostPlayed] = useState<MostPlayedEntry[]>([])
-  const [rebuildState, setRebuildState] = useState<RebuildState>('idle')
 
   useEffect(() => {
     fetch('/api/on-this-day')
@@ -66,17 +63,6 @@ export default function Home() {
       .then(data => { if (data?.leaderboard) setMostPlayed(data.leaderboard.slice(0, 6)) })
       .catch(() => {})
   }, [])
-
-  async function handleRebuild() {
-    setRebuildState('loading')
-    try {
-      const r = await fetch('/api/rebuild', { method: 'POST' })
-      setRebuildState(r.ok ? 'success' : 'error')
-    } catch {
-      setRebuildState('error')
-    }
-    setTimeout(() => setRebuildState('idle'), 3000)
-  }
 
   // Format date as "May 14"
   const displayDate = currentDate
@@ -110,16 +96,6 @@ export default function Home() {
   return (
     <>
       <TopBar eyebrow="Welcome back" title="Pull up a tape, dust off the deck.">
-        {rebuildState !== 'idle' && (
-          <span className="t-small" style={{
-            color: rebuildState === 'success' ? 'var(--accent)' : rebuildState === 'error' ? '#f87171' : 'var(--fg-3)',
-          }}>
-            {rebuildState === 'loading' ? 'Rebuilding…' : rebuildState === 'success' ? 'Index rebuilt' : 'Rebuild failed'}
-          </span>
-        )}
-        <button className="btn" onClick={handleRebuild} disabled={rebuildState === 'loading'}>
-          <Icon d={ICONS.upload} size={14} /> Rebuild index
-        </button>
         <button className="btn primary">
           <Icon d={ICONS.play} size={13} fill="currentColor" stroke={0} /> Today&apos;s tape
         </button>

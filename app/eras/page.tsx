@@ -74,12 +74,14 @@ function sumYears(data: YearCount[], from: number, to: number): number {
 
 export default function ErasPage() {
   const [showsPerYear, setShowsPerYear] = useState<YearCount[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/stats')
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.showsPerYear) setShowsPerYear(data.showsPerYear) })
       .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const eras = ERA_DEFS.map(e => ({
@@ -100,19 +102,23 @@ export default function ErasPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             {YEAR_TICKS.map(y => <span key={y} className="t-eyebrow">{y}</span>)}
           </div>
-          <div style={{ display: 'flex', height: 36, borderRadius: 'var(--r-xs)', overflow: 'hidden' }}>
-            {eras.map((e, i) => (
-              <div
-                key={e.id}
-                style={{
-                  flex: e.shows ?? e.startYear,
-                  background: e.barColor,
-                  borderRight: i < eras.length - 1 ? '2px solid var(--bg-0)' : 'none',
-                }}
-              />
-            ))}
-          </div>
-          {totalShows > 0 && (
+          {loading ? (
+            <div className="skeleton" style={{ height: 36, borderRadius: 'var(--r-xs)' }} />
+          ) : (
+            <div style={{ display: 'flex', height: 36, borderRadius: 'var(--r-xs)', overflow: 'hidden' }}>
+              {eras.map((e, i) => (
+                <div
+                  key={e.id}
+                  style={{
+                    flex: e.shows ?? e.startYear,
+                    background: e.barColor,
+                    borderRight: i < eras.length - 1 ? '2px solid var(--bg-0)' : 'none',
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          {!loading && totalShows > 0 && (
             <p className="t-small" style={{ color: 'var(--fg-3)' }}>
               {totalShows.toLocaleString()} shows total · 1965–1995
             </p>
@@ -138,9 +144,13 @@ export default function ErasPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                   <span className="t-eyebrow">shows</span>
-                  <span className="t-mono" style={{ fontSize: 22, color: 'var(--fg)' }}>
-                    {e.shows !== null ? e.shows.toLocaleString() : '—'}
-                  </span>
+                  {loading ? (
+                    <div className="skeleton" style={{ height: 26, width: 52, borderRadius: 6 }} />
+                  ) : (
+                    <span className="t-mono" style={{ fontSize: 22, color: 'var(--fg)' }}>
+                      {e.shows !== null ? e.shows.toLocaleString() : '—'}
+                    </span>
+                  )}
                 </div>
                 <span className="t-small" style={{ fontSize: 11.5, color: 'var(--fg-4)' }}>{e.sig}</span>
               </div>
@@ -161,7 +171,7 @@ export default function ErasPage() {
             <span className="t-eyebrow" style={{ color: 'var(--accent)' }}>FOCUS</span>
             <h3 className="t-h3">Europe &apos;72 · the wall-of-sound era</h3>
             <span className="t-mono" style={{ fontSize: 11.5, color: 'var(--fg-3)' }}>
-              {eras[1].shows !== null ? `${eras[1].shows} shows` : '…'} · 22 countries
+              {loading ? '…' : eras[1].shows !== null ? `${eras[1].shows} shows` : '—'} · 22 countries
             </span>
           </header>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 18 }}>

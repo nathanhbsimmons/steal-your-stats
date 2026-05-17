@@ -115,7 +115,7 @@ async function generateDossierMD(songTitle: string, sections: boolean[]) {
 type Tab = 'export' | 'setlist'
 
 export default function ExportPage() {
-  const [tab, setTab] = useState<Tab>('export')
+  const [tab, setTab] = useState<Tab>('setlist')
   const [sections, setSections] = useState<boolean[]>(SECTIONS.map(([, on]) => on))
   const [format, setFormat] = useState('MD')
   const [songInput, setSongInput] = useState('Dark Star')
@@ -152,7 +152,7 @@ export default function ExportPage() {
     <>
       <TopBar
         eyebrow="Export"
-        title={tab === 'export' ? 'Pull your data, share a setlist.' : 'Build your perfect set.'}
+        title={tab === 'setlist' ? 'Build your perfect set.' : 'Pull your data, share a setlist.'}
       />
 
       <div className="scroll-hide" style={{ flex: 1, overflow: 'auto', padding: '0 28px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -160,8 +160,8 @@ export default function ExportPage() {
         {/* Tab switcher */}
         <div style={{ display: 'flex', gap: 6 }}>
           {([
-            { key: 'export' as Tab,   icon: ICONS.download, label: 'Data Export' },
             { key: 'setlist' as Tab,  icon: ICONS.list,     label: 'Setlist Builder' },
+            { key: 'export' as Tab,   icon: ICONS.download, label: 'Data Export' },
           ]).map(({ key, icon, label }) => (
             <button
               key={key}

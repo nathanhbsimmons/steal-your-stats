@@ -360,6 +360,7 @@ export function SetlistBuilder() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchSong[]>([])
   const [searching, setSearching] = useState(false)
+  const [querySinceLastAdd, setQuerySinceLastAdd] = useState(false)
   const debouncedQuery = useDebounce(query, 220)
 
   // Drag state
@@ -388,8 +389,9 @@ export function SetlistBuilder() {
 
   // ── Song search ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!debouncedQuery.trim()) { setResults([]); return }
+    if (!debouncedQuery.trim()) { setResults([]); setQuerySinceLastAdd(false); return }
     setSearching(true)
+    setQuerySinceLastAdd(true)
     fetch(`/api/songs?q=${encodeURIComponent(debouncedQuery)}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.songs) setResults(data.songs.slice(0, 8)) })
@@ -408,6 +410,7 @@ export function SetlistBuilder() {
   const addSong = useCallback((song: SearchSong) => {
     const entry = makeEntry(song.title)
     setSetlist(prev => ({ ...prev, [activeSet]: [...prev[activeSet], entry] }))
+    setQuerySinceLastAdd(false)
   }, [activeSet])
 
   const removeSong = useCallback((setKey: SetKey, idx: number) => {
@@ -702,8 +705,8 @@ export function SetlistBuilder() {
           )}
         </div>
 
-        {/* Duplicate warning */}
-        {results.some(r => allTitles.has(r.title)) && (
+        {/* Duplicate warning — only after user has searched since last add */}
+        {querySinceLastAdd && results.some(r => allTitles.has(r.title)) && (
           <div style={{
             padding: '10px 14px', borderRadius: 'var(--r-sm)',
             background: 'rgba(255,138,138,0.08)',
