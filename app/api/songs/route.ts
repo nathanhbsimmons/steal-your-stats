@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSongCatalog } from '@/lib/ids'
 import { getSongHints } from '@/lib/setlist-builder'
+import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -13,9 +14,14 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const withHints = songs.map(s => ({
-    ...s,
-    hints: getSongHints(s.title),
+  const withHints = await Promise.all(songs.map(async s => {
+    const hints = getSongHints(s.title)
+    try {
+      hints.topSuccessors = await realtimeSongFactsService.getSongPairings(s.title, 3)
+    } catch {
+      // setlist cache not ready — static hints still shown
+    }
+    return { ...s, hints }
   }))
 
   return NextResponse.json({ songs: withHints, total: withHints.length })

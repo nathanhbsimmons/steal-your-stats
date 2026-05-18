@@ -144,16 +144,31 @@ export default function Home() {
             )}
 
             <div style={{ display: 'flex', gap: 28, marginTop: 4 }}>
-              {[
-                { label: 'Show length', value: '2:36:14' },
-                { label: 'Tracks',      value: '22' },
-                { label: 'Soundboard',  value: 'SBD · A+' },
-              ].map(s => (
-                <div key={s.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span className="t-eyebrow">{s.label}</span>
-                  <span className="t-mono" style={{ fontSize: 16, color: 'var(--fg)' }}>{s.value}</span>
-                </div>
-              ))}
+              {loading ? (
+                [1, 2].map(i => (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div className="skeleton" style={{ height: 10, width: 44, borderRadius: 4 }} />
+                    <div className="skeleton" style={{ height: 20, width: 60, borderRadius: 4 }} />
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span className="t-eyebrow">Tracks</span>
+                    <span className="t-mono" style={{ fontSize: 16, color: 'var(--fg)' }}>
+                      {featured?.songs?.length ?? '—'}
+                    </span>
+                  </div>
+                  {featured?.songs?.[0] && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span className="t-eyebrow">Opener</span>
+                      <span className="t-mono" style={{ fontSize: 16, color: 'var(--fg)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {featured.songs[0]}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>

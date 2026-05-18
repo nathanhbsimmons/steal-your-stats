@@ -37,6 +37,7 @@ export interface SongHints {
     isCommonEncore: boolean
   }
   avgDurationSec?: number
+  topSuccessors?: { name: string; count: number }[]
 }
 
 // ─── Average durations (seconds) ─────────────────────────────────────────────

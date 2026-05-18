@@ -86,6 +86,7 @@ export class RealtimeSongFactsService {
   private allSetlistsCache: AllSetlistsCache | null = null
   private versionsCache = new Map<string, VersionsCache>()
   private buildPromise: Promise<Setlist[]> | null = null
+  private successorMap: Map<string, { name: string; count: number }[]> | null = null
 
   constructor() {
     this.setlistClient = new SetlistClientImpl()
@@ -105,6 +106,7 @@ export class RealtimeSongFactsService {
     this.buildPromise = this.fetchAllPages().then(setlists => {
       // Cache result regardless of whether it's partial (rate-limited) or complete
       this.allSetlistsCache = { setlists, cachedAt: Date.now() }
+      this.successorMap = this.buildSuccessorMap(setlists)
       this.buildPromise = null
       return setlists
     }).catch(err => {
@@ -138,6 +140,48 @@ export class RealtimeSongFactsService {
     }
 
     return all
+  }
+
+  // Build a map of song → top successors from every consecutive song pair in the cache.
+  // Runs once after the setlist cache is populated; subsequent lookups are O(1).
+  private buildSuccessorMap(setlists: Setlist[]): Map<string, { name: string; count: number }[]> {
+    const raw = new Map<string, Map<string, number>>()
+
+    for (const setlist of setlists) {
+      for (const set of setlist.sets.set) {
+        const songs = set.song
+        for (let i = 0; i < songs.length - 1; i++) {
+          const curr = songs[i].name
+          const next = songs[i + 1]?.name
+          if (!curr || !next) continue
+          const currKey = resolveSong({ title: curr }).normalizedTitle.toLowerCase()
+          const nextLabel = toTitleCase(resolveSong({ title: next }).normalizedTitle)
+          if (!raw.has(currKey)) raw.set(currKey, new Map())
+          const m = raw.get(currKey)!
+          m.set(nextLabel, (m.get(nextLabel) || 0) + 1)
+        }
+      }
+    }
+
+    const result = new Map<string, { name: string; count: number }[]>()
+    for (const [key, counts] of raw) {
+      result.set(key, [...counts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, count]) => ({ name, count })))
+    }
+    return result
+  }
+
+  async getSongPairings(songTitle: string, limit = 3): Promise<{ name: string; count: number }[]> {
+    await this.getAllGDSetlists() // ensure map is built
+    if (!this.successorMap) return []
+    const searchNames = this.buildSearchNames(songTitle)
+    for (const name of searchNames) {
+      const hits = this.successorMap.get(name)
+      if (hits) return hits.slice(0, limit)
+    }
+    return []
   }
 
   private toShowRef(setlist: Setlist): ShowRef {

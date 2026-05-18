@@ -134,16 +134,28 @@ function SongResult({ displayTitle, hints, onAdd, isDuplicate }: SongResultProps
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-        {pairing && (
-          <span className="pill" style={{
-            fontSize: 10.5, padding: '2px 8px',
-            background: pairing.alwaysWith ? 'rgba(240,176,74,0.12)' : 'var(--glass-bg-faint)',
-            borderColor: pairing.alwaysWith ? 'rgba(240,176,74,0.28)' : 'var(--glass-border)',
-            color: pairing.alwaysWith ? 'var(--accent)' : 'var(--fg-3)',
-          }}>
-            {pairing.label}
-          </span>
-        )}
+        {hints.topSuccessors && hints.topSuccessors.length > 0
+          ? hints.topSuccessors.map(s => (
+              <span key={s.name} className="pill" style={{
+                fontSize: 10.5, padding: '2px 8px',
+                background: 'rgba(240,176,74,0.10)',
+                borderColor: 'rgba(240,176,74,0.25)',
+                color: 'var(--accent)',
+              }}>
+                → {s.name} <span style={{ opacity: 0.6 }}>({s.count}×)</span>
+              </span>
+            ))
+          : pairing && (
+              <span className="pill" style={{
+                fontSize: 10.5, padding: '2px 8px',
+                background: pairing.alwaysWith ? 'rgba(240,176,74,0.12)' : 'var(--glass-bg-faint)',
+                borderColor: pairing.alwaysWith ? 'rgba(240,176,74,0.28)' : 'var(--glass-border)',
+                color: pairing.alwaysWith ? 'var(--accent)' : 'var(--fg-3)',
+              }}>
+                {pairing.label}
+              </span>
+            )
+        }
         {positionHints.isCommonOpener && (
           <span className="pill" style={{ fontSize: 10.5, padding: '2px 8px', color: 'var(--good)', borderColor: 'rgba(140,224,168,0.25)', background: 'rgba(140,224,168,0.07)' }}>
             Common opener
