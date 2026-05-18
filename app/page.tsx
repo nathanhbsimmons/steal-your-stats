@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { TopBar } from '@/components/glass/topbar'
 import { StatTile, ShowRow } from '@/components/glass/primitives'
 import { Icon, ICONS } from '@/components/glass/icons'
@@ -31,6 +32,7 @@ interface MostPlayedEntry {
 }
 
 export default function Home() {
+  const router = useRouter()
   const [shows, setShows] = useState<ShowOnThisDay[]>([])
   const [currentDate, setCurrentDate] = useState('')
   const [loading, setLoading] = useState(true)
@@ -258,8 +260,6 @@ export default function Home() {
               <span className="pill" style={{ fontSize: 10.5, padding: '2px 8px', fontFamily: 'var(--font-mono)' }}>
                 {loading ? '…' : `${shows.length} SHOW${shows.length !== 1 ? 'S' : ''}`}
               </span>
-              <span style={{ flex: 1 }} />
-              <Link href="/recent" className="btn" style={{ padding: '6px 12px', fontSize: 12 }}>View all</Link>
             </header>
             <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 4px 10px' }}>
               {loading ? (
@@ -275,6 +275,7 @@ export default function Home() {
                     city={`${show.city}${show.state ? `, ${show.state}` : ''}`}
                     country={show.country}
                     badge={`${show.year}`}
+                    onClick={() => router.push(`/show/${show.date}`)}
                   />
                 ))
               ) : (
@@ -282,7 +283,7 @@ export default function Home() {
                   { date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca, NY', country: 'USA', badge: 'Cornell' },
                   { date: '1972-05-26', venue: 'Lyceum Theatre', city: 'London', country: 'UK', badge: 'Europe 72' },
                   { date: '1973-11-11', venue: 'Winterland', city: 'San Francisco, CA', country: 'USA', badge: 'SBD' },
-                ].map(r => <ShowRow key={r.date} {...r} />)
+                ].map(r => <ShowRow key={r.date} {...r} onClick={() => router.push(`/show/${r.date}`)} />)
               )}
             </div>
           </section>
