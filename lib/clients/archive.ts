@@ -123,35 +123,40 @@ export class ArchiveClientImpl implements ArchiveClient {
 
   async resolveArchiveShow(params: { date: string; venue?: string; city?: string }): Promise<ArchiveShow | null> {
     const { date, venue, city } = params
+    const [year, month, day] = date.split('-')
+    const shortYear = year.slice(2)
 
-    const searchParams = new URLSearchParams({
-      q: `collection:GratefulDead AND date:${date} AND mediatype:etree`,
-      output: 'json',
-      rows: '20',
-    })
+    // GD identifiers reliably start with gd{YYYY-MM-DD} or gd{YY-MM-DD};
+    // try these first before the less-reliable date field.
+    const queries = [
+      `identifier:gd${year}-${month}-${day}* AND collection:GratefulDead`,
+      `identifier:gd${shortYear}-${month}-${day}* AND collection:GratefulDead`,
+      `collection:GratefulDead AND date:${date}`,
+      `collection:GratefulDead AND date:[${date}T00:00:00Z TO ${date}T23:59:59Z]`,
+    ]
 
-    try {
-      const response = await this.http.get<{
-        responseHeader: { status: number; QTime: number; params: Record<string, unknown> }
-        response: { docs: ArchiveShow[]; numFound: number; start: number }
-      }>(`/advancedsearch.php?${searchParams.toString()}`)
+    for (const q of queries) {
+      try {
+        const searchParams = new URLSearchParams({ q, output: 'json', rows: '20', fl: 'identifier,title,creator,date,venue,city,state,country,licenseurl,rights,publicdate' })
+        const response = await this.http.get<{
+          response: { docs: ArchiveShow[]; numFound: number }
+        }>(`/advancedsearch.php?${searchParams.toString()}`, { cache: false })
 
-      if (!response.data?.response) return null
+        const shows = response.data?.response?.docs || []
+        if (shows.length === 0) continue
+        if (shows.length === 1) return shows[0]
 
-      const shows = response.data.response.docs || []
+        const scored = shows
+          .map(show => ({ show, score: this.calculateMatchScore(show, { venue, city }) }))
+          .sort((a, b) => b.score - a.score)
 
-      if (shows.length === 0) return null
-      if (shows.length === 1) return shows[0]
-
-      // Score results by venue/city match and return best match
-      const scored = shows
-        .map(show => ({ show, score: this.calculateMatchScore(show, { venue, city }) }))
-        .sort((a, b) => b.score - a.score)
-
-      return scored[0].show
-    } catch {
-      return null
+        return scored[0].show
+      } catch {
+        continue
+      }
     }
+
+    return null
   }
 
   async getSongTracks(itemId: string, normalizedTitle: string, aliases: string[]): Promise<ArchiveTrack[]> {

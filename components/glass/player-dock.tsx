@@ -176,8 +176,14 @@ export function PlayerDock({
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
         }}>
-          {/* Panel header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px 10px', flexShrink: 0 }}>
+          {/* Panel header — click anywhere to collapse */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setQueueOpen(false)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setQueueOpen(false) } }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px 10px', flexShrink: 0, cursor: 'pointer', userSelect: 'none' }}
+          >
             <span className="t-h3" style={{ fontSize: 13 }}>Queue</span>
             <span className="t-eyebrow">{queue.length} tracks · {formatQueueDuration(queue)}</span>
             <span style={{ flex: 1 }} />
@@ -185,11 +191,12 @@ export function PlayerDock({
               <button
                 className="btn"
                 style={{ padding: '4px 10px', fontSize: 11 }}
-                onClick={onClearQueue}
+                onClick={e => { e.stopPropagation(); onClearQueue() }}
               >
                 Clear all
               </button>
             )}
+            <Icon d={ICONS.chevDown} size={14} style={{ color: 'var(--fg-3)', flexShrink: 0 }} />
           </div>
           {/* Track list */}
           <div className="scroll-hide" style={{ overflow: 'auto', flex: 1 }}>

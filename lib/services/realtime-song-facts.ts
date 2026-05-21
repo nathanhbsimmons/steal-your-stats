@@ -1,3 +1,5 @@
+import fs from 'fs'
+import path from 'path'
 import { SetlistClientImpl, Setlist } from '../clients/setlist'
 import { ArchiveClientImpl } from '../clients/archive'
 import { HttpError } from '../http'
@@ -74,10 +76,12 @@ interface VersionsCache {
   cachedAt: number
 }
 
-const ALL_SETLISTS_TTL = 4 * 60 * 60 * 1000 // 4 hours
+const ALL_SETLISTS_TTL = 4 * 60 * 60 * 1000  // 4 hours in-memory
+const DISK_CACHE_TTL  = 12 * 60 * 60 * 1000  // 12 hours on disk
 const VERSIONS_TTL = 24 * 60 * 60 * 1000     // 24 hours
 const RATE_LIMIT_DELAY = 800 // ms between sequential page requests
 const ENRICH_TIMEOUT_MS = 12_000 // max time to spend fetching Archive.org durations
+const DISK_CACHE_PATH = path.join(process.cwd(), '.cache', 'gd-setlists.json')
 
 export class RealtimeSongFactsService {
   private setlistClient: SetlistClientImpl
@@ -93,20 +97,50 @@ export class RealtimeSongFactsService {
     this.archiveClient = new ArchiveClientImpl()
   }
 
+  private loadFromDisk(): Setlist[] | null {
+    try {
+      const raw = fs.readFileSync(DISK_CACHE_PATH, 'utf8')
+      const { setlists, cachedAt } = JSON.parse(raw) as { setlists: Setlist[]; cachedAt: number }
+      if (Date.now() - cachedAt < DISK_CACHE_TTL) {
+        console.log(`[setlists] loaded ${setlists.length} setlists from disk cache`)
+        return setlists
+      }
+    } catch {}
+    return null
+  }
+
+  private saveToDisk(setlists: Setlist[]): void {
+    try {
+      fs.mkdirSync(path.dirname(DISK_CACHE_PATH), { recursive: true })
+      fs.writeFileSync(DISK_CACHE_PATH, JSON.stringify({ setlists, cachedAt: Date.now() }))
+      console.log(`[setlists] saved ${setlists.length} setlists to disk cache`)
+    } catch (err) {
+      console.warn('[setlists] failed to save disk cache:', err)
+    }
+  }
+
   // Returns all GD setlists, fetching from setlist.fm if needed.
-  // Concurrent callers share the same in-flight promise so the API is only
-  // called once. Results are cached for 4 hours.
+  // Checks disk cache first so data survives server restarts.
+  // Concurrent callers share the same in-flight promise so the API is only hit once.
   private async getAllGDSetlists(): Promise<Setlist[]> {
     if (this.allSetlistsCache && Date.now() - this.allSetlistsCache.cachedAt < ALL_SETLISTS_TTL) {
       return this.allSetlistsCache.setlists
     }
 
+    // Try disk cache before hitting the network
+    const fromDisk = this.loadFromDisk()
+    if (fromDisk) {
+      this.allSetlistsCache = { setlists: fromDisk, cachedAt: Date.now() }
+      this.successorMap = this.buildSuccessorMap(fromDisk)
+      return fromDisk
+    }
+
     if (this.buildPromise) return this.buildPromise
 
     this.buildPromise = this.fetchAllPages().then(setlists => {
-      // Cache result regardless of whether it's partial (rate-limited) or complete
       this.allSetlistsCache = { setlists, cachedAt: Date.now() }
       this.successorMap = this.buildSuccessorMap(setlists)
+      this.saveToDisk(setlists)
       this.buildPromise = null
       return setlists
     }).catch(err => {
@@ -383,6 +417,35 @@ export class RealtimeSongFactsService {
     return facts
   }
 
+  async getShowsOnDate(month: string, day: string): Promise<ShowOnThisDay[]> {
+    const allSetlists = await this.getAllGDSetlists()
+    return allSetlists
+      .filter(setlist => {
+        const parts = setlist.eventDate.split('-') // DD-MM-YYYY
+        return parts[0] === day && parts[1] === month
+      })
+      .map(setlist => {
+        const isoDate = fromSetlistDate(setlist.eventDate)
+        const songs: string[] = []
+        for (const set of setlist.sets.set) {
+          for (const song of set.song) {
+            if (song.name) songs.push(song.name)
+          }
+        }
+        return {
+          date: isoDate,
+          year: parseInt(isoDate.split('-')[0]),
+          venue: setlist.venue.name,
+          city: setlist.venue.city.name,
+          state: setlist.venue.city.state,
+          country: setlist.venue.city.country.name,
+          songs,
+          setlistUrl: setlist.url,
+        }
+      })
+      .sort((a, b) => a.year - b.year)
+  }
+
   async getVenueStats(): Promise<VenueStat[]> {
     const allSetlists = await this.getAllGDSetlists()
 
@@ -527,4 +590,22 @@ export interface GlobalStats {
   leaderboard: { name: string; count: number; pct: number }[]
 }
 
-export const realtimeSongFactsService = new RealtimeSongFactsService()
+export interface ShowOnThisDay {
+  date: string
+  year: number
+  venue: string
+  city: string
+  state?: string
+  country: string
+  songs: string[]
+  setlistUrl?: string
+}
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __realtimeSongFactsService: RealtimeSongFactsService | undefined
+}
+
+export const realtimeSongFactsService =
+  globalThis.__realtimeSongFactsService ??
+  (globalThis.__realtimeSongFactsService = new RealtimeSongFactsService())

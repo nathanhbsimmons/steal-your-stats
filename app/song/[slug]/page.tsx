@@ -75,6 +75,7 @@ export default function SongPage() {
   const [sortKey,      setSortKey]      = useState<SortKey>('duration-desc')
   const [shareLabel,   setShareLabel]   = useState<'Share' | 'Copied!'>('Share')
   const [starred,      setStarred]      = useState(false)
+  const [playError,    setPlayError]    = useState<string | null>(null)
 
   const FAVORITES_KEY = 'steal-your-stats-favorites'
 
@@ -155,9 +156,14 @@ export default function SongPage() {
   }
 
   const handlePlayShowVersions = async (showRef: { date: string; venue: string; city: string }) => {
+    setPlayError(null)
     try {
       const archiveShow = await resolveArchiveShow(showRef)
-      if (!archiveShow) return
+      if (!archiveShow) {
+        setPlayError(`No Archive.org recording found for ${showRef.date} at ${showRef.venue}.`)
+        setTimeout(() => setPlayError(null), 6000)
+        return
+      }
       const { tracks } = await fetchSongTracks(archiveShow.identifier, songTitle)
       const formatted: Track[] = tracks.map((t: { id: string; name: string; url: string; showDate: string; venue: string; city: string; archiveItemId: string }) => ({
         ...t,
@@ -168,10 +174,17 @@ export default function SongPage() {
         licenseUrl: archiveShow.licenseurl,
         rights: archiveShow.rights,
       }))
+      if (formatted.length === 0) {
+        setPlayError(`Show found but no playable tracks for "${songTitle}" on ${showRef.date}.`)
+        setTimeout(() => setPlayError(null), 6000)
+        return
+      }
       addToQueue(formatted)
       if (!currentTrack && formatted.length > 0) selectTrack(formatted[0])
     } catch (err) {
       console.error('Failed to load show versions:', err)
+      setPlayError('Could not load show from Archive.org. Try again in a moment.')
+      setTimeout(() => setPlayError(null), 6000)
     }
   }
 
@@ -286,6 +299,11 @@ export default function SongPage() {
           <button className="btn primary lg" onClick={handlePlayLongest}>
             <Icon d={ICONS.play} size={14} fill="currentColor" stroke={0} /> Play longest version
           </button>
+          {playError && (
+            <span className="t-small" style={{ color: 'var(--bad)', maxWidth: 320, textAlign: 'right' }}>
+              {playError}
+            </span>
+          )}
         </div>
       </header>
 
