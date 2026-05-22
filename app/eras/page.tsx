@@ -2,71 +2,46 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { TopBar } from '@/components/glass/topbar'
-import { Icon, ICONS } from '@/components/glass/icons'
 
 interface YearCount { year: number; count: number }
 
 const ERA_DEFS = [
   {
-    id: 'primal',
-    name: 'Primal Dead',
-    years: '1965 – 1971',
-    startYear: 1965,
-    endYear: 1971,
+    id: 'primal', segClass: 'primal',
+    name: 'Primal Dead', years: '1965 – 1971',
+    startYear: 1965, endYear: 1971,
     tag: 'Pigpen era',
-    sig: 'Lovelight, Caution, Viola Lee',
-    barColor: 'rgba(240,176,74,0.85)',
-    searchSong: 'Viola Lee Blues',
+    sig: 'Lovelight, Caution, Viola Lee Blues',
   },
   {
-    id: 'europe',
-    name: "Europe '72",
-    years: '1972 – 1974',
-    startYear: 1972,
-    endYear: 1974,
-    tag: 'wall-of-sound',
-    sig: 'Dark Star, Playing, Eyes',
-    barColor: 'rgba(240,176,74,0.55)',
-    highlight: true,
-    searchSong: 'Dark Star',
+    id: 'europe72', segClass: 'pigpen',
+    name: "Europe '72", years: '1972 – 1974',
+    startYear: 1972, endYear: 1974,
+    tag: 'Wall-of-Sound',
+    sig: 'Dark Star, Playing in the Band, Eyes',
   },
   {
-    id: 'hiatus',
-    name: 'Hiatus & Return',
-    years: '1975 – 1979',
-    startYear: 1975,
-    endYear: 1979,
-    tag: 'studio era',
-    sig: 'Estimated Prophet, Terrapin',
-    barColor: 'rgba(255,255,255,0.30)',
-    searchSong: 'Terrapin Station',
+    id: 'hiatus', segClass: 'keith',
+    name: 'Hiatus & Return', years: '1975 – 1979',
+    startYear: 1975, endYear: 1979,
+    tag: 'Studio era',
+    sig: 'Estimated Prophet, Terrapin Station',
   },
   {
-    id: 'brent',
-    name: 'Brent years',
-    years: '1980 – 1990',
-    startYear: 1980,
-    endYear: 1990,
-    tag: 'arena Dead',
+    id: 'brent', segClass: 'brent',
+    name: 'Brent Years', years: '1980 – 1990',
+    startYear: 1980, endYear: 1990,
+    tag: 'Arena Dead',
     sig: 'Throwing Stones, Hell in a Bucket',
-    barColor: 'rgba(240,176,74,0.30)',
-    searchSong: 'Hell in a Bucket',
   },
   {
-    id: 'final',
-    name: 'Final tours',
-    years: '1991 – 1995',
-    startYear: 1991,
-    endYear: 1995,
+    id: 'final', segClass: 'vince',
+    name: 'Final Tours', years: '1991 – 1995',
+    startYear: 1991, endYear: 1995,
     tag: 'Vince & Bruce',
     sig: 'Lazy River Road, Days Between',
-    barColor: 'rgba(240,176,74,0.18)',
-    searchSong: 'Days Between',
   },
 ]
-
-const YEAR_TICKS = ['1965', '1970', '1975', '1980', '1985', '1990', '1995']
 
 function sumYears(data: YearCount[], from: number, to: number): number {
   return data.filter(d => d.year >= from && d.year <= to).reduce((s, d) => s + d.count, 0)
@@ -74,12 +49,13 @@ function sumYears(data: YearCount[], from: number, to: number): number {
 
 export default function ErasPage() {
   const [showsPerYear, setShowsPerYear] = useState<YearCount[]>([])
+  const [focusId, setFocusId] = useState('europe72')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/stats')
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.showsPerYear) setShowsPerYear(data.showsPerYear) })
+      .then(d => { if (d?.showsPerYear) setShowsPerYear(d.showsPerYear) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
@@ -87,129 +63,120 @@ export default function ErasPage() {
   const eras = ERA_DEFS.map(e => ({
     ...e,
     shows: showsPerYear.length > 0 ? sumYears(showsPerYear, e.startYear, e.endYear) : null,
+    span: e.endYear - e.startYear + 1,
   }))
 
-  const totalShows = eras.reduce((s, e) => s + (e.shows ?? 0), 0)
+  const totalSpan = 1995 - 1965 + 1
+  const focus = eras.find(e => e.id === focusId) ?? eras[1]
 
   return (
-    <>
-      <TopBar eyebrow="Eras" title="Five movements, one long strange trip." />
-
-      <div className="scroll-hide" style={{ flex: 1, overflow: 'auto', padding: '0 28px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-
-        {/* Timeline strip */}
-        <section className="glass" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            {YEAR_TICKS.map(y => <span key={y} className="t-eyebrow">{y}</span>)}
-          </div>
-          {loading ? (
-            <div className="skeleton" style={{ height: 36, borderRadius: 'var(--r-xs)' }} />
-          ) : (
-            <div style={{ display: 'flex', height: 36, borderRadius: 'var(--r-xs)', overflow: 'hidden' }}>
-              {eras.map((e, i) => (
-                <div
-                  key={e.id}
-                  style={{
-                    flex: e.shows ?? e.startYear,
-                    background: e.barColor,
-                    borderRight: i < eras.length - 1 ? '2px solid var(--bg-0)' : 'none',
-                  }}
-                />
-              ))}
-            </div>
-          )}
-          {!loading && totalShows > 0 && (
-            <p className="t-small" style={{ color: 'var(--fg-3)' }}>
-              {totalShows.toLocaleString()} shows total · 1965–1995
-            </p>
-          )}
-        </section>
-
-        {/* Era cards */}
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14 }}>
-          {eras.map(e => (
-            <div
-              key={e.id}
-              className={`glass${e.highlight ? ' strong' : ''}`}
-              style={{
-                padding: '18px 18px 16px',
-                display: 'flex', flexDirection: 'column', gap: 10, minHeight: 220,
-                ...(e.highlight ? { boxShadow: 'var(--shadow-card), 0 0 0 1px rgba(240,176,74,0.3)' } : {}),
-              }}
-            >
-              <span className="t-eyebrow" style={{ color: e.highlight ? 'var(--accent)' : 'var(--fg-3)' }}>{e.tag}</span>
-              <h3 className="t-display" style={{ fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1.1 }}>{e.name}</h3>
-              <span className="t-mono" style={{ fontSize: 11.5, color: 'var(--fg-3)' }}>{e.years}</span>
-              <div className="divider" style={{ margin: '4px 0' }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 2 }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                  <span className="t-eyebrow">shows</span>
-                  {loading ? (
-                    <div className="skeleton" style={{ height: 26, width: 52, borderRadius: 6 }} />
-                  ) : (
-                    <span className="t-mono" style={{ fontSize: 22, color: 'var(--fg)' }}>
-                      {e.shows !== null ? e.shows.toLocaleString() : '—'}
-                    </span>
-                  )}
-                </div>
-                <span className="t-small" style={{ fontSize: 11.5, color: 'var(--fg-4)' }}>{e.sig}</span>
-              </div>
-              <Link
-                href={`/eras/${e.id}`}
-                className="btn"
-                style={{ marginTop: 'auto', padding: '7px 12px', fontSize: 12, justifyContent: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
-              >
-                Explore →
-              </Link>
-            </div>
-          ))}
-        </section>
-
-        {/* Focus card — Europe '72 */}
-        <section className="glass" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <header style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <span className="t-eyebrow" style={{ color: 'var(--accent)' }}>FOCUS</span>
-            <h3 className="t-h3">Europe &apos;72 · the wall-of-sound era</h3>
-            <span className="t-mono" style={{ fontSize: 11.5, color: 'var(--fg-3)' }}>
-              {loading ? '…' : eras[1].shows !== null ? `${eras[1].shows} shows` : '—'} · 22 countries
-            </span>
-          </header>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 18 }}>
-            <div className="glass faint" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span className="t-eyebrow">Signature jam</span>
-              <span style={{ fontSize: 15, color: 'var(--fg)' }}>Dark Star · Lyceum &apos;72</span>
-              <span className="t-mono" style={{ fontSize: 18, color: 'var(--accent)' }}>47:18</span>
-              <Link
-                href="/song/Dark Star"
-                className="btn"
-                style={{ padding: '6px 12px', fontSize: 11.5, alignSelf: 'flex-start', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
-              >
-                <Icon d={ICONS.play} size={11} fill="currentColor" stroke={0} /> Play
-              </Link>
-            </div>
-            <div className="glass faint" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span className="t-eyebrow">Songs debuted</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                {['Brown-Eyed Women', "He's Gone", 'Tennessee Jed', 'Ramble On Rose', 'Jack Straw', 'Mr. Charlie'].map(s => (
-                  <Link
-                    key={s}
-                    href={`/song/${encodeURIComponent(s)}`}
-                    className="pill"
-                    style={{ fontSize: 11, padding: '3px 9px', textDecoration: 'none' }}
-                  >
-                    {s}
-                  </Link>
-                ))}
-              </div>
-            </div>
-            <div className="glass faint" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span className="t-eyebrow">Avg show length</span>
-              <span className="t-mono" style={{ fontSize: 28, color: 'var(--fg)', letterSpacing: '-0.02em' }}>3:11:42</span>
-              <span className="t-small">~28% longer than the avg show</span>
-            </div>
-          </div>
-        </section>
+    <section className="col">
+      <div className="page-head">
+        <div>
+          <div className="kicker">Eras · VII</div>
+          <h2>The band&apos;s <span className="italic">five lives.</span></h2>
+          <div className="lede">From the Acid Tests to Soldier Field — three decades, in five chapters.</div>
+        </div>
+        <div className="toolbar">
+          <span>2,328 shows · 1965–1995</span>
+        </div>
       </div>
-    </>
+
+      {/* Timeline axis */}
+      <div className="timeline-axis" style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.1em', marginBottom: 4 }}>
+        <span>1965</span><span>1970</span><span>1975</span><span>1980</span><span>1985</span><span>1990</span><span>1995</span>
+      </div>
+
+      {/* Timeline strip */}
+      <div className="timeline">
+        {eras.map(e => (
+          <div
+            key={e.id}
+            className={`seg ${e.segClass}`}
+            style={{ flexBasis: `${(e.span / totalSpan) * 100}%` }}
+            onClick={() => setFocusId(e.id)}
+          />
+        ))}
+      </div>
+
+      {/* Era cards */}
+      <div className="era-grid">
+        {eras.map(e => (
+          <div
+            key={e.id}
+            className="era-card"
+            style={focusId === e.id ? { background: 'var(--hi)', borderBottom: '3px solid var(--rust)' } : {}}
+            onClick={() => setFocusId(e.id)}
+          >
+            <div className="tag">{e.tag}</div>
+            <h4>{e.name}</h4>
+            <div className="years">{e.years}</div>
+            <div className="shows">
+              Shows
+              <span className="n">
+                {loading ? '—' : e.shows !== null ? e.shows.toLocaleString() : '—'}
+              </span>
+            </div>
+            <div className="sigs">{e.sig}</div>
+            <Link
+              href={`/eras/${e.id}`}
+              className="explore"
+              onClick={ev => ev.stopPropagation()}
+            >
+              Explore ⟶
+            </Link>
+          </div>
+        ))}
+      </div>
+
+      {/* Focus section */}
+      <div className="section-head">
+        <h3>Focus · {focus.name}</h3>
+        <div className="descr">{focus.tag} · {loading ? '…' : focus.shows !== null ? `${focus.shows} shows` : '—'}</div>
+        <span className="meta">{focus.years}</span>
+      </div>
+
+      <div className="era-focus" style={{
+        display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr', gap: 0,
+        border: '1.5px solid var(--ink)',
+        borderTop: '3px solid var(--ink)',
+        marginTop: 0,
+      }}>
+        <div style={{ padding: '18px 20px', borderRight: '1px solid var(--rule)' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Signature jam</div>
+          <div style={{ fontFamily: 'var(--serif-display)', fontSize: 20, color: 'var(--ink)', lineHeight: 1.1 }}>Dark Star — Lyceum &#x2019;72</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 26, color: 'var(--rust)', letterSpacing: '-0.02em', marginTop: 6 }}>47:18</div>
+          <Link href="/song/Dark Star" className="btn" style={{ marginTop: 14, display: 'inline-flex', textDecoration: 'none', fontSize: 15 }}>
+            ▶ Play
+          </Link>
+        </div>
+        <div style={{ padding: '18px 20px', borderRight: '1px solid var(--rule)' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Songs debuted in this era</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+            {['Brown-Eyed Women', "He's Gone", 'Tennessee Jed', 'Ramble On Rose', 'Jack Straw', 'Mr. Charlie', 'Bertha', 'Wharf Rat'].map(s => (
+              <Link
+                key={s}
+                href={`/song/${encodeURIComponent(s)}`}
+                style={{
+                  display: 'inline-block', border: '1px solid var(--ink)',
+                  padding: '2px 8px', fontFamily: 'var(--mono)', fontSize: 11,
+                  letterSpacing: '0.04em', background: 'var(--paper)', textDecoration: 'none',
+                  color: 'var(--ink)',
+                }}
+              >
+                {s}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding: '18px 20px' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Avg. show length</div>
+          <div style={{ fontFamily: 'var(--serif-display)', fontSize: 40, color: 'var(--rust)', letterSpacing: '-0.015em', lineHeight: 1 }}>3:11:42</div>
+          <div style={{ fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 13, color: 'var(--ink-3)', marginTop: 8, lineHeight: 1.35 }}>
+            ~28% longer than the all-time average. Wall-of-Sound era.
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }

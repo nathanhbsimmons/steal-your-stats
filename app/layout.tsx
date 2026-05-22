@@ -1,20 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Sidebar } from "@/components/glass/sidebar";
+import { VaultShell } from "@/components/vault/vault-shell";
 import "./globals.css";
 
-const geist = Geist({
-  variable: "--font-geist",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Steal Your Stats — Grateful Dead",
+  title: "StealyourStats — Grateful Dead",
   description: "Song stats, setlist history, and in-browser audio for the Grateful Dead.",
 };
 
@@ -24,27 +13,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&family=UnifrakturMaguntia&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body>
-        <div className="scene" aria-hidden="true" />
-        <div style={{
-          display: 'flex',
-          height: '100vh',
-          overflow: 'hidden',
-          position: 'relative',
-          zIndex: 1,
-        }}>
-          <Sidebar />
-          <div style={{
-            flex: 1,
-            minWidth: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-          }}>
-            {children}
-          </div>
-        </div>
+        <VaultShell>
+          {children}
+        </VaultShell>
       </body>
     </html>
   );
