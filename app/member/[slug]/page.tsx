@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePlayer } from '@/lib/contexts/player-context'
 
 interface YearCount { year: number; count: number }
@@ -28,6 +29,7 @@ interface MemberDef {
   born: number
   died?: number
   mark: string
+  photo: string
   eraId: string
   bio: string
   signatureShows: { date: string; venue: string; city: string; note: string }[]
@@ -49,6 +51,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Lead guitar · vocals',
     yearsDisplay: '1965–1995', startYear: 1965, endYear: 1995,
     shows: 2328, core: true, born: 1942, mark: '▲',
+    photo: '/members/jerry_garcia.jpg',
     eraId: 'europe72',
     bio: "Jerome John Garcia — guitarist, singer, reluctant figurehead. Wandered in from the Palo Alto folk scene in 1965 with banjo fingers and never put the Stratocaster down. Over thirty years his lead-guitar voice — singing, conversational, halfway to a pedal-steel sigh — defined whatever a Grateful Dead song was. He wrote most of the catalog with Robert Hunter, took the longest solos, and held the band together by drift. He died in his sleep at a rehab clinic on August 9th, 1995, five weeks after the last show.",
     signatureShows: [
@@ -65,6 +68,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Rhythm guitar · vocals',
     yearsDisplay: '1965–1995', startYear: 1965, endYear: 1995,
     shows: 2328, core: true, born: 1947, mark: '■',
+    photo: '/members/bob_weir.jpg',
     eraId: 'brent',
     bio: "Robert Hall Weir — rhythm guitar, occasional lead, the cowboy songs. Joined at 16 after Garcia heard him goof a Jorma part. He turned the rhythm-guitar role on its head: no chord pads, just inverted voicings and counterlines that argued with Garcia all night. The Bobby ballads — Looks Like Rain, Cassidy, Estimated Prophet — anchor the back half of any setlist. He outlasted everybody and is still on the road with Dead & Company.",
     signatureShows: [
@@ -81,6 +85,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Bass · vocals',
     yearsDisplay: '1965–1995', startYear: 1965, endYear: 1995,
     shows: 2328, core: true, born: 1940, mark: '◆',
+    photo: '/members/phil_lesh.jpg',
     eraId: 'europe72',
     bio: "Philip Chapman Lesh — bassist, trained on classical trumpet, no rock experience whatsoever when Garcia handed him a Fender Jazz in 1965. Played bass like a lead instrument, full chordal runs, walking up against Kreutzmann's drums. Wrote Box of Rain about his dying father; that was about all he wrote for the band, but it was enough. After Jerry he ran Phil Lesh & Friends in Marin for two decades.",
     signatureShows: [
@@ -97,6 +102,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Drums',
     yearsDisplay: '1965–1995', startYear: 1965, endYear: 1995,
     shows: 2328, core: true, born: 1946, mark: '●',
+    photo: '/members/bill_kreutzmann.jpg',
     eraId: 'europe72',
     bio: "William Kreutzmann Jr. — the band's first drummer, only drummer for the first two years and the back half of the run. A swing-feel jazz player at heart, more Elvin Jones than Keith Moon, which is what let Garcia stretch song forms into thirty-minute conversations. Held the floor through every roster change. Today he plays around Hawai'i with whoever passes through.",
     signatureShows: [
@@ -113,6 +119,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Drums · percussion',
     yearsDisplay: '1967–1995', startYear: 1967, endYear: 1995,
     shows: 2205, core: true, born: 1943, mark: '○',
+    photo: '/members/mickey_hart.jpg',
     eraId: 'brent',
     bio: "Mickey Hart — the second drummer. Sat in on a Halloween in 1967 and stayed twenty-eight years. Brought the band tabla, dumbek, the Beast — a wall of timpani and gongs that became Rhythm Devils. Took a leave from 1971–1974 after his father embezzled the band's money. Wrote a stack of books about percussion as world ritual. Without Mickey there is no Drums > Space.",
     signatureShows: [
@@ -129,6 +136,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Keys · harmonica · vocals',
     yearsDisplay: '1965–1972', startYear: 1965, endYear: 1972,
     shows: 815, core: true, born: 1945, died: 1973, mark: '✕',
+    photo: '/members/pigpen.jpg',
     eraId: 'primal',
     bio: "Ron 'Pigpen' McKernan — keys, harmonica, raconteur, the band's blues conscience. Grew up listening to his father's R&B record collection in San Bruno. Sang Lovelight, Caution, Smokestack Lightning until they were sermons. Drank himself into liver failure and died at 27 on March 8th, 1973. The band stopped playing his songs the night he died and never really started again.",
     signatureShows: [
@@ -145,6 +153,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Piano',
     yearsDisplay: '1971–1979', startYear: 1971, endYear: 1979,
     shows: 685, core: false, born: 1948, died: 1980, mark: '+',
+    photo: '/members/keith_godchaux.jpg',
     eraId: 'hiatus',
     bio: "Keith Godchaux — piano, joined in late 1971 when his wife Donna walked up to Garcia after a show and said her husband should be the next keyboardist. He was. A precise, jazz-leaning player; his fills under Garcia in the '72–'74 stretch are the conversational peak of the band. By 1979 his playing had drifted; he was let go and died in a car crash in 1980.",
     signatureShows: [
@@ -161,6 +170,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Vocals',
     yearsDisplay: '1972–1979', startYear: 1972, endYear: 1979,
     shows: 502, core: false, born: 1947, mark: '*',
+    photo: '/members/donna_godchaux.jpeg',
     eraId: 'hiatus',
     bio: "Donna Jean Godchaux — vocals, formerly a Muscle Shoals session singer (her voice is on Suspicious Minds and When a Man Loves a Woman). Eight years on stage with the band; her harmonies on Sunrise, Playing in the Band, Stella Blue. Left with Keith in 1979. Still records and tours in Alabama with the Donna Jean Godchaux Band.",
     signatureShows: [
@@ -177,6 +187,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Keys · vocals',
     yearsDisplay: '1979–1990', startYear: 1979, endYear: 1990,
     shows: 968, core: false, born: 1952, died: 1990, mark: '†',
+    photo: '/members/brent_mydland.jpg',
     eraId: 'brent',
     bio: "Brent Mydland — Hammond, Rhodes, lead vocals on his own songs. Eleven years, the longest tenure of any non-original member. A gruff, melodic singer; wrote Hell in a Bucket, Far From Me, Just a Little Light. Struggled with depression and chemistry; died of a speedball overdose on July 26th, 1990, days after his last show. The band never sounded the same without his harmony stack.",
     signatureShows: [
@@ -193,6 +204,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Keys · vocals',
     yearsDisplay: '1990–1995', startYear: 1990, endYear: 1995,
     shows: 290, core: false, born: 1951, died: 2006, mark: '‡',
+    photo: '/members/vince_welnick.jpeg',
     eraId: 'final',
     bio: "Vince Welnick — keys, harmonies, former Tubes synth player. Auditioned the week Brent died and was on stage in two weeks. Five years of holding the keys chair through Garcia's decline. Took the band's dissolution hard; left music for years, then took his own life in 2006. The Way You Do is his. He deserved more.",
     signatureShows: [
@@ -306,8 +318,14 @@ export default function MemberPage() {
       {/* ── HERO ── */}
       <div className="member-hero">
         <div className="portrait-lg">
-          <span className="mark">{member.mark}</span>
-          <span className="lbl">PORTRAIT · PLACEHOLDER</span>
+          <Image
+            src={member.photo}
+            alt={member.name}
+            fill
+            sizes="260px"
+            style={{ objectFit: 'cover', objectPosition: 'top center' }}
+            priority
+          />
         </div>
         <div className="title-block">
           <div className="kicker">Band member · {member.core ? 'core' : 'passing through'}</div>

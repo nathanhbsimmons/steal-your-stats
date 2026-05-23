@@ -1483,6 +1483,7 @@ p { margin: 0; }
   background: var(--paper-3);
   border: 1.5px solid var(--ink);
   position: relative;
+  overflow: hidden;
   display: grid;
   place-items: center;
   box-shadow: 4px 4px 0 var(--paper-edge);

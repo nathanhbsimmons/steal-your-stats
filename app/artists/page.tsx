@@ -2,23 +2,24 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface YearCount { year: number; count: number }
 
 const CORE_SIX = [
-  { name: 'Jerry Garcia',    role: 'Lead guitar · vocals',      initial: 'JG', years: '1965 – 1995', mark: 'J', href: '/member/jerry-garcia'    },
-  { name: 'Bob Weir',        role: 'Rhythm guitar · vocals',    initial: 'BW', years: '1965 – 1995', mark: 'B', href: '/member/bob-weir'         },
-  { name: 'Phil Lesh',       role: 'Bass · vocals',             initial: 'PL', years: '1965 – 1995', mark: 'P', href: '/member/phil-lesh'        },
-  { name: 'Bill Kreutzmann', role: 'Drums',                     initial: 'BK', years: '1965 – 1995', mark: 'K', href: '/member/bill-kreutzmann'  },
-  { name: 'Mickey Hart',     role: 'Drums · percussion',        initial: 'MH', years: '1967 – 1995', mark: 'M', href: '/member/mickey-hart'      },
-  { name: 'Pigpen',          role: 'Keys · harmonica · vocals', initial: 'PP', years: '1965 – 1972', mark: 'R', href: '/member/pigpen'           },
+  { name: 'Jerry Garcia',    role: 'Lead guitar · vocals',      initial: 'JG', years: '1965 – 1995', mark: 'J', href: '/member/jerry-garcia',    photo: '/members/jerry_garcia.jpg'    },
+  { name: 'Bob Weir',        role: 'Rhythm guitar · vocals',    initial: 'BW', years: '1965 – 1995', mark: 'B', href: '/member/bob-weir',         photo: '/members/bob_weir.jpg'         },
+  { name: 'Phil Lesh',       role: 'Bass · vocals',             initial: 'PL', years: '1965 – 1995', mark: 'P', href: '/member/phil-lesh',        photo: '/members/phil_lesh.jpg'        },
+  { name: 'Bill Kreutzmann', role: 'Drums',                     initial: 'BK', years: '1965 – 1995', mark: 'K', href: '/member/bill-kreutzmann',  photo: '/members/bill_kreutzmann.jpg'  },
+  { name: 'Mickey Hart',     role: 'Drums · percussion',        initial: 'MH', years: '1967 – 1995', mark: 'M', href: '/member/mickey-hart',      photo: '/members/mickey_hart.jpg'      },
+  { name: 'Pigpen',          role: 'Keys · harmonica · vocals', initial: 'PP', years: '1965 – 1972', mark: 'R', href: '/member/pigpen',           photo: '/members/pigpen.jpg'           },
 ]
 
 const PASSING_THROUGH = [
-  { name: 'Keith Godchaux',  role: 'Keys',          initial: 'KG', years: '1971 – 1979', mark: 'K', href: '/member/keith-godchaux'  },
-  { name: 'Donna Godchaux',  role: 'Vocals',        initial: 'DG', years: '1972 – 1979', mark: 'D', href: '/member/donna-godchaux'  },
-  { name: 'Brent Mydland',   role: 'Keys · vocals', initial: 'BM', years: '1979 – 1990', mark: 'B', href: '/member/brent-mydland'   },
-  { name: 'Vince Welnick',   role: 'Keys · vocals', initial: 'VW', years: '1990 – 1995', mark: 'V', href: '/member/vince-welnick'   },
+  { name: 'Keith Godchaux',  role: 'Keys',          initial: 'KG', years: '1971 – 1979', mark: 'K', href: '/member/keith-godchaux',  photo: '/members/keith_godchaux.jpg'  },
+  { name: 'Donna Godchaux',  role: 'Vocals',        initial: 'DG', years: '1972 – 1979', mark: 'D', href: '/member/donna-godchaux',  photo: '/members/donna_godchaux.jpeg' },
+  { name: 'Brent Mydland',   role: 'Keys · vocals', initial: 'BM', years: '1979 – 1990', mark: 'B', href: '/member/brent-mydland',   photo: '/members/brent_mydland.jpg'   },
+  { name: 'Vince Welnick',   role: 'Keys · vocals', initial: 'VW', years: '1990 – 1995', mark: 'V', href: '/member/vince-welnick',   photo: '/members/vince_welnick.jpeg'  },
 ]
 
 function sumYears(data: YearCount[], from: number, to: number): number {
@@ -41,8 +42,13 @@ function MemberCard({
     >
       <div className={`member-card${minor ? ' minor' : ''}`} style={{ cursor: 'pointer' }}>
         <div className="portrait">
-          <span className="mark">{member.mark}</span>
-          <span className="lbl">{member.initial}</span>
+          <Image
+            src={member.photo}
+            alt={member.name}
+            fill
+            sizes="(max-width: 600px) 50vw, 200px"
+            style={{ objectFit: 'cover', objectPosition: 'top center' }}
+          />
         </div>
         <div className="name">{member.name}</div>
         <div className="role">{member.role}</div>
