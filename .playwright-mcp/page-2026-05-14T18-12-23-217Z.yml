@@ -1,0 +1,194 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - text: Checkout GratefulStats on the
+      - link "Guess The Year" [ref=e4] [cursor=pointer]:
+        - /url: https://podcasts.apple.com/us/podcast/guess-the-year/id1649273235
+      - text: show / podcast, dropping on 5/11
+      - link "Insta" [ref=e5] [cursor=pointer]:
+        - /url: https://www.instagram.com/guesstheyearshow/
+    - text: To celebrate, the site will be free from 5/9 - 5/17
+  - navigation [ref=e6]:
+    - generic [ref=e7]:
+      - link [ref=e8] [cursor=pointer]:
+        - /url: index.html
+        - img [ref=e9]
+      - list [ref=e11]:
+        - listitem [ref=e12]:
+          - link "Tunes" [expanded] [active] [ref=e13] [cursor=pointer]:
+            - /url: "#"
+          - generic "Tunes" [ref=e149]:
+            - link "Summary" [ref=e150] [cursor=pointer]:
+              - /url: TunesSummary.html
+            - link "Detail" [ref=e151] [cursor=pointer]:
+              - /url: TunesDetail.html
+        - listitem [ref=e14]:
+          - link "Shows" [ref=e15] [cursor=pointer]:
+            - /url: Shows.html
+        - listitem [ref=e16]:
+          - link "Years" [ref=e17] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=e18]:
+          - link "Venues" [ref=e19] [cursor=pointer]:
+            - /url: Venues.html
+        - listitem [ref=e20]:
+          - link "Search" [ref=e21] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=e22]:
+          - link "Top 20" [ref=e23] [cursor=pointer]:
+            - /url: SiteData.html
+        - listitem [ref=e24]:
+          - link "Shameless Commerce Division" [ref=e25] [cursor=pointer]:
+            - /url: ShamelessCommerce.html
+        - listitem [ref=e26]:
+          - link "About Us" [ref=e27] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=e29]:
+          - link "Login" [ref=e70] [cursor=pointer]:
+            - /url: Login.html
+  - main [ref=e31]:
+    - generic [ref=e32]:
+      - text: Grateful Stats
+      - generic [ref=e33]:
+        - heading "A database of Grateful Dead shows, tunes, and venues" [level=5] [ref=e35]
+        - link "Graph of Jerry's Hand" [ref=e37] [cursor=pointer]:
+          - /url: hand.html
+          - img "Graph of Jerry's Hand" [ref=e39]
+        - generic [ref=e41]:
+          - text: Here you can peruse all kinds of trippy information about the 2303 shows, 490 songs and 593 venues.
+          - text: "\"You just gotta poke around!\""
+      - heading "Shows played on this day in the history of the Grateful Dead:" [level=5] [ref=e42]
+      - grid [ref=e71]:
+        - rowgroup [ref=e45]:
+          - 'row "Date: No sort applied, activate to apply an ascending sort Weekday: No sort applied, activate to apply an ascending sort Years Ago: No sort applied, activate to apply an ascending sort Venue: No sort applied, activate to apply an ascending sort Opening songs: No sort applied, activate to apply an ascending sort" [ref=e72]':
+            - 'columnheader "Date: No sort applied, activate to apply an ascending sort" [ref=e73]':
+              - generic [ref=e74]: Date
+            - 'columnheader "Weekday: No sort applied, activate to apply an ascending sort" [ref=e75]':
+              - generic [ref=e76]: Weekday
+            - 'columnheader "Years Ago: No sort applied, activate to apply an ascending sort" [ref=e77]':
+              - generic [ref=e78]: Years Ago
+            - 'columnheader "Venue: No sort applied, activate to apply an ascending sort" [ref=e79]':
+              - generic [ref=e80]: Venue
+            - 'columnheader "Opening songs: No sort applied, activate to apply an ascending sort" [ref=e81]':
+              - generic [ref=e82]: Opening songs
+        - rowgroup [ref=e52]:
+          - row "05/14/1970 Thursday 56 Meramec Community College, Kirkwood, MO Don't Ease Me In, Friend Of The Devil, Deep Elem Blues" [ref=e83]:
+            - gridcell "05/14/1970" [ref=e84]:
+              - link "05/14/1970" [ref=e85] [cursor=pointer]:
+                - /url: Shows.html?showid=027f620f-b380-44f2-9df1-8760dd80c64f
+            - gridcell "Thursday" [ref=e86]
+            - gridcell "56" [ref=e87]
+            - gridcell "Meramec Community College, Kirkwood, MO" [ref=e88]:
+              - link "Meramec Community College, Kirkwood, MO" [ref=e89] [cursor=pointer]:
+                - /url: Venues.html?venueid=d6b40584-9e40-42bd-b78f-57646b6e91b8
+            - gridcell "Don't Ease Me In, Friend Of The Devil, Deep Elem Blues" [ref=e90]:
+              - link "Don't Ease Me In" [ref=e91] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=1eff3134-1c62-411c-888e-7e58345e713e
+              - text: ","
+              - link "Friend Of The Devil" [ref=e92] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=52721be9-3fcf-453a-aa20-26eef50c3142
+              - text: ","
+              - link "Deep Elem Blues" [ref=e93] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=27eb3bdb-0388-4236-879f-9d2c8a5e32d9
+          - row "05/14/1974 Tuesday 52 Adams Field House, Missoula,, MT Bertha, Me And My Uncle, Loser" [ref=e94]:
+            - gridcell "05/14/1974" [ref=e95]:
+              - link "05/14/1974" [ref=e96] [cursor=pointer]:
+                - /url: Shows.html?showid=9ca1efae-9efa-479e-ad3c-0c430483982e
+            - gridcell "Tuesday" [ref=e97]
+            - gridcell "52" [ref=e98]
+            - gridcell "Adams Field House, Missoula,, MT" [ref=e99]:
+              - link "Adams Field House, Missoula,, MT" [ref=e100] [cursor=pointer]:
+                - /url: Venues.html?venueid=636aa604-bd49-49c9-b0a4-b3f2b9f34d8c
+            - gridcell "Bertha, Me And My Uncle, Loser" [ref=e101]:
+              - link "Bertha" [ref=e102] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=c0246dee-5fae-4ad6-814d-a718d47371e8
+              - text: ","
+              - link "Me And My Uncle" [ref=e103] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=73e14dd3-27be-4010-9094-b88d1ac11d60
+              - text: ","
+              - link "Loser" [ref=e104] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=d99f15ba-7d69-41c5-9ec0-5e1fe973ab4a
+          - row "05/14/1978 Sunday 48 Providence Civic Center, Providence, RI Mississippi Half Step Uptown Toodeloo, Cassidy, They Love Each Other" [ref=e105]:
+            - gridcell "05/14/1978" [ref=e106]:
+              - link "05/14/1978" [ref=e107] [cursor=pointer]:
+                - /url: Shows.html?showid=a6ed6048-2a19-4e8b-a9b6-f9836ec31093
+            - gridcell "Sunday" [ref=e108]
+            - gridcell "48" [ref=e109]
+            - gridcell "Providence Civic Center, Providence, RI" [ref=e110]:
+              - link "Providence Civic Center, Providence, RI" [ref=e111] [cursor=pointer]:
+                - /url: Venues.html?venueid=e7851e7c-6d15-470a-a025-8f1ddaf216c4
+            - gridcell "Mississippi Half Step Uptown Toodeloo, Cassidy, They Love Each Other" [ref=e112]:
+              - link "Mississippi Half Step Uptown Toodeloo" [ref=e113] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=3779ee8c-9d16-4124-b691-1b319195d3cd
+              - text: ","
+              - link "Cassidy" [ref=e114] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=6100538e-f76a-4f81-8976-a68fc0842caf
+              - text: ","
+              - link "They Love Each Other" [ref=e115] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=c5e43d5c-c4c1-40e5-aab3-f60d74df6b2a
+          - row "05/14/1980 Wednesday 46 Nassau Veterans Memorial Coliseum, Uniondale, NY Alabama Getaway, The Promised Land, Candyman" [ref=e116]:
+            - gridcell "05/14/1980" [ref=e117]:
+              - link "05/14/1980" [ref=e118] [cursor=pointer]:
+                - /url: Shows.html?showid=9e50236b-9d29-43db-97d0-49b14cf0c3fa
+            - gridcell "Wednesday" [ref=e119]
+            - gridcell "46" [ref=e120]
+            - gridcell "Nassau Veterans Memorial Coliseum, Uniondale, NY" [ref=e121]:
+              - link "Nassau Veterans Memorial Coliseum, Uniondale, NY" [ref=e122] [cursor=pointer]:
+                - /url: Venues.html?venueid=8c71156a-39c2-4e13-91c2-095d389e5403
+            - gridcell "Alabama Getaway, The Promised Land, Candyman" [ref=e123]:
+              - link "Alabama Getaway" [ref=e124] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=7c1e35b0-3623-4157-a744-064e9631d96b
+              - text: ","
+              - link "The Promised Land" [ref=e125] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=64bb1d09-db7d-4d7c-b215-c284ccb09e0c
+              - text: ","
+              - link "Candyman" [ref=e126] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=91bffed6-442b-4058-9d2b-c1f7415d120d
+          - row "05/14/1983 Saturday 43 Greek Theatre, Berkeley, CA Feel Like A Stranger, Friend Of The Devil, Me And My Uncle" [ref=e127]:
+            - gridcell "05/14/1983" [ref=e128]:
+              - link "05/14/1983" [ref=e129] [cursor=pointer]:
+                - /url: Shows.html?showid=42e50da0-5784-478b-950a-8508d265b239
+            - gridcell "Saturday" [ref=e130]
+            - gridcell "43" [ref=e131]
+            - gridcell "Greek Theatre, Berkeley, CA" [ref=e132]:
+              - link "Greek Theatre, Berkeley, CA" [ref=e133] [cursor=pointer]:
+                - /url: Venues.html?venueid=a7b8b987-6e5e-4d46-a291-50772aad44e7
+            - gridcell "Feel Like A Stranger, Friend Of The Devil, Me And My Uncle" [ref=e134]:
+              - link "Feel Like A Stranger" [ref=e135] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=7599a274-2ec2-4e5d-8727-b7b465172294
+              - text: ","
+              - link "Friend Of The Devil" [ref=e136] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=52721be9-3fcf-453a-aa20-26eef50c3142
+              - text: ","
+              - link "Me And My Uncle" [ref=e137] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=73e14dd3-27be-4010-9094-b88d1ac11d60
+          - row "05/14/1993 Friday 33 Sam Boyd Silver Bowl, Las Vegas, NV Cold Rain And Snow, Wang Dang Doodle, Lazy River Road" [ref=e138]:
+            - gridcell "05/14/1993" [ref=e139]:
+              - link "05/14/1993" [ref=e140] [cursor=pointer]:
+                - /url: Shows.html?showid=e260e549-4739-4eb2-bbbf-2d6303c16a93
+            - gridcell "Friday" [ref=e141]
+            - gridcell "33" [ref=e142]
+            - gridcell "Sam Boyd Silver Bowl, Las Vegas, NV" [ref=e143]:
+              - link "Sam Boyd Silver Bowl, Las Vegas, NV" [ref=e144] [cursor=pointer]:
+                - /url: Venues.html?venueid=12864ebd-1e5a-4e90-a582-4215e9777373
+            - gridcell "Cold Rain And Snow, Wang Dang Doodle, Lazy River Road" [ref=e145]:
+              - link "Cold Rain And Snow" [ref=e146] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=17b2069d-d089-49e8-92bd-11baf6d98b44
+              - text: ","
+              - link "Wang Dang Doodle" [ref=e147] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=56a01d2b-c41c-4ea4-a0a4-c9a9802c7c0b
+              - text: ","
+              - link "Lazy River Road" [ref=e148] [cursor=pointer]:
+                - /url: TunesDetail.html?songid=757de1f0-3dce-4277-ac3d-17b7d6823238
+      - img [ref=e58]
+      - img "WALSTIB" [ref=e61]
+  - contentinfo [ref=e62]:
+    - generic [ref=e63]:
+      - paragraph [ref=e64]: © 2026 Twelve Bar Software, LLC (DBA GratefulStats.com) - All Rights Reserved.
+      - list [ref=e65]:
+        - listitem [ref=e66]:
+          - link "Terms" [ref=e67] [cursor=pointer]:
+            - /url: Terms.html
+        - listitem [ref=e68]:
+          - link "Privacy" [ref=e69] [cursor=pointer]:
+            - /url: Privacy.html

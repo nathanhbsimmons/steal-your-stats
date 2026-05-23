@@ -1,0 +1,295 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]: INDEXED THU 21 MAY MMXXVI
+      - generic [ref=e5]:
+        - heading "StealyourStats" [level=1] [ref=e6] [cursor=pointer]
+        - generic [ref=e7]: The Dead Archive · compiled by hand, played through the deck
+      - generic [ref=e9]:
+        - generic [ref=e10]: 49°F · clear sky and a Sunshine Daydream
+        - generic [ref=e11]:
+          - generic [ref=e12]: ⌕
+          - textbox "⌕ ⌘K" [ref=e13]:
+            - /placeholder: search songs, shows, venues…
+          - generic [ref=e14]: ⌘K
+    - generic [ref=e15]:
+      - generic [ref=e16]: Pp. 0001 — 2333
+      - generic [ref=e17]:
+        - generic [ref=e18]: ❦
+        - generic [ref=e19]: An Annotated Guide to Grateful Dead Songlists
+        - generic [ref=e20]: ❦
+      - generic [ref=e21]: setlist.fm · archive.org · this volume
+    - navigation "Chapter navigation" [ref=e22]:
+      - button "I. Home" [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: I.
+        - text: Home
+      - button "II. Search ⌘K" [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]: II.
+        - text: Search
+        - generic [ref=e27]: ⌘K
+      - button "III. Songs 442" [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: III.
+        - text: Songs
+        - generic [ref=e30]: "442"
+      - button "IV. Recent" [ref=e31] [cursor=pointer]:
+        - generic [ref=e32]: IV.
+        - text: Recent
+      - button "V. Band Members" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: V.
+        - text: Band Members
+      - button "VI. Venues" [ref=e35] [cursor=pointer]:
+        - generic [ref=e36]: VI.
+        - text: Venues
+      - button "VII. Eras" [ref=e37] [cursor=pointer]:
+        - generic [ref=e38]: VII.
+        - text: Eras
+      - button "VIII. Stats" [ref=e39] [cursor=pointer]:
+        - generic [ref=e40]: VIII.
+        - text: Stats
+      - button "IX. Export" [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: IX.
+        - text: Export
+      - generic [ref=e44]: PG. 0008 of 2333
+    - generic [ref=e46]:
+      - generic [ref=e48]:
+        - generic [ref=e49]: Statistics · thirty years on the road
+        - heading "The big numbers, through the years." [level=2] [ref=e50]
+        - generic [ref=e51]: Every show, every song, every hour of hand-filed tape.
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]: Total Shows
+          - generic [ref=e55]: 2,333
+          - generic [ref=e56]: indexed from setlist.fm
+        - generic [ref=e57]:
+          - generic [ref=e58]: Unique Songs
+          - generic [ref=e59]: "442"
+          - generic [ref=e60]: titles in the catalog
+        - generic [ref=e61]:
+          - generic [ref=e62]: Hours Archived
+          - generic [ref=e63]: 6,299
+          - generic [ref=e64]: avg 2h 42m per show
+        - generic [ref=e65]:
+          - generic [ref=e66]: Peak Year
+          - generic [ref=e67]: "1970"
+          - generic [ref=e68]: 139 shows
+      - generic [ref=e69]:
+        - heading "Shows per year 1965 — 1995" [level=3] [ref=e70]
+        - generic [ref=e71]: peak year highlighted
+        - generic [ref=e72]: N = 2,333
+      - generic [ref=e158]:
+        - 'generic "1965: 21 shows" [ref=e159] [cursor=pointer]':
+          - generic [ref=e160]: "21"
+        - 'generic "1966: 102 shows" [ref=e161] [cursor=pointer]':
+          - generic [ref=e162]: "102"
+        - 'generic "1967: 130 shows" [ref=e163] [cursor=pointer]':
+          - generic [ref=e164]: "130"
+        - 'generic "1968: 117 shows" [ref=e165] [cursor=pointer]':
+          - generic [ref=e166]: "117"
+        - 'generic "1969: 138 shows" [ref=e167] [cursor=pointer]':
+          - generic [ref=e168]: "138"
+        - 'generic "1970: 139 shows" [ref=e169] [cursor=pointer]':
+          - generic [ref=e170]: "139"
+        - 'generic "1971: 82 shows" [ref=e171] [cursor=pointer]':
+          - generic [ref=e172]: "82"
+        - 'generic "1972: 86 shows" [ref=e173] [cursor=pointer]':
+          - generic [ref=e174]: "86"
+        - 'generic "1973: 72 shows" [ref=e175] [cursor=pointer]':
+          - generic [ref=e176]: "72"
+        - 'generic "1974: 40 shows" [ref=e177] [cursor=pointer]':
+          - generic [ref=e178]: "40"
+        - 'generic "1975: 4 shows" [ref=e179] [cursor=pointer]':
+          - generic [ref=e180]: "4"
+        - 'generic "1976: 41 shows" [ref=e181] [cursor=pointer]':
+          - generic [ref=e182]: "41"
+        - 'generic "1977: 60 shows" [ref=e183] [cursor=pointer]':
+          - generic [ref=e184]: "60"
+        - 'generic "1978: 81 shows" [ref=e185] [cursor=pointer]':
+          - generic [ref=e186]: "81"
+        - 'generic "1979: 75 shows" [ref=e187] [cursor=pointer]':
+          - generic [ref=e188]: "75"
+        - 'generic "1980: 87 shows" [ref=e189] [cursor=pointer]':
+          - generic [ref=e190]: "87"
+        - 'generic "1981: 85 shows" [ref=e191] [cursor=pointer]':
+          - generic [ref=e192]: "85"
+        - 'generic "1982: 62 shows" [ref=e193] [cursor=pointer]':
+          - generic [ref=e194]: "62"
+        - 'generic "1983: 66 shows" [ref=e195] [cursor=pointer]':
+          - generic [ref=e196]: "66"
+        - 'generic "1984: 64 shows" [ref=e197] [cursor=pointer]':
+          - generic [ref=e198]: "64"
+        - 'generic "1985: 71 shows" [ref=e199] [cursor=pointer]':
+          - generic [ref=e200]: "71"
+        - 'generic "1986: 46 shows" [ref=e201] [cursor=pointer]':
+          - generic [ref=e202]: "46"
+        - 'generic "1987: 86 shows" [ref=e203] [cursor=pointer]':
+          - generic [ref=e204]: "86"
+        - 'generic "1988: 81 shows" [ref=e205] [cursor=pointer]':
+          - generic [ref=e206]: "81"
+        - 'generic "1989: 73 shows" [ref=e207] [cursor=pointer]':
+          - generic [ref=e208]: "73"
+        - 'generic "1990: 74 shows" [ref=e209] [cursor=pointer]':
+          - generic [ref=e210]: "74"
+        - 'generic "1991: 77 shows" [ref=e211] [cursor=pointer]':
+          - generic [ref=e212]: "77"
+        - 'generic "1992: 55 shows" [ref=e213] [cursor=pointer]':
+          - generic [ref=e214]: "55"
+        - 'generic "1993: 81 shows" [ref=e215] [cursor=pointer]':
+          - generic [ref=e216]: "81"
+        - 'generic "1994: 85 shows" [ref=e217] [cursor=pointer]':
+          - generic [ref=e218]: "85"
+        - 'generic "1995: 47 shows" [ref=e219] [cursor=pointer]':
+          - generic [ref=e220]: "47"
+      - generic [ref=e221]:
+        - generic [ref=e222]: ’65
+        - generic [ref=e223]: ’70
+        - generic [ref=e224]: ’75
+        - generic [ref=e225]: ’80
+        - generic [ref=e226]: ’85
+        - generic [ref=e227]: ’90
+        - generic [ref=e228]: ’95
+      - generic [ref=e229]: Peak — 1970, 139 shows. The longest stretches off-road came in 1975 (the studio year) and 1986 (Garcia’s coma).
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - generic [ref=e76]:
+            - heading "Position breakdown" [level=3] [ref=e77]
+            - generic [ref=e78]: Dark Star — where it landed
+            - generic [ref=e79]: N = 232
+          - generic [ref=e80]:
+            - img [ref=e81]:
+              - generic [ref=e87]: "232"
+              - generic [ref=e88]: DARK STAR
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - generic [ref=e92]: Mid-set
+                - generic [ref=e93]: "210"
+                - generic [ref=e94]: · 90%
+              - generic [ref=e95]:
+                - generic [ref=e97]: Opener
+                - generic [ref=e98]: "14"
+                - generic [ref=e99]: · 6%
+              - generic [ref=e100]:
+                - generic [ref=e102]: Closer
+                - generic [ref=e103]: "6"
+                - generic [ref=e104]: · 3%
+              - generic [ref=e105]:
+                - generic [ref=e107]: Encore
+                - generic [ref=e108]: "2"
+                - generic [ref=e109]: · 1%
+        - generic [ref=e110]:
+          - generic [ref=e111]:
+            - heading "All-time leaderboard" [level=3] [ref=e112]
+            - generic [ref=e113]: top 20 most-played
+            - generic [ref=e114]: N=442 songs
+          - list [ref=e230]:
+            - listitem [ref=e231] [cursor=pointer]:
+              - link "1. Drums 1508" [ref=e232]:
+                - /url: /song/Drums
+                - generic [ref=e233]:
+                  - generic [ref=e234]: "1."
+                  - generic [ref=e235]: Drums
+                  - generic [ref=e236]: "1508"
+            - listitem [ref=e239] [cursor=pointer]:
+              - link "2. Space 1087" [ref=e240]:
+                - /url: /song/Space
+                - generic [ref=e241]:
+                  - generic [ref=e242]: "2."
+                  - generic [ref=e243]: Space
+                  - generic [ref=e244]: "1087"
+            - listitem [ref=e247] [cursor=pointer]:
+              - link "3. Playing in the Band 639" [ref=e248]:
+                - /url: /song/Playing%20in%20the%20Band
+                - generic [ref=e249]:
+                  - generic [ref=e250]: "3."
+                  - generic [ref=e251]: Playing in the Band
+                  - generic [ref=e252]: "639"
+            - listitem [ref=e255] [cursor=pointer]:
+              - link "4. Me and My Uncle 634" [ref=e256]:
+                - /url: /song/Me%20and%20My%20Uncle
+                - generic [ref=e257]:
+                  - generic [ref=e258]: "4."
+                  - generic [ref=e259]: Me and My Uncle
+                  - generic [ref=e260]: "634"
+            - listitem [ref=e263] [cursor=pointer]:
+              - link "5. Sugar Magnolia 602" [ref=e264]:
+                - /url: /song/Sugar%20Magnolia
+                - generic [ref=e265]:
+                  - generic [ref=e266]: "5."
+                  - generic [ref=e267]: Sugar Magnolia
+                  - generic [ref=e268]: "602"
+            - listitem [ref=e271] [cursor=pointer]:
+              - link "6. China Cat Sunflower 572" [ref=e272]:
+                - /url: /song/China%20Cat%20Sunflower
+                - generic [ref=e273]:
+                  - generic [ref=e274]: "6."
+                  - generic [ref=e275]: China Cat Sunflower
+                  - generic [ref=e276]: "572"
+            - listitem [ref=e279] [cursor=pointer]:
+              - link "7. I Know You Rider 570" [ref=e280]:
+                - /url: /song/I%20Know%20You%20Rider
+                - generic [ref=e281]:
+                  - generic [ref=e282]: "7."
+                  - generic [ref=e283]: I Know You Rider
+                  - generic [ref=e284]: "570"
+            - listitem [ref=e287] [cursor=pointer]:
+              - link "8. Not Fade Away 561" [ref=e288]:
+                - /url: /song/Not%20Fade%20Away
+                - generic [ref=e289]:
+                  - generic [ref=e290]: "8."
+                  - generic [ref=e291]: Not Fade Away
+                  - generic [ref=e292]: "561"
+            - listitem [ref=e295] [cursor=pointer]:
+              - link "9. Truckin 532" [ref=e296]:
+                - /url: /song/Truckin
+                - generic [ref=e297]:
+                  - generic [ref=e298]: "9."
+                  - generic [ref=e299]: Truckin
+                  - generic [ref=e300]: "532"
+            - listitem [ref=e303] [cursor=pointer]:
+              - link "10. The Other One 496" [ref=e304]:
+                - /url: /song/The%20Other%20One
+                - generic [ref=e305]:
+                  - generic [ref=e306]: "10."
+                  - generic [ref=e307]: The Other One
+                  - generic [ref=e308]: "496"
+            - listitem [ref=e311] [cursor=pointer]:
+              - link "11. Jack Straw 477" [ref=e312]:
+                - /url: /song/Jack%20Straw
+                - generic [ref=e313]:
+                  - generic [ref=e314]: "11."
+                  - generic [ref=e315]: Jack Straw
+                  - generic [ref=e316]: "477"
+            - listitem [ref=e319] [cursor=pointer]:
+              - link "12. Good Lovin' 447" [ref=e320]:
+                - /url: /song/Good%20Lovin'
+                - generic [ref=e321]:
+                  - generic [ref=e322]: "12."
+                  - generic [ref=e323]: Good Lovin'
+                  - generic [ref=e324]: "447"
+    - contentinfo [ref=e124]:
+      - generic [ref=e125]: © MMXXVI · Steal Your Stats Press · Made by hand
+      - generic [ref=e126]: ❦ If you get confused, listen to the music play ❦
+      - generic [ref=e127]: v.11.5 · cached locally · last sync 1h ago
+    - generic [ref=e128]:
+      - generic [ref=e129]:
+        - generic [ref=e133]:
+          - generic [ref=e134]: nothing in the deck
+          - generic [ref=e135]: cue a show to begin · play the featured tape
+        - generic [ref=e136]:
+          - generic [ref=e137]:
+            - button "Previous" [ref=e138] [cursor=pointer]: ◀◀
+            - button "Play" [ref=e139] [cursor=pointer]: ▶
+            - button "Next" [ref=e140] [cursor=pointer]: ▶▶
+          - generic [ref=e141]:
+            - generic [ref=e142]: 0:00
+            - generic [ref=e145]: 0:00
+        - generic [ref=e146]:
+          - generic [ref=e148]: VOL
+          - button "Queue 1" [ref=e327] [cursor=pointer]:
+            - text: Queue
+            - generic [ref=e154]: "1"
+      - generic [ref=e155]:
+        - generic [ref=e156]: cued · 1 track
+        - generic [ref=e157]: —
+  - button "Open Next.js Dev Tools" [ref=e333] [cursor=pointer]:
+    - img [ref=e334]
+  - alert [ref=e337]

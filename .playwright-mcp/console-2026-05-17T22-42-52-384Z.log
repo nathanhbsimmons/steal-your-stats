@@ -1,0 +1,26 @@
+[   13150ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:14537
+[   31209ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/stats/summary:0
+[   31210ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/stats:0
+[   69654ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[   70214ms] [LOG] [Fast Refresh] done in 660ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[   70316ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[   70402ms] [LOG] [Fast Refresh] done in 186ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[   85200ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[   85237ms] [LOG] [Fast Refresh] done in 139ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  229248ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  229273ms] [LOG] [Fast Refresh] done in 125ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  239629ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://localhost:3000/api/stats:0
+[  239629ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://localhost:3000/api/stats/summary:0
+[  239630ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/stats:0
+[  239630ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/stats/summary:0
+[  300215ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:14537
+[  318001ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  318160ms] [LOG] [Fast Refresh] done in 259ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  330542ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  330797ms] [LOG] [Fast Refresh] done in 356ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  331698ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  331812ms] [LOG] [Fast Refresh] done in 214ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  376158ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  376331ms] [LOG] [Fast Refresh] done in 273ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  376504ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  376772ms] [LOG] [Fast Refresh] done in 369ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809

@@ -1,0 +1,102 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Steal Your Stats
+        - generic [ref=e10]: The Dead Archive
+    - navigation [ref=e11]:
+      - link "Home" [ref=e12] [cursor=pointer]:
+        - /url: /
+        - img [ref=e14]
+        - generic [ref=e16]: Home
+      - link "Search" [ref=e17] [cursor=pointer]:
+        - /url: /search
+        - img [ref=e19]
+        - generic [ref=e21]: Search
+      - link "Recent 12" [ref=e22] [cursor=pointer]:
+        - /url: /recent
+        - img [ref=e24]
+        - generic [ref=e26]: Recent
+        - generic [ref=e27]: "12"
+      - link "Artists" [ref=e28] [cursor=pointer]:
+        - /url: /artists
+        - img [ref=e30]
+        - generic [ref=e32]: Artists
+      - link "Venues" [ref=e33] [cursor=pointer]:
+        - /url: /venues
+        - img [ref=e35]
+        - generic [ref=e37]: Venues
+      - link "Eras" [ref=e38] [cursor=pointer]:
+        - /url: /eras
+        - img [ref=e40]
+        - generic [ref=e42]: Eras
+      - link "Stats" [ref=e43] [cursor=pointer]:
+        - /url: /stats
+        - img [ref=e45]
+        - generic [ref=e47]: Stats
+      - link "Export" [ref=e48] [cursor=pointer]:
+        - /url: /export
+        - img [ref=e50]
+        - generic [ref=e52]: Export
+    - generic [ref=e53]:
+      - generic [ref=e54]: Pinned
+      - generic [ref=e55]:
+        - link "Dark Star" [ref=e56] [cursor=pointer]:
+          - /url: /song/Dark%20Star
+          - img [ref=e58]
+          - generic [ref=e60]: Dark Star
+        - link "St. Stephen" [ref=e61] [cursor=pointer]:
+          - /url: /song/St.%20Stephen
+          - img [ref=e63]
+          - generic [ref=e65]: St. Stephen
+        - link "Scarlet › Fire" [ref=e66] [cursor=pointer]:
+          - /url: /song/Scarlet%20Begonias
+          - img [ref=e68]
+          - generic [ref=e70]: Scarlet › Fire
+        - link "Eyes of the World" [ref=e71] [cursor=pointer]:
+          - /url: /song/Eyes%20of%20the%20World
+          - img [ref=e73]
+          - generic [ref=e75]: Eyes of the World
+        - link "Morning Dew" [ref=e76] [cursor=pointer]:
+          - /url: /song/Morning%20Dew
+          - img [ref=e78]
+          - generic [ref=e80]: Morning Dew
+    - generic [ref=e82]:
+      - generic [ref=e83]: JG
+      - generic [ref=e84]:
+        - generic [ref=e85]: jerry@archive
+        - generic [ref=e86]: cached · 24h
+      - img [ref=e88]
+  - generic [ref=e90]:
+    - banner [ref=e91]:
+      - generic [ref=e92]:
+        - generic [ref=e93]: Venues
+        - heading "Where the Dead set up the wall." [level=1] [ref=e94]
+      - generic [ref=e95]:
+        - img [ref=e97]
+        - textbox "Songs, venues, dates, eras…" [ref=e99]
+        - generic [ref=e100]: ⌘K
+    - generic [ref=e101]:
+      - generic [ref=e102]:
+        - generic [ref=e103]:
+          - generic [ref=e104]: Unique venues
+          - generic [ref=e105]: —
+          - generic [ref=e106]: from setlist.fm
+        - generic [ref=e107]:
+          - generic [ref=e108]: Most played
+          - generic [ref=e109]: —
+        - generic [ref=e110]:
+          - generic [ref=e111]: Showing
+          - generic [ref=e112]: —
+          - generic [ref=e113]: all venues
+        - generic [ref=e114]:
+          - generic [ref=e115]: Top city
+          - generic [ref=e116]: —
+          - generic [ref=e117]: by show count
+      - generic [ref=e119]:
+        - heading "All venues" [level=3] [ref=e120]
+        - generic [ref=e121]: sorted by shows
+        - generic [ref=e122]:
+          - img [ref=e123]
+          - textbox "Filter venues…" [ref=e125]

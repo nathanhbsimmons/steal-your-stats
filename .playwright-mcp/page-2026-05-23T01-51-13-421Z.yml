@@ -1,0 +1,106 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]: INDEXED FRI 22 MAY MMXXVI
+    - generic [ref=e5]:
+      - heading "StealyourStats" [level=1] [ref=e6] [cursor=pointer]
+      - generic [ref=e7]: The Dead Archive · compiled by hand, played through the deck
+    - generic [ref=e9]:
+      - generic [ref=e10]: 49°F · clear sky and a Sunshine Daydream
+      - generic [ref=e11]:
+        - generic [ref=e12]: ⌕
+        - textbox "⌕ ⌘K" [ref=e13]:
+          - /placeholder: search songs, shows, venues…
+        - generic [ref=e14]: ⌘K
+  - generic [ref=e15]:
+    - generic [ref=e16]: Pp. 0001 — 2333
+    - generic [ref=e17]:
+      - generic [ref=e18]: ❦
+      - generic [ref=e19]: An Annotated Guide to Grateful Dead Songlists
+      - generic [ref=e20]: ❦
+    - generic [ref=e21]: setlist.fm · archive.org · this volume
+  - navigation "Chapter navigation" [ref=e22]:
+    - button "I. Home" [ref=e23] [cursor=pointer]:
+      - generic [ref=e24]: I.
+      - text: Home
+    - button "II. Search ⌘K" [ref=e25] [cursor=pointer]:
+      - generic [ref=e26]: II.
+      - text: Search
+      - generic [ref=e27]: ⌘K
+    - button "III. Songs 442" [ref=e28] [cursor=pointer]:
+      - generic [ref=e29]: III.
+      - text: Songs
+      - generic [ref=e30]: "442"
+    - button "IV. Recent" [ref=e31] [cursor=pointer]:
+      - generic [ref=e32]: IV.
+      - text: Recent
+    - button "V. Band Members" [ref=e33] [cursor=pointer]:
+      - generic [ref=e34]: V.
+      - text: Band Members
+    - button "VI. Venues" [ref=e35] [cursor=pointer]:
+      - generic [ref=e36]: VI.
+      - text: Venues
+    - button "VII. Eras" [ref=e37] [cursor=pointer]:
+      - generic [ref=e38]: VII.
+      - text: Eras
+    - button "VIII. Stats" [ref=e39] [cursor=pointer]:
+      - generic [ref=e40]: VIII.
+      - text: Stats
+    - button "IX. Export" [ref=e41] [cursor=pointer]:
+      - generic [ref=e42]: IX.
+      - text: Export
+    - generic [ref=e44]: PG. 0003 of 2333
+  - generic [ref=e46]:
+    - generic [ref=e47]:
+      - link "Home" [ref=e48] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e49]: /
+      - link "Songs" [ref=e50] [cursor=pointer]:
+        - /url: /songs
+      - generic [ref=e51]: /
+      - generic [ref=e52]: Bertha
+      - button "Share" [ref=e53] [cursor=pointer]
+      - button "☆" [ref=e54] [cursor=pointer]
+    - generic [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]: Song · jam vehicle
+        - heading "Bertha" [level=2] [ref=e58]
+      - generic [ref=e59]:
+        - button "⟵ First show" [disabled] [ref=e60] [cursor=pointer]
+        - button "Last show ⟶" [disabled] [ref=e61] [cursor=pointer]
+        - button "▶ Play longest version" [ref=e62] [cursor=pointer]:
+          - generic [ref=e63]: ▶
+          - text: Play longest version
+    - generic [ref=e72]:
+      - generic [ref=e73]: Provenance
+      - text: Performance data from
+      - link "setlist.fm" [ref=e74] [cursor=pointer]:
+        - /url: https://www.setlist.fm
+      - text: . Audio recordings via
+      - link "Archive.org" [ref=e75] [cursor=pointer]:
+        - /url: https://archive.org
+      - text: — community-contributed tapes.
+  - contentinfo [ref=e76]:
+    - generic [ref=e77]: © MMXXVI · Steal Your Stats Press · Made by hand
+    - generic [ref=e78]: ❦ If you get confused, listen to the music play ❦
+    - generic [ref=e79]: v.11.5 · cached locally · last sync 1h ago
+  - generic [ref=e80]:
+    - generic [ref=e81]:
+      - generic [ref=e85]:
+        - generic [ref=e86]: nothing in the deck
+        - generic [ref=e87]: cue a show to begin · play the featured tape
+      - generic [ref=e88]:
+        - generic [ref=e89]:
+          - button "Previous" [ref=e90] [cursor=pointer]: ◀◀
+          - button "Play" [ref=e91] [cursor=pointer]: ▶
+          - button "Next" [ref=e92] [cursor=pointer]: ▶▶
+        - generic [ref=e93]:
+          - generic [ref=e94]: 0:00
+          - generic [ref=e97]: 0:00
+      - generic [ref=e98]:
+        - generic [ref=e100]: VOL
+        - button "Queue 0" [ref=e105] [cursor=pointer]:
+          - text: Queue
+          - generic [ref=e106]: "0"
+    - generic [ref=e107]:
+      - generic [ref=e108]: standby · no queue · click a setlist track to begin
+      - generic [ref=e109]: —

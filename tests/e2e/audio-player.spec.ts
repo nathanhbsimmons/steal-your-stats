@@ -11,12 +11,22 @@ const mockSongFacts = {
 }
 
 const mockPositionFacts = {
-  opener: { count: 10, shows: [] },
-  closer: { count: 5, shows: [] },
-  encore: { count: 3, shows: [] },
+  opener: { count: 2, shows: [
+    { date: '1970-02-11', venue: 'Winterland Arena', city: 'San Francisco', country: 'US', url: '' },
+    { date: '1969-11-02', venue: 'Fillmore West', city: 'San Francisco', country: 'US', url: '' },
+  ]},
+  closer: { count: 1, shows: [{ date: '1972-08-27', venue: 'Old Renaissance Faire Grounds', city: 'Veneta', country: 'US', url: '' }]},
+  encore: { count: 0, shows: [] },
 }
 
-const mockVersionsFacts = { tracks: [], extremes: null }
+const mockVersionsFacts = {
+  tracks: [
+    { id: 'ds-1', showDate: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', country: 'US', durationSec: 817 },
+    { id: 'ds-2', showDate: '1972-08-27', venue: 'Old Renaissance Faire Grounds', city: 'Veneta', country: 'US', durationSec: 2341 },
+  ],
+  extremes: null,
+  songTitle: 'Dark Star',
+}
 
 const mockArchiveShow = {
   identifier: 'gd68-04-02.aud.seamons.25.sbeok.shnf',
@@ -55,214 +65,154 @@ const mockTracks = {
   ],
 }
 
-// ── Helper ───────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function setupApiMocks(page: Page) {
-  await page.route('**/api/song-facts**', route =>
-    route.fulfill({ contentType: 'application/json', body: JSON.stringify(mockSongFacts) })
-  )
-  await page.route('**/api/position-facts**', route =>
-    route.fulfill({ contentType: 'application/json', body: JSON.stringify(mockPositionFacts) })
-  )
-  await page.route('**/api/versions**', route =>
-    route.fulfill({ contentType: 'application/json', body: JSON.stringify(mockVersionsFacts) })
-  )
-  await page.route('**/api/archive/resolve-show**', route =>
-    route.fulfill({ contentType: 'application/json', body: JSON.stringify(mockArchiveShow) })
-  )
-  await page.route('**/api/archive/song-tracks**', route =>
-    route.fulfill({ contentType: 'application/json', body: JSON.stringify(mockTracks) })
-  )
+  await page.route('**/api/song-facts**', r => r.fulfill({ json: mockSongFacts }))
+  await page.route('**/api/position-facts**', r => r.fulfill({ json: mockPositionFacts }))
+  await page.route('**/api/versions**', r => r.fulfill({ json: mockVersionsFacts }))
+  await page.route('**/api/archive/resolve-show**', r => r.fulfill({ json: mockArchiveShow }))
+  await page.route('**/api/archive/song-tracks**', r => r.fulfill({ json: mockTracks }))
+  await page.route('**/api/weather**', r => r.fulfill({ json: { temp: 72, code: 1, label: 'Clear' } }))
+  await page.route('**/api/stats**', r => r.fulfill({ json: { showsPerYear: [], leaderboard: [] } }))
+  await page.route('**/api/stats/summary**', r => r.fulfill({ json: {} }))
 }
 
 async function loadSongPage(page: Page, song = 'Dark%20Star') {
   await setupApiMocks(page)
   await page.goto(`/song/${song}`)
-  // Wait for song data to load
   await expect(page.getByText('Dark Star').first()).toBeVisible({ timeout: 10_000 })
+}
+
+// Clicks "First show" button and waits for tracks to load into the player
+async function addFirstShowToQueue(page: Page) {
+  await page.getByRole('button', { name: /First show/i }).click()
+  // Wait until the player has a track (no longer shows "nothing in the deck")
+  await expect(page.locator('.vault-player .meta .title')).not.toContainText('nothing in the deck', { timeout: 10_000 })
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-test.describe('Audio Player — initial state', () => {
-  test('renders empty player and queue on load', async ({ page }) => {
+test.describe('VaultPlayer — initial state', () => {
+  test('shows "nothing in the deck" when no track loaded', async ({ page }) => {
     await loadSongPage(page)
-    await expect(page.getByText('No track selected')).toBeVisible()
-    await expect(page.getByText('Queue is empty')).toBeVisible()
+    await expect(page.locator('.vault-player')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('nothing in the deck')).toBeVisible()
   })
 
-  test('play/pause controls not rendered when no track is selected', async ({ page }) => {
+  test('shows standby status with no queue', async ({ page }) => {
     await loadSongPage(page)
-    // AudioPlayerDock renders only the empty-state card when currentTrack is null
-    await expect(page.getByRole('button', { name: 'Play', exact: true })).not.toBeVisible()
-    await expect(page.getByRole('button', { name: 'Pause', exact: true })).not.toBeVisible()
-  })
-})
-
-test.describe('Audio Player — queue management', () => {
-  test('clicking Play First Show Versions adds tracks to queue', async ({ page }) => {
-    await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/standby · no queue/)).toBeVisible()
   })
 
-  test('clicking Play First Show Versions auto-selects first track', async ({ page }) => {
+  test('play button is present (aria-label Play)', async ({ page }) => {
     await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    // Player should now show a track (not "No track selected")
-    await expect(page.getByText('No track selected')).not.toBeVisible({ timeout: 10_000 })
+    await expect(page.getByRole('button', { name: 'Play' })).toBeVisible()
   })
 
-  test('removing a track from the queue decrements count', async ({ page }) => {
+  test('Queue badge shows 0 initially', async ({ page }) => {
     await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
-    await page.getByRole('button', { name: /Remove track 1/ }).click()
-    await expect(page.getByText('Queue (1)')).toBeVisible()
+    // Queue button shows "Queue N" — with empty queue, badge is 0
+    const queueBtn = page.locator('button.toggleq')
+    await expect(queueBtn).toBeVisible()
+    await expect(queueBtn).toContainText('0')
   })
 
-  test('Clear button empties the queue', async ({ page }) => {
-    await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
-    await page.getByRole('button', { name: 'Clear', exact: true }).click()
-    await expect(page.getByText('Queue is empty')).toBeVisible()
-  })
-
-  test('"Clear & Play Entire Show" replaces queue with full show', async ({ page }) => {
-    await loadSongPage(page)
-
-    // Add some tracks first
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
-    // Mock a second resolve-show call for the entire show
-    await page.route('**/api/archive/resolve-show**', route =>
-      route.fulfill({ contentType: 'application/json', body: JSON.stringify(mockArchiveShow) })
-    )
-    await page.route('**/api/archive/song-tracks**', route =>
-      route.fulfill({ contentType: 'application/json', body: JSON.stringify(mockTracks) })
-    )
-
-    await page.getByRole('button', { name: 'Clear & Play Entire Show' }).click()
-    // Queue should still have tracks (replaced, not cleared to zero)
-    await expect(page.getByText('Queue is empty')).not.toBeVisible({ timeout: 10_000 })
-  })
-})
-
-test.describe('Audio Player — playback controls', () => {
-  test('play button becomes pause after track is selected', async ({ page }) => {
-    await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
-    // A track should be auto-selected; play/pause button should exist
-    await expect(
-      page.getByRole('button', { name: /^(Play|Pause)$/ }).first()
-    ).toBeVisible()
-  })
-
-  test('clicking a track in the queue makes it current', async ({ page }) => {
-    await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
-    // Click second track in queue
-    await page.getByRole('button', { name: /Play track 2/ }).click()
-    // Player should show the track (not "No track selected")
-    await expect(page.getByText('No track selected')).not.toBeVisible()
-  })
-
-  test('Next track button is enabled when a track is loaded', async ({ page }) => {
-    await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
-    const nextBtn = page.getByRole('button', { name: 'Next track' })
-    await expect(nextBtn).not.toBeDisabled()
-  })
-
-  test('Previous track button is enabled when a track is loaded', async ({ page }) => {
-    await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
-    const prevBtn = page.getByRole('button', { name: 'Previous track' })
-    await expect(prevBtn).not.toBeDisabled()
-  })
-
-  test('clicking Next advances to second track', async ({ page }) => {
-    await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
-    // Both track labels should be visible in the queue
-    await expect(page.getByText('Track 1').first()).toBeVisible()
-    await expect(page.getByText('Track 2').first()).toBeVisible()
-
-    // Click Next — second track becomes the current track in the player
-    await page.getByRole('button', { name: 'Next track' }).click()
-
-    // Player header should update (no longer on the first track's position)
-    // Verify no JS errors occurred during navigation
+  test('no JS errors on load', async ({ page }) => {
     const errors: string[] = []
-    page.on('pageerror', err => errors.push(err.message))
+    page.on('pageerror', e => errors.push(e.message))
+    await loadSongPage(page)
+    await page.waitForTimeout(1500)
     expect(errors).toHaveLength(0)
   })
 })
 
-test.describe('Audio Player — keyboard shortcuts', () => {
-  test('Space key does not throw errors when no track selected', async ({ page }) => {
+test.describe('VaultPlayer — queue management', () => {
+  test('clicking First Show button loads tracks into queue', async ({ page }) => {
+    await loadSongPage(page)
+    await addFirstShowToQueue(page)
+    // Queue badge should now be > 0
+    const queueBtn = page.locator('button.toggleq')
+    await expect(queueBtn).not.toContainText('0')
+  })
+
+  test('after loading tracks, status no longer shows standby', async ({ page }) => {
+    await loadSongPage(page)
+    await addFirstShowToQueue(page)
+    await expect(page.getByText(/standby · no queue/)).not.toBeVisible()
+  })
+
+  test('after loading tracks, track info appears in player', async ({ page }) => {
+    await loadSongPage(page)
+    await addFirstShowToQueue(page)
+    // Title area should show the track name (not "nothing in the deck")
+    await expect(page.locator('.vault-player .meta .title')).not.toContainText('nothing in the deck')
+  })
+
+  test('opening queue drawer shows tracks', async ({ page }) => {
+    await loadSongPage(page)
+    await addFirstShowToQueue(page)
+    // Open the queue drawer
+    await page.locator('button.toggleq').click()
+    await expect(page.locator('.vault-queue')).toBeVisible({ timeout: 5_000 })
+  })
+
+  test('queue drawer has a "Clear queue" button', async ({ page }) => {
+    await loadSongPage(page)
+    await addFirstShowToQueue(page)
+    await page.locator('button.toggleq').click()
+    await expect(page.locator('.vault-queue')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('button', { name: 'Clear queue' })).toBeVisible()
+  })
+
+  test('"Clear queue" empties the queue', async ({ page }) => {
+    await loadSongPage(page)
+    await addFirstShowToQueue(page)
+    await page.locator('button.toggleq').click()
+    await expect(page.locator('.vault-queue')).toBeVisible({ timeout: 5_000 })
+    await page.getByRole('button', { name: 'Clear queue' }).click()
+    // Queue badge should be back to 0
+    const queueBtn = page.locator('button.toggleq')
+    await expect(queueBtn).toContainText('0', { timeout: 5_000 })
+  })
+})
+
+test.describe('VaultPlayer — playback controls', () => {
+  test('play/pause button exists', async ({ page }) => {
+    await loadSongPage(page)
+    // Initially shows "Play" label
+    await expect(page.getByRole('button', { name: 'Play' })).toBeVisible()
+  })
+
+  test('Previous and Next buttons are present', async ({ page }) => {
+    await loadSongPage(page)
+    await expect(page.getByRole('button', { name: 'Previous' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Next' })).toBeVisible()
+  })
+
+  test('after loading a track, play button changes to pause', async ({ page }) => {
+    await loadSongPage(page)
+    await addFirstShowToQueue(page)
+    // selectTrack sets isPlaying=true, so button becomes "Pause"
+    await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible({ timeout: 5_000 })
+  })
+})
+
+test.describe('VaultPlayer — keyboard shortcuts', () => {
+  test('Space key does not throw JS errors', async ({ page }) => {
     await loadSongPage(page)
     const errors: string[] = []
-    page.on('pageerror', err => errors.push(err.message))
-
+    page.on('pageerror', e => errors.push(e.message))
     await page.keyboard.press('Space')
     expect(errors).toHaveLength(0)
   })
 
-  test('Space key does not throw errors when track is playing', async ({ page }) => {
+  test('ArrowRight key does not throw JS errors', async ({ page }) => {
     await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
+    await addFirstShowToQueue(page)
     const errors: string[] = []
-    page.on('pageerror', err => errors.push(err.message))
-
-    await page.keyboard.press('Space')
-    await page.keyboard.press('Space')
-    expect(errors).toHaveLength(0)
-  })
-
-  test('ArrowRight moves to next track', async ({ page }) => {
-    await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
-    const errors: string[] = []
-    page.on('pageerror', err => errors.push(err.message))
+    page.on('pageerror', e => errors.push(e.message))
     await page.keyboard.press('ArrowRight')
     expect(errors).toHaveLength(0)
-  })
-
-  test('M key toggles mute without error', async ({ page }) => {
-    await loadSongPage(page)
-    const errors: string[] = []
-    page.on('pageerror', err => errors.push(err.message))
-
-    await page.keyboard.press('m')
-    expect(errors).toHaveLength(0)
-  })
-})
-
-test.describe('Audio Player — Play Entire Show', () => {
-  test('Play Entire Show button appears when a track is loaded', async ({ page }) => {
-    await loadSongPage(page)
-    await page.getByRole('button', { name: 'Play First Show Versions' }).click()
-    await expect(page.getByText('Queue (2)')).toBeVisible({ timeout: 10_000 })
-
-    await expect(page.getByRole('button', { name: 'Play entire show', exact: true })).toBeVisible()
   })
 })

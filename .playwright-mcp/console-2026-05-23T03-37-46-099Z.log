@@ -1,0 +1,120 @@
+[    1071ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:14537
+[   50504ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[   50755ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/member-shows?year=1980&page=1:0
+[   50813ms] TypeError: Failed to fetch
+    at MemberPage.useCallback[fetchBrowse] (http://localhost:3000/_next/static/chunks/app_member_%5Bslug%5D_page_tsx_31b9caa5._.js:640:33)
+    at MemberPage.useEffect (http://localhost:3000/_next/static/chunks/app_member_%5Bslug%5D_page_tsx_31b9caa5._.js:655:31)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:13122:22)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:886:74)
+    at commitHookEffectListMount (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:6640:628)
+    at commitHookPassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:6675:60)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7630:33)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7673:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7673:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7633:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7633:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7673:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7673:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7673:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7673:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7629:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7633:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:7621:106)
+[   50908ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/__nextjs_original-stack-frames:0
+[  434537ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:14537
+[  435053ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  435166ms] [LOG] [Fast Refresh] done in 215ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  486852ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  487038ms] [LOG] [Fast Refresh] done in 218ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  501435ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  501507ms] [LOG] [Fast Refresh] done in 174ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  501897ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:14537
+[  607152ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  607326ms] [LOG] [Fast Refresh] done in 211ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  616206ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  616328ms] [LOG] [Fast Refresh] done in 168ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  644943ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  645066ms] [LOG] [Fast Refresh] done in 226ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  645466ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:14537
+[  650822ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  651169ms] [LOG] [Fast Refresh] done in 448ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  750049ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  750251ms] [LOG] [Fast Refresh] done in 221ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  779367ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  779434ms] [LOG] [Fast Refresh] done in 168ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  780269ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  780376ms] [LOG] [Fast Refresh] done in 207ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  814237ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1969-12-11 @ http://localhost:3000/_next/static/chunks/cab68_next_dist_e89e2d16._.js:2359
+[  814448ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  814574ms] [LOG] [Fast Refresh] done in 227ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  817540ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1969-12-11 @ http://localhost:3000/_next/static/chunks/cab68_next_dist_e89e2d16._.js:2359
+[  853099ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  853437ms] [LOG] [Fast Refresh] done in 439ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  853538ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  853684ms] [LOG] [Fast Refresh] done in 246ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  853898ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  854128ms] [LOG] [Fast Refresh] done in 329ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  856052ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  856201ms] [LOG] [Fast Refresh] done in 251ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  888850ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  889367ms] [LOG] [Fast Refresh] done in 618ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  889470ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  889481ms] [LOG] [Fast Refresh] done in 112ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  927079ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  927387ms] [LOG] [Fast Refresh] done in 408ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  927489ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  927561ms] [LOG] [Fast Refresh] done in 174ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  927697ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  928000ms] [LOG] [Fast Refresh] done in 403ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  930119ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  930450ms] [LOG] [Fast Refresh] done in 433ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  930551ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  930552ms] [LOG] [Fast Refresh] done in 101ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  931619ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  931794ms] [LOG] [Fast Refresh] done in 275ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[ 1571716ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[ 1571931ms] [LOG] [Fast Refresh] done in 317ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[ 1583197ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[ 1583537ms] [LOG] [Fast Refresh] done in 364ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[ 1591720ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[ 1591810ms] [LOG] [Fast Refresh] done in 191ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[ 1599938ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[ 1600160ms] [LOG] [Fast Refresh] done in 286ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[ 1608198ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[ 1608276ms] [LOG] [Fast Refresh] done in 150ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[ 1613718ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[ 1613967ms] [LOG] [Fast Refresh] done in 329ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[ 1621990ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[ 1622447ms] [LOG] [Fast Refresh] done in 555ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809

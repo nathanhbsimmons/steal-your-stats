@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Vault Operator — Mobile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,800;1,6..96,500&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;700&family=UnifrakturMaguntia&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="mobile-styles.css" />
+  <style>
+    body {
+      margin: 0;
+      background: #d9cda8;
+      font-family: 'Crimson Pro', Georgia, serif;
+      min-height: 100vh;
+    }
+    .intro {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 36px 32px 8px;
+      color: #1a140c;
+    }
+    .intro .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #a8391f;
+      margin-bottom: 6px;
+    }
+    .intro h1 {
+      font-family: 'DM Serif Display', Didot, serif;
+      font-weight: 400;
+      font-size: 44px;
+      line-height: 1;
+      margin: 0 0 10px;
+      letter-spacing: -0.01em;
+    }
+    .intro p {
+      font-family: 'Crimson Pro', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.5;
+      max-width: 720px;
+      color: #3a2d1c;
+      margin: 0 0 6px;
+    }
+    .intro p em {
+      color: #6b5535;
+    }
+  </style>
+</head>
+<body>
+  <div class="intro">
+    <div class="eyebrow">Mobile reimagining · option B</div>
+    <h1>The Vault Operator, in the pocket</h1>
+    <p>Same vocabulary as the broadsheet — parchment, ink rules, blackletter, mono accents, rust highlights — but the layout grammar is built for one hand. The home screen <em>is</em> the tape deck; marginalia become inline pull-quotes; chapter nav becomes a four-tab footer; the player collapses to a 64px mini bar above the tabs on every other screen.</p>
+  </div>
+
+  <div id="canvas-root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="mobile-screens.jsx"></script>
+
+  <script type="text/babel">
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "heroStyle": "reel"
+    }/*EDITMODE-END*/;
+
+    function Board({ children }) {
+      return (
+        <IOSDevice width={402} height={874}>
+          {children}
+        </IOSDevice>
+      );
+    }
+
+    function App() {
+      const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+      return (
+        <>
+          <DesignCanvas>
+            <DCSection
+              id="vault-mobile"
+              title="The Vault Operator — Mobile"
+              subtitle="Four key screens · same archival vocabulary, mobile-native grammar"
+            >
+              <DCArtboard id="deck"   label={`I · The Deck (Home / Now Playing) — ${t.heroStyle}`} width={430} height={902}>
+                <Board><DeckScreen heroStyle={t.heroStyle} /></Board>
+              </DCArtboard>
+              <DCArtboard id="songs"  label="III · Songs (Catalog, alpha-indexed)" width={430} height={902}>
+                <Board><SongsScreen /></Board>
+              </DCArtboard>
+              <DCArtboard id="song-detail" label="III·a · Song Detail (Annotated Dossier)" width={430} height={902}>
+                <Board><SongDetailScreen /></Board>
+              </DCArtboard>
+              <DCArtboard id="stats"  label="VIII · Stats (The Almanac)" width={430} height={902}>
+                <Board><StatsScreen /></Board>
+              </DCArtboard>
+            </DCSection>
+          </DesignCanvas>
+
+          <TweaksPanel title="Tweaks">
+            <TweakSection label="Home hero treatment">
+              <TweakRadio
+                label="Style"
+                value={t.heroStyle}
+                options={[
+                  { value: "reel",  label: "Reel" },
+                  { value: "inlay", label: "J-card" },
+                  { value: "grid",  label: "Grid" },
+                ]}
+                onChange={(v) => setTweak("heroStyle", v)}
+              />
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("canvas-root")).render(<App />);
+  </script>
+</body>
+</html>

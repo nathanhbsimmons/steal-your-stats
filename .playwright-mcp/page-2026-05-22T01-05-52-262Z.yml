@@ -1,0 +1,176 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]: INDEXED THU 21 MAY MMXXVI
+    - generic [ref=e5]:
+      - heading "StealyourStats" [level=1] [ref=e6] [cursor=pointer]
+      - generic [ref=e7]: The Dead Archive · compiled by hand, played through the deck
+    - generic [ref=e9]:
+      - generic [ref=e10]: 49°F · clear sky and a Sunshine Daydream
+      - generic [ref=e11]:
+        - generic [ref=e12]: ⌕
+        - textbox "⌕ ⌘K" [ref=e13]:
+          - /placeholder: search songs, shows, venues…
+        - generic [ref=e14]: ⌘K
+  - generic [ref=e15]:
+    - generic [ref=e16]: Pp. 0001 — 2333
+    - generic [ref=e17]:
+      - generic [ref=e18]: ❦
+      - generic [ref=e19]: An Annotated Guide to Grateful Dead Songlists
+      - generic [ref=e20]: ❦
+    - generic [ref=e21]: setlist.fm · archive.org · this volume
+  - navigation "Chapter navigation" [ref=e22]:
+    - button "I. Home" [ref=e23] [cursor=pointer]:
+      - generic [ref=e24]: I.
+      - text: Home
+    - button "II. Search ⌘K" [ref=e25] [cursor=pointer]:
+      - generic [ref=e26]: II.
+      - text: Search
+      - generic [ref=e27]: ⌘K
+    - button "III. Songs 442" [ref=e28] [cursor=pointer]:
+      - generic [ref=e29]: III.
+      - text: Songs
+      - generic [ref=e30]: "442"
+    - button "IV. Recent" [ref=e31] [cursor=pointer]:
+      - generic [ref=e32]: IV.
+      - text: Recent
+    - button "V. Band Members" [ref=e33] [cursor=pointer]:
+      - generic [ref=e34]: V.
+      - text: Band Members
+    - button "VI. Venues" [ref=e35] [cursor=pointer]:
+      - generic [ref=e36]: VI.
+      - text: Venues
+    - button "VII. Eras" [ref=e37] [cursor=pointer]:
+      - generic [ref=e38]: VII.
+      - text: Eras
+    - button "VIII. Stats" [ref=e39] [cursor=pointer]:
+      - generic [ref=e40]: VIII.
+      - text: Stats
+    - button "IX. Export" [ref=e41] [cursor=pointer]:
+      - generic [ref=e42]: IX.
+      - text: Export
+    - generic [ref=e44]: PG. 0007 of 2333
+  - generic [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e49]: Eras · VII
+        - heading "The band's five lives." [level=2] [ref=e50]
+        - generic [ref=e51]: From the Acid Tests to Soldier Field — three decades, in five chapters.
+      - generic [ref=e53]: 2,328 shows · 1965–1995
+    - generic [ref=e54]:
+      - generic [ref=e55]: "1965"
+      - generic [ref=e56]: "1970"
+      - generic [ref=e57]: "1975"
+      - generic [ref=e58]: "1980"
+      - generic [ref=e59]: "1985"
+      - generic [ref=e60]: "1990"
+      - generic [ref=e61]: "1995"
+    - generic [ref=e68]:
+      - generic [ref=e69] [cursor=pointer]:
+        - generic [ref=e70]: Pigpen era
+        - heading "Primal Dead" [level=4] [ref=e71]
+        - generic [ref=e72]: 1965 – 1971
+        - generic [ref=e73]:
+          - text: Shows
+          - generic [ref=e74]: —
+        - generic [ref=e75]: Lovelight, Caution, Viola Lee Blues
+        - link "Explore ⟶" [ref=e76]:
+          - /url: /eras/primal
+      - generic [ref=e77] [cursor=pointer]:
+        - generic [ref=e78]: Wall-of-Sound
+        - heading "Europe '72" [level=4] [ref=e79]
+        - generic [ref=e80]: 1972 – 1974
+        - generic [ref=e81]:
+          - text: Shows
+          - generic [ref=e82]: —
+        - generic [ref=e83]: Dark Star, Playing in the Band, Eyes
+        - link "Explore ⟶" [ref=e84]:
+          - /url: /eras/europe72
+      - generic [ref=e85] [cursor=pointer]:
+        - generic [ref=e86]: Studio era
+        - heading "Hiatus & Return" [level=4] [ref=e87]
+        - generic [ref=e88]: 1975 – 1979
+        - generic [ref=e89]:
+          - text: Shows
+          - generic [ref=e90]: —
+        - generic [ref=e91]: Estimated Prophet, Terrapin Station
+        - link "Explore ⟶" [ref=e92]:
+          - /url: /eras/hiatus
+      - generic [ref=e93] [cursor=pointer]:
+        - generic [ref=e94]: Arena Dead
+        - heading "Brent Years" [level=4] [ref=e95]
+        - generic [ref=e96]: 1980 – 1990
+        - generic [ref=e97]:
+          - text: Shows
+          - generic [ref=e98]: —
+        - generic [ref=e99]: Throwing Stones, Hell in a Bucket
+        - link "Explore ⟶" [ref=e100]:
+          - /url: /eras/brent
+      - generic [ref=e101] [cursor=pointer]:
+        - generic [ref=e102]: Vince & Bruce
+        - heading "Final Tours" [level=4] [ref=e103]
+        - generic [ref=e104]: 1991 – 1995
+        - generic [ref=e105]:
+          - text: Shows
+          - generic [ref=e106]: —
+        - generic [ref=e107]: Lazy River Road, Days Between
+        - link "Explore ⟶" [ref=e108]:
+          - /url: /eras/final
+    - generic [ref=e109]:
+      - heading "Focus · Europe '72" [level=3] [ref=e110]
+      - generic [ref=e111]: Wall-of-Sound · …
+      - generic [ref=e112]: 1972 – 1974
+    - generic [ref=e113]:
+      - generic [ref=e114]:
+        - generic [ref=e115]: Signature jam
+        - generic [ref=e116]: Dark Star — Lyceum ’72
+        - generic [ref=e117]: 47:18
+        - link "▶ Play" [ref=e118] [cursor=pointer]:
+          - /url: /song/Dark Star
+      - generic [ref=e119]:
+        - generic [ref=e120]: Songs debuted in this era
+        - generic [ref=e121]:
+          - link "Brown-Eyed Women" [ref=e122] [cursor=pointer]:
+            - /url: /song/Brown-Eyed%20Women
+          - link "He's Gone" [ref=e123] [cursor=pointer]:
+            - /url: /song/He's%20Gone
+          - link "Tennessee Jed" [ref=e124] [cursor=pointer]:
+            - /url: /song/Tennessee%20Jed
+          - link "Ramble On Rose" [ref=e125] [cursor=pointer]:
+            - /url: /song/Ramble%20On%20Rose
+          - link "Jack Straw" [ref=e126] [cursor=pointer]:
+            - /url: /song/Jack%20Straw
+          - link "Mr. Charlie" [ref=e127] [cursor=pointer]:
+            - /url: /song/Mr.%20Charlie
+          - link "Bertha" [ref=e128] [cursor=pointer]:
+            - /url: /song/Bertha
+          - link "Wharf Rat" [ref=e129] [cursor=pointer]:
+            - /url: /song/Wharf%20Rat
+      - generic [ref=e130]:
+        - generic [ref=e131]: Avg. show length
+        - generic [ref=e132]: 3:11:42
+        - generic [ref=e133]: ~28% longer than the all-time average. Wall-of-Sound era.
+  - contentinfo [ref=e134]:
+    - generic [ref=e135]: © MMXXVI · Steal Your Stats Press · Made by hand
+    - generic [ref=e136]: ❦ If you get confused, listen to the music play ❦
+    - generic [ref=e137]: v.11.5 · cached locally · last sync 1h ago
+  - generic [ref=e138]:
+    - generic [ref=e139]:
+      - generic [ref=e143]:
+        - generic [ref=e144]: nothing in the deck
+        - generic [ref=e145]: cue a show to begin · play the featured tape
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - button "Previous" [ref=e148] [cursor=pointer]: ◀◀
+          - button "Play" [ref=e149] [cursor=pointer]: ▶
+          - button "Next" [ref=e150] [cursor=pointer]: ▶▶
+        - generic [ref=e151]:
+          - generic [ref=e152]: 0:00
+          - generic [ref=e155]: 0:00
+      - generic [ref=e156]:
+        - generic [ref=e158]: VOL
+        - button "Queue 0" [ref=e163] [cursor=pointer]:
+          - text: Queue
+          - generic [ref=e164]: "0"
+    - generic [ref=e165]:
+      - generic [ref=e166]: standby · no queue · click a setlist track to begin
+      - generic [ref=e167]: —

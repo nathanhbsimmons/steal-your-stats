@@ -1,0 +1,250 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e5]
+        - generic [ref=e8]:
+          - generic [ref=e9]: Steal Your Stats
+          - generic [ref=e10]: The Dead Archive
+      - navigation [ref=e11]:
+        - link "Home" [ref=e12] [cursor=pointer]:
+          - /url: /
+          - img [ref=e14]
+          - generic [ref=e16]: Home
+        - link "Search" [ref=e17] [cursor=pointer]:
+          - /url: /search
+          - img [ref=e19]
+          - generic [ref=e21]: Search
+        - link "Recent 12" [ref=e22] [cursor=pointer]:
+          - /url: /recent
+          - img [ref=e24]
+          - generic [ref=e26]: Recent
+          - generic [ref=e27]: "12"
+        - link "Artists" [ref=e28] [cursor=pointer]:
+          - /url: /artists
+          - img [ref=e30]
+          - generic [ref=e32]: Artists
+        - link "Venues" [ref=e33] [cursor=pointer]:
+          - /url: /venues
+          - img [ref=e35]
+          - generic [ref=e37]: Venues
+        - link "Eras" [ref=e38] [cursor=pointer]:
+          - /url: /eras
+          - img [ref=e40]
+          - generic [ref=e42]: Eras
+        - link "Stats" [ref=e43] [cursor=pointer]:
+          - /url: /stats
+          - img [ref=e45]
+          - generic [ref=e47]: Stats
+        - link "Export" [ref=e48] [cursor=pointer]:
+          - /url: /export
+          - img [ref=e50]
+          - generic [ref=e52]: Export
+      - generic [ref=e53]:
+        - generic [ref=e54]: Pinned
+        - generic [ref=e55]:
+          - link "Dark Star" [ref=e56] [cursor=pointer]:
+            - /url: /song/Dark%20Star
+            - img [ref=e58]
+            - generic [ref=e60]: Dark Star
+          - link "St. Stephen" [ref=e61] [cursor=pointer]:
+            - /url: /song/St.%20Stephen
+            - img [ref=e63]
+            - generic [ref=e65]: St. Stephen
+          - link "Scarlet › Fire" [ref=e66] [cursor=pointer]:
+            - /url: /song/Scarlet%20Begonias
+            - img [ref=e68]
+            - generic [ref=e70]: Scarlet › Fire
+          - link "Eyes of the World" [ref=e71] [cursor=pointer]:
+            - /url: /song/Eyes%20of%20the%20World
+            - img [ref=e73]
+            - generic [ref=e75]: Eyes of the World
+          - link "Morning Dew" [ref=e76] [cursor=pointer]:
+            - /url: /song/Morning%20Dew
+            - img [ref=e78]
+            - generic [ref=e80]: Morning Dew
+      - generic [ref=e82]:
+        - generic [ref=e83]: JG
+        - generic [ref=e84]:
+          - generic [ref=e85]: jerry@archive
+          - generic [ref=e86]: cached · 24h
+        - img [ref=e88]
+    - generic [ref=e90]:
+      - generic [ref=e91]:
+        - button [ref=e92] [cursor=pointer]:
+          - img [ref=e93]
+        - generic [ref=e95]: SONGS / DARK STAR
+        - generic [ref=e96]:
+          - img [ref=e97]
+          - textbox "Songs, venues, dates…" [ref=e99]
+          - generic [ref=e100]: ⌘K
+        - button [ref=e101] [cursor=pointer]:
+          - img [ref=e102]
+        - button [ref=e104] [cursor=pointer]:
+          - img [ref=e105]
+      - banner [ref=e107]:
+        - generic [ref=e108]:
+          - img [ref=e109]
+          - img [ref=e122]
+        - generic [ref=e124]:
+          - generic [ref=e125]: Song · jam vehicle
+          - heading "Dark Star" [level=1] [ref=e126]
+          - generic [ref=e199]:
+            - generic [ref=e200]: "Also known as:"
+            - generic [ref=e201]: dark star
+            - generic [ref=e202]: darkstar
+            - generic [ref=e203]: darkstar (live)
+            - generic [ref=e204]: dark star (live)
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - button "First show" [ref=e129] [cursor=pointer]:
+              - img [ref=e130]
+              - text: First show
+            - button "Last show" [ref=e132] [cursor=pointer]:
+              - img [ref=e133]
+              - text: Last show
+          - button "Play longest version" [ref=e135] [cursor=pointer]:
+            - img [ref=e136]
+            - text: Play longest version
+      - generic [ref=e138]:
+        - generic [ref=e139]:
+          - generic [ref=e140]:
+            - heading "Performance Facts" [level=2] [ref=e141]
+            - generic [ref=e142]: setlist.fm
+            - generic [ref=e143]: cached 4m ago
+          - generic [ref=e145]:
+            - generic [ref=e205]:
+              - generic [ref=e206]: First Performance
+              - generic [ref=e207]: 1968·01·17
+              - generic [ref=e208]:
+                - generic [ref=e209]: Carousel Ballroom
+                - generic [ref=e210]: San Francisco · United States
+              - link "View setlist" [ref=e211] [cursor=pointer]:
+                - /url: https://www.setlist.fm/setlist/grateful-dead/1968/carousel-ballroom-san-francisco-ca-13dca5c5.html
+                - text: View setlist
+                - img [ref=e212]
+            - generic [ref=e214]:
+              - generic [ref=e215]: Last Performance
+              - generic [ref=e216]: 2015·06·27
+              - generic [ref=e217]:
+                - generic [ref=e218]: Levi's Stadium
+                - generic [ref=e219]: Santa Clara · United States
+              - link "View setlist" [ref=e220] [cursor=pointer]:
+                - /url: https://www.setlist.fm/setlist/grateful-dead/2015/levis-stadium-santa-clara-ca-7bc95e1c.html
+                - text: View setlist
+                - img [ref=e221]
+            - generic [ref=e223]:
+              - generic [ref=e224]: Total Performances
+              - generic [ref=e225]: "248"
+              - generic [ref=e226]: across 47 years
+              - img [ref=e227]
+        - generic [ref=e149]:
+          - generic [ref=e150]:
+            - heading "Position Facts" [level=2] [ref=e151]
+            - generic [ref=e152]: Where Dark Star landed in the set
+          - generic [ref=e230]:
+            - generic [ref=e231] [cursor=pointer]:
+              - img [ref=e233]
+              - generic [ref=e235]: Opened the show
+              - generic [ref=e236]: "20"
+            - generic [ref=e237]:
+              - generic [ref=e238]:
+                - generic [ref=e239]: 1970·05·08
+                - generic [ref=e240]:
+                  - generic [ref=e241]: SUNY College of Technology at Delhi
+                  - generic [ref=e242]: Delhi · United States
+                - img [ref=e244] [cursor=pointer]
+              - generic [ref=e246]:
+                - generic [ref=e247]: 1970·03·17
+                - generic [ref=e248]:
+                  - generic [ref=e249]: Kleinhans Music Hall
+                  - generic [ref=e250]: Buffalo · United States
+                - img [ref=e252] [cursor=pointer]
+              - generic [ref=e254]:
+                - generic [ref=e255]: 1970·02·22
+                - generic [ref=e256]:
+                  - generic [ref=e257]: Sam Houston Coliseum
+                  - generic [ref=e258]: Houston · United States
+                - img [ref=e260] [cursor=pointer]
+              - generic [ref=e262]:
+                - generic [ref=e263]: 1969·03·02
+                - generic [ref=e264]:
+                  - generic [ref=e265]: Fillmore West
+                  - generic [ref=e266]: San Francisco · United States
+                - img [ref=e268] [cursor=pointer]
+              - generic [ref=e270]:
+                - generic [ref=e271]: 1969·02·07
+                - generic [ref=e272]:
+                  - generic [ref=e273]: Stanley Theatre
+                  - generic [ref=e274]: Pittsburgh · United States
+                - img [ref=e276] [cursor=pointer]
+              - generic [ref=e278]:
+                - generic [ref=e279]: 1969·01·25
+                - generic [ref=e280]:
+                  - generic [ref=e281]: Avalon Ballroom
+                  - generic [ref=e282]: San Francisco · United States
+                - img [ref=e284] [cursor=pointer]
+              - generic [ref=e286]:
+                - generic [ref=e287]: 1968·12·07
+                - generic [ref=e288]:
+                  - generic [ref=e289]: Knights Hall, Bellarmine University
+                  - generic [ref=e290]: Louisville · United States
+                - img [ref=e292] [cursor=pointer]
+              - generic [ref=e294]:
+                - generic [ref=e295]: 1968·11·30
+                - generic [ref=e296]:
+                  - generic [ref=e297]: Hyde Park Teen Center
+                  - generic [ref=e298]: Cincinnati · United States
+                - img [ref=e300] [cursor=pointer]
+              - generic [ref=e302]:
+                - generic [ref=e303]: 1968·10·13
+                - generic [ref=e304]:
+                  - generic [ref=e305]: Avalon Ballroom
+                  - generic [ref=e306]: San Francisco · United States
+                - img [ref=e308] [cursor=pointer]
+              - generic [ref=e310]:
+                - generic [ref=e311]: 1968·10·12
+                - generic [ref=e312]:
+                  - generic [ref=e313]: Avalon Ballroom
+                  - generic [ref=e314]: San Francisco · United States
+                - img [ref=e316] [cursor=pointer]
+              - button "Load more" [ref=e319] [cursor=pointer]:
+                - text: Load more
+                - img [ref=e320]
+          - generic [ref=e323] [cursor=pointer]:
+            - img [ref=e325]
+            - generic [ref=e327]: Closed the show
+            - generic [ref=e328]: "3"
+          - generic [ref=e330] [cursor=pointer]:
+            - img [ref=e332]
+            - generic [ref=e334]: Played as encore
+            - generic [ref=e335]: "1"
+        - generic [ref=e158] [cursor=pointer]:
+          - img [ref=e160]
+          - heading "Versions · Archive.org" [level=2] [ref=e162]
+          - generic [ref=e163]: 248 tracked
+        - contentinfo [ref=e169]:
+          - generic [ref=e170]:
+            - text: Data from
+            - link "setlist.fm" [ref=e171] [cursor=pointer]:
+              - /url: https://www.setlist.fm
+            - text: and
+            - link "Archive.org" [ref=e172] [cursor=pointer]:
+              - /url: https://archive.org
+          - generic [ref=e173]: ·
+          - generic [ref=e174]: Cached 24h
+          - generic [ref=e175]: SWR · refreshed 2026-05-15 02:38 UTC
+      - generic [ref=e176]:
+        - img [ref=e178]
+        - generic [ref=e180]:
+          - generic [ref=e181]: No track selected
+          - generic [ref=e182]: Tap any ▶ in the versions table, or “Play longest version” above.
+        - generic [ref=e183]:
+          - generic [ref=e184]: Shortcuts
+          - generic [ref=e185]: Space
+          - generic [ref=e186]: ←
+          - generic [ref=e187]: →
+          - generic [ref=e188]: M
+  - button "Open Next.js Dev Tools" [ref=e194] [cursor=pointer]:
+    - img [ref=e195]
+  - alert [ref=e198]

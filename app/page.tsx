@@ -316,19 +316,19 @@ export default function HomePage() {
         <div className="ledger-hero">
           <div className="cell">
             <div className="label">Shows Indexed</div>
-            <div className="val">{kpi ? kpi.totalShows.toLocaleString() : '—'}</div>
+            <div className="val">{kpi?.totalShows?.toLocaleString() ?? '—'}</div>
             <div className="annot">from setlist.fm</div>
           </div>
           <div className="cell">
             <div className="label">Hours Archived</div>
-            <div className="val rust">{kpi ? kpi.hoursArchived.toLocaleString() : '—'}</div>
+            <div className="val rust">{kpi?.hoursArchived?.toLocaleString() ?? '—'}</div>
             <div className="annot">est. at 2.7h / show</div>
           </div>
         </div>
         <ul className="ledger">
           <li>
             <div className="label">Unique Songs<span className="annot">GD catalog</span></div>
-            <div className="val forest">{kpi ? kpi.uniqueSongs.toLocaleString() : '—'}</div>
+            <div className="val forest">{kpi?.uniqueSongs?.toLocaleString() ?? '—'}</div>
           </li>
           <li>
             <div className="label">Last Refresh<span className="annot">auto-refreshes daily</span></div>

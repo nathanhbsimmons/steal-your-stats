@@ -1,0 +1,317 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]: INDEXED FRI 22 MAY MMXXVI
+    - generic [ref=e5]:
+      - heading "StealyourStats" [level=1] [ref=e6] [cursor=pointer]
+      - generic [ref=e7]: The Dead Archive · compiled by hand, played through the deck
+    - generic [ref=e9]:
+      - generic [ref=e10]: 49°F · clear sky and a Sunshine Daydream
+      - generic [ref=e11]:
+        - generic [ref=e12]: ⌕
+        - textbox "⌕ ⌘K" [ref=e13]:
+          - /placeholder: search songs, shows, venues…
+        - generic [ref=e14]: ⌘K
+  - generic [ref=e15]:
+    - generic [ref=e16]: Pp. 0001 — 2333
+    - generic [ref=e17]:
+      - generic [ref=e18]: ❦
+      - generic [ref=e19]: An Annotated Guide to Grateful Dead Songlists
+      - generic [ref=e20]: ❦
+    - generic [ref=e21]: setlist.fm · archive.org · this volume
+  - navigation "Chapter navigation" [ref=e22]:
+    - button "I. Home" [ref=e23] [cursor=pointer]:
+      - generic [ref=e24]: I.
+      - text: Home
+    - button "II. Search ⌘K" [ref=e25] [cursor=pointer]:
+      - generic [ref=e26]: II.
+      - text: Search
+      - generic [ref=e27]: ⌘K
+    - button "III. Songs 442" [ref=e28] [cursor=pointer]:
+      - generic [ref=e29]: III.
+      - text: Songs
+      - generic [ref=e30]: "442"
+    - button "IV. Recent" [ref=e31] [cursor=pointer]:
+      - generic [ref=e32]: IV.
+      - text: Recent
+    - button "V. Band Members" [ref=e33] [cursor=pointer]:
+      - generic [ref=e34]: V.
+      - text: Band Members
+    - button "VI. Venues" [ref=e35] [cursor=pointer]:
+      - generic [ref=e36]: VI.
+      - text: Venues
+    - button "VII. Eras" [ref=e37] [cursor=pointer]:
+      - generic [ref=e38]: VII.
+      - text: Eras
+    - button "VIII. Stats" [ref=e39] [cursor=pointer]:
+      - generic [ref=e40]: VIII.
+      - text: Stats
+    - button "IX. Export" [ref=e41] [cursor=pointer]:
+      - generic [ref=e42]: IX.
+      - text: Export
+    - generic [ref=e44]: PG. 0001 of 2333
+  - generic [ref=e46]:
+    - generic [ref=e47]:
+      - link "HOME" [ref=e48] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e49]: /
+      - link "BAND MEMBERS" [ref=e50] [cursor=pointer]:
+        - /url: /artists
+      - generic [ref=e51]: /
+      - generic [ref=e52]: JERRY GARCIA
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]: ▲
+        - generic [ref=e56]: PORTRAIT · PLACEHOLDER
+      - generic [ref=e57]:
+        - generic [ref=e58]: Band member · core
+        - heading "Jerry Garcia" [level=2] [ref=e59]
+        - generic [ref=e60]: Lead guitar · vocals
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - generic [ref=e63]: Years
+            - text: 1965–1995
+          - generic [ref=e64]:
+            - generic [ref=e65]: Shows
+            - text: 2,328
+          - generic [ref=e66]:
+            - generic [ref=e67]: Born
+            - text: "1942"
+          - generic [ref=e68]:
+            - generic [ref=e69]: Mark
+            - text: ▲
+        - generic [ref=e70]:
+          - link "⟶ View era · Europe '72" [ref=e71] [cursor=pointer]:
+            - /url: /eras?focus=europe72
+          - button "▶ Play featured show" [ref=e72] [cursor=pointer]
+    - generic [ref=e73]:
+      - heading "Bio" [level=3] [ref=e74]
+      - generic [ref=e75]: — compiled by the vault operator
+      - generic [ref=e76]: FOUNDING MEMBER
+    - paragraph [ref=e77]: Jerome John Garcia — guitarist, singer, reluctant figurehead. Wandered in from the Palo Alto folk scene in 1965 with banjo fingers and never put the Stratocaster down. Over thirty years his lead-guitar voice — singing, conversational, halfway to a pedal-steel sigh — defined whatever a Grateful Dead song was. He wrote most of the catalog with Robert Hunter, took the longest solos, and held the band together by drift. He died in his sleep at a rehab clinic on August 9th, 1995, five weeks after the last show.
+    - generic [ref=e78]:
+      - heading "Shows per year" [level=3] [ref=e79]
+      - generic [ref=e80]: — click any bar to jump to that year below
+      - generic [ref=e81]: N ≈ 2,328
+    - generic [ref=e82]:
+      - generic "1965 · 0 shows" [ref=e83] [cursor=pointer]
+      - generic "1966 · 0 shows" [ref=e84] [cursor=pointer]
+      - generic "1967 · 0 shows" [ref=e85] [cursor=pointer]
+      - generic "1968 · 0 shows" [ref=e86] [cursor=pointer]
+      - generic "1969 · 0 shows" [ref=e87] [cursor=pointer]
+      - generic "1970 · 0 shows" [ref=e88] [cursor=pointer]
+      - generic "1971 · 0 shows" [ref=e89] [cursor=pointer]
+      - generic "1972 · 0 shows" [ref=e90] [cursor=pointer]
+      - generic "1973 · 0 shows" [ref=e91] [cursor=pointer]
+      - generic "1974 · 0 shows" [ref=e92] [cursor=pointer]
+      - generic "1975 · 0 shows" [ref=e93] [cursor=pointer]
+      - generic "1976 · 0 shows" [ref=e94] [cursor=pointer]
+      - generic "1977 · 0 shows" [ref=e95] [cursor=pointer]
+      - generic "1978 · 0 shows" [ref=e96] [cursor=pointer]
+      - generic "1979 · 0 shows" [ref=e97] [cursor=pointer]
+      - generic "1980 · 0 shows" [ref=e98] [cursor=pointer]
+      - generic "1981 · 0 shows" [ref=e99] [cursor=pointer]
+      - generic "1982 · 0 shows" [ref=e100] [cursor=pointer]
+      - generic "1983 · 0 shows" [ref=e101] [cursor=pointer]
+      - generic "1984 · 0 shows" [ref=e102] [cursor=pointer]
+      - generic "1985 · 0 shows" [ref=e103] [cursor=pointer]
+      - generic "1986 · 0 shows" [ref=e104] [cursor=pointer]
+      - generic "1987 · 0 shows" [ref=e105] [cursor=pointer]
+      - generic "1988 · 0 shows" [ref=e106] [cursor=pointer]
+      - generic "1989 · 0 shows" [ref=e107] [cursor=pointer]
+      - generic "1990 · 0 shows" [ref=e108] [cursor=pointer]
+      - generic "1991 · 0 shows" [ref=e109] [cursor=pointer]
+      - generic "1992 · 0 shows" [ref=e110] [cursor=pointer]
+      - generic "1993 · 0 shows" [ref=e111] [cursor=pointer]
+      - generic "1994 · 0 shows" [ref=e112] [cursor=pointer]
+      - generic "1995 · 0 shows" [ref=e113] [cursor=pointer]
+    - generic [ref=e114]:
+      - generic [ref=e115] [cursor=pointer]: "'65"
+      - generic [ref=e116] [cursor=pointer]: "'66"
+      - generic [ref=e117] [cursor=pointer]: "'67"
+      - generic [ref=e118] [cursor=pointer]: "'68"
+      - generic [ref=e119] [cursor=pointer]: "'69"
+      - generic [ref=e120] [cursor=pointer]: "'70"
+      - generic [ref=e121] [cursor=pointer]: "'71"
+      - generic [ref=e122] [cursor=pointer]: "'72"
+      - generic [ref=e123] [cursor=pointer]: "'73"
+      - generic [ref=e124] [cursor=pointer]: "'74"
+      - generic [ref=e125] [cursor=pointer]: "'75"
+      - generic [ref=e126] [cursor=pointer]: "'76"
+      - generic [ref=e127] [cursor=pointer]: "'77"
+      - generic [ref=e128] [cursor=pointer]: "'78"
+      - generic [ref=e129] [cursor=pointer]: "'79"
+      - generic [ref=e130] [cursor=pointer]: "'80"
+      - generic [ref=e131] [cursor=pointer]: "'81"
+      - generic [ref=e132] [cursor=pointer]: "'82"
+      - generic [ref=e133] [cursor=pointer]: "'83"
+      - generic [ref=e134] [cursor=pointer]: "'84"
+      - generic [ref=e135] [cursor=pointer]: "'85"
+      - generic [ref=e136] [cursor=pointer]: "'86"
+      - generic [ref=e137] [cursor=pointer]: "'87"
+      - generic [ref=e138] [cursor=pointer]: "'88"
+      - generic [ref=e139] [cursor=pointer]: "'89"
+      - generic [ref=e140] [cursor=pointer]: "'90"
+      - generic [ref=e141] [cursor=pointer]: "'91"
+      - generic [ref=e142] [cursor=pointer]: "'92"
+      - generic [ref=e143] [cursor=pointer]: "'93"
+      - generic [ref=e144] [cursor=pointer]: "'94"
+      - generic [ref=e145] [cursor=pointer]: "'95"
+    - generic [ref=e146]:
+      - heading "Signature shows" [level=3] [ref=e147]
+      - generic [ref=e148]: — the nights worth knowing
+      - generic [ref=e149]: 4 highlights
+    - generic [ref=e150]:
+      - generic [ref=e151]:
+        - button "▶" [ref=e152] [cursor=pointer]
+        - generic [ref=e153]:
+          - generic [ref=e154]: № 01
+          - generic [ref=e155]: 1977-05-08
+          - generic [ref=e156]: Barton HallIthaca, NY
+          - generic [ref=e157]: — the canonical Cornell · 13-min Morning Dew
+        - link "Setlist ↗" [ref=e158] [cursor=pointer]:
+          - /url: /show/1977-05-08
+      - generic [ref=e159]:
+        - button "▶" [ref=e160] [cursor=pointer]
+        - generic [ref=e161]:
+          - generic [ref=e162]: № 02
+          - generic [ref=e163]: 1973-02-09
+          - generic [ref=e164]: Maples PavilionStanford, CA
+          - generic [ref=e165]: — the Stanford Eyes · first outing
+        - link "Setlist ↗" [ref=e166] [cursor=pointer]:
+          - /url: /show/1973-02-09
+      - generic [ref=e167]:
+        - button "▶" [ref=e168] [cursor=pointer]
+        - generic [ref=e169]:
+          - generic [ref=e170]: № 03
+          - generic [ref=e171]: 1977-05-19
+          - generic [ref=e172]: Fox TheatreAtlanta, GA
+          - generic [ref=e173]: — this volume's featured Peggy-O
+        - link "Setlist ↗" [ref=e174] [cursor=pointer]:
+          - /url: /show/1977-05-19
+      - generic [ref=e175]:
+        - button "▶" [ref=e176] [cursor=pointer]
+        - generic [ref=e177]:
+          - generic [ref=e178]: № 04
+          - generic [ref=e179]: 1995-07-09
+          - generic [ref=e180]: Soldier FieldChicago, IL
+          - generic [ref=e181]: — his last show on earth
+        - link "Setlist ↗" [ref=e182] [cursor=pointer]:
+          - /url: /show/1995-07-09
+    - generic [ref=e183]:
+      - heading "Songs debuted in this era" [level=3] [ref=e184]
+      - generic [ref=e185]: — Europe '72 · 1972–1974
+      - generic [ref=e186]: 8 debuts
+    - generic [ref=e187]:
+      - link "Sugaree" [ref=e188] [cursor=pointer]:
+        - /url: /song/Sugaree
+      - link "Bertha" [ref=e189] [cursor=pointer]:
+        - /url: /song/Bertha
+      - link "Loser" [ref=e190] [cursor=pointer]:
+        - /url: /song/Loser
+      - link "Eyes of the World" [ref=e191] [cursor=pointer]:
+        - /url: /song/Eyes%20of%20the%20World
+      - link "Scarlet Begonias" [ref=e192] [cursor=pointer]:
+        - /url: /song/Scarlet%20Begonias
+      - link "Althea" [ref=e193] [cursor=pointer]:
+        - /url: /song/Althea
+      - link "Lazy River Road" [ref=e194] [cursor=pointer]:
+        - /url: /song/Lazy%20River%20Road
+      - link "Brokedown Palace" [ref=e195] [cursor=pointer]:
+        - /url: /song/Brokedown%20Palace
+    - generic [ref=e196]:
+      - heading "Signature songs" [level=3] [ref=e197]
+      - generic [ref=e198]: — what they're known for
+      - generic [ref=e199]: 8 songs
+    - generic [ref=e200]:
+      - link "Eyes of the World" [ref=e201] [cursor=pointer]:
+        - /url: /song/Eyes%20of%20the%20World
+      - link "Sugaree" [ref=e202] [cursor=pointer]:
+        - /url: /song/Sugaree
+      - link "Althea" [ref=e203] [cursor=pointer]:
+        - /url: /song/Althea
+      - link "Morning Dew" [ref=e204] [cursor=pointer]:
+        - /url: /song/Morning%20Dew
+      - link "Bird Song" [ref=e205] [cursor=pointer]:
+        - /url: /song/Bird%20Song
+      - link "Stella Blue" [ref=e206] [cursor=pointer]:
+        - /url: /song/Stella%20Blue
+      - link "Terrapin Station" [ref=e207] [cursor=pointer]:
+        - /url: /song/Terrapin%20Station
+      - link "Brokedown Palace" [ref=e208] [cursor=pointer]:
+        - /url: /song/Brokedown%20Palace
+    - generic [ref=e209]:
+      - heading "Browse shows" [level=3] [ref=e210]
+      - generic [ref=e211]: — full archive, paged one year at a time
+      - generic [ref=e212]: 1980 · 0 of ?
+    - generic [ref=e213]:
+      - button "1965" [ref=e214] [cursor=pointer]
+      - button "1966" [ref=e215] [cursor=pointer]
+      - button "1967" [ref=e216] [cursor=pointer]
+      - button "1968" [ref=e217] [cursor=pointer]
+      - button "1969" [ref=e218] [cursor=pointer]
+      - button "1970" [ref=e219] [cursor=pointer]
+      - button "1971" [ref=e220] [cursor=pointer]
+      - button "1972" [ref=e221] [cursor=pointer]
+      - button "1973" [ref=e222] [cursor=pointer]
+      - button "1974" [ref=e223] [cursor=pointer]
+      - button "1975" [ref=e224] [cursor=pointer]
+      - button "1976" [ref=e225] [cursor=pointer]
+      - button "1977" [ref=e226] [cursor=pointer]
+      - button "1978" [ref=e227] [cursor=pointer]
+      - button "1979" [ref=e228] [cursor=pointer]
+      - button "1980" [ref=e229] [cursor=pointer]
+      - button "1981" [ref=e230] [cursor=pointer]
+      - button "1982" [ref=e231] [cursor=pointer]
+      - button "1983" [ref=e232] [cursor=pointer]
+      - button "1984" [ref=e233] [cursor=pointer]
+      - button "1985" [ref=e234] [cursor=pointer]
+      - button "1986" [ref=e235] [cursor=pointer]
+      - button "1987" [ref=e236] [cursor=pointer]
+      - button "1988" [ref=e237] [cursor=pointer]
+      - button "1989" [ref=e238] [cursor=pointer]
+      - button "1990" [ref=e239] [cursor=pointer]
+      - button "1991" [ref=e240] [cursor=pointer]
+      - button "1992" [ref=e241] [cursor=pointer]
+      - button "1993" [ref=e242] [cursor=pointer]
+      - button "1994" [ref=e243] [cursor=pointer]
+      - button "1995" [ref=e244] [cursor=pointer]
+    - generic [ref=e245]: No setlist data found for 1980.
+    - generic [ref=e246]:
+      - button "⟵ previous year 1979" [ref=e247] [cursor=pointer]:
+        - generic [ref=e248]: ⟵
+        - generic [ref=e249]:
+          - generic [ref=e250]: previous year
+          - generic [ref=e251]: "1979"
+      - generic [ref=e252]:
+        - generic [ref=e253]: viewing
+        - generic [ref=e254]: "1980"
+      - button "next year 1981 ⟶" [ref=e255] [cursor=pointer]:
+        - generic [ref=e256]:
+          - generic [ref=e257]: next year
+          - generic [ref=e258]: "1981"
+        - generic [ref=e259]: ⟶
+  - contentinfo [ref=e260]:
+    - generic [ref=e261]: © MMXXVI · Steal Your Stats Press · Made by hand
+    - generic [ref=e262]: ❦ If you get confused, listen to the music play ❦
+    - generic [ref=e263]: v.11.5 · cached locally · last sync 1h ago
+  - generic [ref=e264]:
+    - generic [ref=e265]:
+      - generic [ref=e269]:
+        - generic [ref=e270]: nothing in the deck
+        - generic [ref=e271]: cue a show to begin · play the featured tape
+      - generic [ref=e272]:
+        - generic [ref=e273]:
+          - button "Previous" [ref=e274] [cursor=pointer]: ◀◀
+          - button "Play" [ref=e275] [cursor=pointer]: ▶
+          - button "Next" [ref=e276] [cursor=pointer]: ▶▶
+        - generic [ref=e277]:
+          - generic [ref=e278]: 0:00
+          - generic [ref=e281]: 0:00
+      - generic [ref=e282]:
+        - generic [ref=e284]: VOL
+        - button "Queue 0" [ref=e289] [cursor=pointer]:
+          - text: Queue
+          - generic [ref=e290]: "0"
+    - generic [ref=e291]:
+      - generic [ref=e292]: standby · no queue · click a setlist track to begin
+      - generic [ref=e293]: —
