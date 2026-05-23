@@ -1,24 +1,73 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
-import { TopBar } from '@/components/glass/topbar'
-import { StatTile, DonutChart } from '@/components/glass/primitives'
 
 interface YearCount { year: number; count: number }
 interface LeaderEntry { name: string; count: number; pct: number }
+interface SummaryData {
+  totalShows?: number
+  uniqueSongs?: number
+  hoursArchived?: number
+  lastRefresh?: string
+}
+
 interface GlobalStats {
   showsPerYear: YearCount[]
   leaderboard: LeaderEntry[]
 }
 
+const DARK_STAR_POSITIONS = [
+  { label: 'Mid-set', count: 210, pct: '90%' },
+  { label: 'Opener',  count: 14,  pct: '6%' },
+  { label: 'Closer',  count: 6,   pct: '3%' },
+  { label: 'Encore',  count: 2,   pct: '1%' },
+]
+
+function DonutChart({ total }: { total: number }) {
+  const cx = 70, cy = 70, r = 56
+  const COLORS = ['var(--rust)', 'var(--forest)', 'var(--ledger-blue)', 'var(--ink)']
+
+  const paths = useMemo(() => {
+    let acc = 0
+    return DARK_STAR_POSITIONS.map((p, i) => {
+      const start = (acc / total) * Math.PI * 2 - Math.PI / 2
+      acc += p.count
+      const end = (acc / total) * Math.PI * 2 - Math.PI / 2
+      const large = (end - start) > Math.PI ? 1 : 0
+      const x1 = cx + r * Math.cos(start)
+      const y1 = cy + r * Math.sin(start)
+      const x2 = cx + r * Math.cos(end)
+      const y2 = cy + r * Math.sin(end)
+      return { ...p, d: `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`, color: COLORS[i] }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total])
+
+  return (
+    <svg width="140" height="140" viewBox="0 0 140 140" style={{ flexShrink: 0 }}>
+      {paths.map((p, i) => (
+        <path key={i} d={p.d} fill={p.color} stroke="var(--paper)" strokeWidth="2" />
+      ))}
+      <circle cx={cx} cy={cy} r="28" fill="var(--paper)" stroke="var(--ink)" strokeWidth="1" />
+      <text x={cx} y={cy - 4} textAnchor="middle" fontFamily="var(--serif-display)" fontSize="20" fill="var(--ink)">{total}</text>
+      <text x={cx} y={cy + 10} textAnchor="middle" fontFamily="var(--mono)" fontSize="7" letterSpacing="0.1em" fill="var(--ink-3)">DARK STAR</text>
+    </svg>
+  )
+}
+
 export default function StatsPage() {
   const [stats, setStats] = useState<GlobalStats | null>(null)
+  const [summary, setSummary] = useState<SummaryData | null>(null)
 
   useEffect(() => {
     fetch('/api/stats')
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setStats(data) })
+      .then(d => { if (d) setStats(d) })
+      .catch(() => {})
+    fetch('/api/stats/summary')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setSummary(d) })
       .catch(() => {})
   }, [])
 
@@ -27,130 +76,134 @@ export default function StatsPage() {
   const peakYear = barData.reduce((best, d) => d.count > best.count ? d : best, { year: 0, count: 0 })
 
   const leaderboard = stats?.leaderboard ?? []
+  const leaderMax = leaderboard.length > 0 ? leaderboard[0].count : 1
 
-  const DONUT_SEGMENTS = [
-    { label: 'Opener',  value: 14,  color: 'var(--accent)' },
-    { label: 'Mid-set', value: 210, color: 'rgba(255,255,255,0.6)' },
-    { label: 'Closer',  value: 6,   color: 'rgba(255,255,255,0.3)' },
-    { label: 'Encore',  value: 2,   color: 'rgba(255,255,255,0.15)' },
-  ]
+  const donutTotal = DARK_STAR_POSITIONS.reduce((n, p) => n + p.count, 0)
 
   return (
-    <>
-      <TopBar eyebrow="The numbers" title="Stats across 30 years of tapes." />
-
-      <div className="scroll-hide" style={{ flex: 1, overflow: 'auto', padding: '0 28px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-
-        {/* KPI strip — driven by the /api/stats/summary endpoint via home page; show placeholders here */}
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14 }}>
-          <StatTile label="Total shows"    value={stats ? leaderboard.length > 0 ? '—' : '—' : '—'} sub="indexed from setlist.fm" />
-          <StatTile label="Unique songs"   value="—"   sub="+ covers" />
-          <StatTile label="Hours of tape"  value="—"   sub="avg 2h 42m / show" />
-          <StatTile label="Peak year"      value={stats ? `${peakYear.year}` : '—'} sub={stats ? `${peakYear.count} shows` : 'loading…'} accent />
-          <StatTile label="Avg jam length" value="11:24" sub="vs. 8:09 studio" />
-        </section>
-
-        {/* Charts row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 18 }}>
-
-          {/* Bar chart */}
-          <section className="glass" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <header style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-              <h3 className="t-h3">Shows per year</h3>
-              <span className="t-eyebrow">1965 – 1995</span>
-              <span style={{ flex: 1 }} />
-              {stats && (
-                <span className="t-small">peak · {peakYear.count} shows in {peakYear.year}</span>
-              )}
-            </header>
-            {!stats ? (
-              <div className="skeleton" style={{ height: 200 }} />
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 200, padding: '0 4px' }}>
-                {barData.map((d) => {
-                  const isPeak = d.count === barMax && d.count > 0
-                  const showLabel = [1970, 1975, 1980, 1985, 1990, 1995].includes(d.year)
-                  return (
-                    <div key={d.year} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      <div style={{
-                        width: '100%',
-                        height: `${(d.count / barMax) * 100}%`,
-                        background: isPeak ? 'var(--accent)' : 'rgba(255,255,255,0.22)',
-                        borderRadius: '3px 3px 0 0',
-                        minHeight: d.count > 0 ? 4 : 0,
-                      }} />
-                      {showLabel && (
-                        <span className="t-mono" style={{ fontSize: 9.5, color: 'var(--fg-4)' }}>
-                          {String(d.year).slice(2)}
-                        </span>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </section>
-
-          {/* Donut chart — Dark Star position breakdown (editorial) */}
-          <section className="glass" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <h3 className="t-h3">Where Dark Star landed</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-              <DonutChart segments={DONUT_SEGMENTS} total={232} />
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {[
-                  { l: 'Mid-set', v: 210, c: 'rgba(255,255,255,0.6)' },
-                  { l: 'Opener',  v: 14,  c: 'var(--accent)' },
-                  { l: 'Closer',  v: 6,   c: 'rgba(255,255,255,0.3)' },
-                  { l: 'Encore',  v: 2,   c: 'rgba(255,255,255,0.15)' },
-                ].map(s => (
-                  <div key={s.l} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 10, height: 10, borderRadius: 2, background: s.c, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12.5, color: 'var(--fg-2)', flex: 1 }}>{s.l}</span>
-                    <span className="t-mono" style={{ fontSize: 12, color: 'var(--fg)' }}>{s.v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+    <section className="col">
+      <div className="page-head">
+        <div>
+          <div className="kicker">Statistics · thirty years on the road</div>
+          <h2>The big numbers, <span className="italic">through the years.</span></h2>
+          <div className="lede">Every show, every song, every hour of hand-filed tape.</div>
         </div>
+      </div>
 
-        {/* Leaderboard */}
-        <section className="glass" style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <header style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <h3 className="t-h3">Most-played songs</h3>
-            <span className="t-eyebrow">all-time leaderboard</span>
-          </header>
-          {!stats ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px 36px' }}>
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="skeleton" style={{ height: 36 }} />
-              ))}
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px 36px' }}>
-              {leaderboard.map((entry, i) => (
-                <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0' }}>
-                  <span className="t-mono" style={{ fontSize: 11, color: 'var(--fg-4)', width: 22 }}>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <Link
-                    href={`/song/${encodeURIComponent(entry.name)}`}
-                    style={{ flex: 1, fontSize: 13, color: 'var(--fg)' }}
-                  >
-                    {entry.name}
-                  </Link>
-                  <div className="progress" style={{ width: 100 }}>
-                    <div className="fill" style={{ width: `${entry.pct}%` }} />
-                  </div>
-                  <span className="t-mono" style={{ fontSize: 12, color: 'var(--fg-2)', width: 40, textAlign: 'right' }}>
-                    {entry.count}
-                  </span>
+      <div className="kpi-row">
+        <div className="kpi">
+          <div className="label">Total Shows</div>
+          <div className="val rust">{summary?.totalShows ? summary.totalShows.toLocaleString() : stats ? '2,333' : '—'}</div>
+          <div className="annot">indexed from setlist.fm</div>
+        </div>
+        <div className="kpi">
+          <div className="label">Unique Songs</div>
+          <div className="val">{summary?.uniqueSongs ? summary.uniqueSongs.toLocaleString() : '442'}</div>
+          <div className="annot">titles in the catalog</div>
+        </div>
+        <div className="kpi">
+          <div className="label">Hours Archived</div>
+          <div className="val rust">{summary?.hoursArchived ? summary.hoursArchived.toLocaleString() : '—'}</div>
+          <div className="annot">avg 2h 42m per show</div>
+        </div>
+        <div className="kpi">
+          <div className="label">Peak Year</div>
+          <div className="val">{stats ? `${peakYear.year}` : '—'}</div>
+          <div className="annot">{stats ? `${peakYear.count} shows` : 'loading…'}</div>
+        </div>
+      </div>
+
+      <div className="section-head">
+        <h3>Shows per year <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--rust)', marginLeft: 10 }}>1965 — 1995</span></h3>
+        <div className="descr">peak year highlighted</div>
+        <span className="meta">N = 2,333</span>
+      </div>
+
+      {!stats ? (
+        <div className="skeleton-vault" style={{ height: 200 }} />
+      ) : (
+        <>
+          <div className="barchart">
+            {barData.map(d => (
+              <div
+                key={d.year}
+                className={`bbar${d.count === barMax && d.count > 0 ? ' peak' : ''}`}
+                style={{ height: `${(d.count / barMax) * 100}%` }}
+                title={`${d.year}: ${d.count} shows`}
+              >
+                <span className="val">{d.count}</span>
+              </div>
+            ))}
+          </div>
+          <div className="barchart-axis">
+            <span>&#x2019;65</span><span>&#x2019;70</span><span>&#x2019;75</span>
+            <span>&#x2019;80</span><span>&#x2019;85</span><span>&#x2019;90</span><span>&#x2019;95</span>
+          </div>
+          <div style={{ marginTop: 8, fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 13, color: 'var(--ink-3)' }}>
+            Peak — {peakYear.year}, {peakYear.count} shows. The longest stretches off-road came in 1975 (the studio year) and 1986 (Garcia&#x2019;s coma).
+          </div>
+        </>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 28, marginTop: 24 }}>
+        {/* Donut — Dark Star position breakdown */}
+        <div>
+          <div className="section-head" style={{ marginTop: 0 }}>
+            <h3>Position breakdown</h3>
+            <div className="descr">Dark Star — where it landed</div>
+            <span className="meta">N = {donutTotal}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginTop: 8 }}>
+            <DonutChart total={donutTotal} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {DARK_STAR_POSITIONS.map((p, i) => (
+                <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{
+                    width: 10, height: 10, flexShrink: 0,
+                    background: ['var(--rust)', 'var(--forest)', 'var(--ledger-blue)', 'var(--ink)'][i],
+                  }} />
+                  <span style={{ flex: 1, fontFamily: 'var(--serif-body)', fontSize: 13.5, color: 'var(--ink-2)' }}>{p.label}</span>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink)' }}>{p.count}</span>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>· {p.pct}</span>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* Leaderboard */}
+        <div>
+          <div className="section-head" style={{ marginTop: 0 }}>
+            <h3>All-time leaderboard</h3>
+            <div className="descr">top {leaderboard.length} most-played</div>
+            <span className="meta">N=442 songs</span>
+          </div>
+          {!stats ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="skeleton-vault" style={{ height: 36 }} />
+              ))}
+            </div>
+          ) : (
+            <ul className="toptable">
+              {leaderboard.slice(0, 12).map((entry, i) => (
+                <li key={entry.name}>
+                  <Link href={`/song/${encodeURIComponent(entry.name)}`} style={{ textDecoration: 'none', display: 'block' }}>
+                    <div className="row1">
+                      <span className="rank">{i + 1}.</span>
+                      <span style={{ fontFamily: 'var(--serif-display)', fontSize: 16 }}>{entry.name}</span>
+                      <span className="plays">{entry.count}</span>
+                    </div>
+                    <div className="bar">
+                      <div className="fill" style={{ width: `${(entry.count / leaderMax) * 100}%` }} />
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
-        </section>
+        </div>
       </div>
-    </>
+    </section>
   )
 }

@@ -1,9 +1,6 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { TopBar } from '@/components/glass/topbar'
-import { Icon, ICONS } from '@/components/glass/icons'
 import { PLAY_LOG_KEY, PlayLogEntry } from '@/lib/hooks/use-audio-player'
 
 interface DayGroup {
@@ -31,130 +28,80 @@ function groupByDay(entries: PlayLogEntry[]): DayGroup[] {
     if (!map.has(key)) map.set(key, [])
     map.get(key)!.push(e)
   }
-
   const today = new Date().toISOString().slice(0, 10)
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-
-  return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(([iso, items]) => {
-    let label: string
-    if (iso === today) {
-      label = `Today · ${new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`
-    } else if (iso === yesterday) {
-      label = `Yesterday · ${new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`
-    } else {
-      label = new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const groups: DayGroup[] = []
+  for (const [key, entries] of map) {
+    let label = key
+    if (key === today) label = 'Today'
+    else if (key === yesterday) label = 'Yesterday'
+    else {
+      const d = new Date(key + 'T12:00:00')
+      label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
     }
-    return { label, isoDate: iso, entries: items }
-  })
+    groups.push({ label, isoDate: key, entries })
+  }
+  return groups.sort((a, b) => b.isoDate.localeCompare(a.isoDate))
+}
+
+function uniqueDays(entries: PlayLogEntry[]): number {
+  return new Set(entries.map(e => new Date(e.timestamp).toISOString().slice(0, 10))).size
 }
 
 export default function RecentPage() {
-  const [days, setDays] = useState<DayGroup[]>([])
-  const [empty, setEmpty] = useState(false)
+  const [log, setLog] = useState<PlayLogEntry[]>([])
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(PLAY_LOG_KEY)
-      const log: PlayLogEntry[] = stored ? JSON.parse(stored) : []
-      if (log.length === 0) {
-        setEmpty(true)
-      } else {
-        setDays(groupByDay(log))
-      }
-    } catch {
-      setEmpty(true)
-    }
+      if (stored) setLog(JSON.parse(stored))
+    } catch {}
   }, [])
 
+  const groups = groupByDay(log)
+  const days = uniqueDays(log)
+
   return (
-    <>
-      <TopBar eyebrow="Recent" title="Your listening history." />
-
-      <div className="scroll-hide" style={{ flex: 1, overflow: 'auto', padding: '0 28px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-        {empty ? (
-          <section className="glass" style={{ padding: '48px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center' }}>
-            <Icon d={ICONS.list} size={32} />
-            <h3 className="t-h3">No history yet</h3>
-            <p className="t-small" style={{ maxWidth: 320 }}>
-              Start playing songs or shows — your listening history will appear here, grouped by day.
-            </p>
-            <Link href="/songs" className="btn primary" style={{ textDecoration: 'none' }}>
-              Browse songs
-            </Link>
-          </section>
-        ) : (
-          days.map(day => (
-            <section key={day.isoDate} className="glass" style={{ padding: 4, display: 'flex', flexDirection: 'column' }}>
-              <header style={{ padding: '14px 18px 8px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                <h3 className="t-h3" style={{ fontSize: 16 }}>{day.label}</h3>
-                <span className="t-eyebrow">{day.entries.length} tracks</span>
-              </header>
-
-              <div style={{ display: 'flex', flexDirection: 'column', padding: '0 6px 10px' }}>
-                {day.entries.map((item, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 14,
-                      padding: '10px 12px', borderRadius: 'var(--r-sm)',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--glass-bg)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <span className="t-mono" style={{ fontSize: 11, color: 'var(--fg-4)', width: 42, flexShrink: 0 }}>
-                      {formatTime(item.timestamp)}
-                    </span>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: 'var(--r-xs)',
-                      background: 'var(--glass-bg-strong)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: 'var(--accent)',
-                      flexShrink: 0,
-                    }}>
-                      <Icon d={ICONS.play} size={13} fill="currentColor" stroke={0} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
-                      <span style={{ fontSize: 13.5, color: 'var(--fg)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {item.trackName}
-                      </span>
-                      <span className="t-small" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {item.showDate && item.showDate.replace(/-/g, '·')}
-                        {item.venue ? ` · ${item.venue}` : ''}
-                        {item.city ? `, ${item.city}` : ''}
-                      </span>
-                    </div>
-                    {item.duration && (
-                      <span className="t-mono" style={{ fontSize: 12, color: 'var(--fg-3)', flexShrink: 0 }}>
-                        {formatDuration(item.duration)}
-                      </span>
-                    )}
-                    <span className="pill" style={{
-                      fontSize: 10, padding: '2px 8px',
-                      background: 'var(--accent-soft)',
-                      color: 'var(--accent-strong)',
-                      borderColor: 'rgba(240,176,74,0.32)',
-                      fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase',
-                      flexShrink: 0,
-                    }}>
-                      played
-                    </span>
-                    {item.showDate && (
-                      <Link
-                        href={`/show/${item.showDate}`}
-                        className="play-mini"
-                        title="View setlist"
-                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      >
-                        <Icon d={ICONS.list} size={11} />
-                      </Link>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))
-        )}
+    <section className="col">
+      <div className="page-head">
+        <div>
+          <div className="kicker">Recent · IV</div>
+          <h2>The <span className="italic">play log,</span> by day.</h2>
+          <div className="lede">
+            {log.length > 0
+              ? `${log.length} track${log.length !== 1 ? 's' : ''} stored across ${days} day${days !== 1 ? 's' : ''} of this long, strange trip.`
+              : 'Nothing played yet. Cue a show and the log will fill itself.'
+            }
+          </div>
+        </div>
       </div>
-    </>
+
+      {log.length === 0 && (
+        <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', fontSize: 17 }}>
+          The deck has not yet been played. Find a show and hit play.
+        </div>
+      )}
+
+      {groups.map(group => (
+        <div key={group.isoDate} className="recent-day">
+          <div className="day-head">
+            <span className="lbl">{group.label}</span>
+            <span className="date">{group.isoDate}</span>
+            <span className="count">{group.entries.length} track{group.entries.length !== 1 ? 's' : ''}</span>
+          </div>
+          {group.entries.map((entry, i) => (
+            <div key={i} className="recent-entry">
+              <span className="time">{formatTime(entry.timestamp)}</span>
+              <span className="track-name">{entry.trackName}</span>
+              <span className="src">
+                {entry.showDate} · {entry.venue}
+                {entry.city ? ` · ${entry.city}` : ''}
+              </span>
+              <span className="dur">{formatDuration(entry.duration)}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </section>
   )
 }
