@@ -35,6 +35,7 @@ export interface EnqueueEntireShowOptions {
   preferredFormats?: string[]
   clearExisting?: boolean
   songs?: string[]
+  startFrom?: number
 }
 
 export interface UseAudioPlayerReturn {
@@ -51,6 +52,7 @@ export interface UseAudioPlayerReturn {
   clearQueue: () => void
   playEntireShow: (tracks: Track[]) => void
   enqueueEntireShow: (showRef: ShowRef, options?: EnqueueEntireShowOptions) => Promise<void>
+  enqueueShowTrack: (showRef: ShowRef, trackIdx: number, songs?: string[]) => Promise<void>
 }
 
 export function useAudioPlayer(): UseAudioPlayerReturn {
@@ -241,7 +243,8 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
       if (clearExisting) {
         setQueue(processedTracks)
         if (processedTracks.length > 0) {
-          setCurrentTrack(processedTracks[0])
+          const startIdx = Math.min(options.startFrom ?? 0, processedTracks.length - 1)
+          setCurrentTrack(processedTracks[startIdx])
           setIsPlaying(true)
         }
       } else {
@@ -262,6 +265,45 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     }
   }, [])
 
+  // Append a single track from a show to the end of the queue (duplicates allowed).
+  const enqueueShowTrack = useCallback(async (showRef: ShowRef, trackIdx: number, songs?: string[]) => {
+    try {
+      // If the show is already loaded in the queue, shortcut — clone that track with a new id
+      const existingShowTracks = queueRef.current.filter(t => t.showDate === showRef.date)
+      if (existingShowTracks.length > trackIdx) {
+        const src = existingShowTracks[trackIdx]
+        setQueue(prev => [...prev, { ...src, id: `${src.id}-q${Date.now()}` }])
+        return
+      }
+
+      // Otherwise fetch from Archive.org
+      const resolveResponse = await fetch('/api/archive/resolve-show', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(showRef),
+      })
+      if (!resolveResponse.ok) throw new Error(`resolve: ${resolveResponse.status}`)
+      const archiveShow = await resolveResponse.json()
+
+      const tracksResponse = await fetch('/api/archive/song-tracks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: archiveShow.identifier, songTitle: '' }),
+      })
+      if (!tracksResponse.ok) throw new Error(`tracks: ${tracksResponse.status}`)
+      const { tracks } = await tracksResponse.json()
+
+      const processed = processTracksForEnqueue(tracks, ['mp3'], archiveShow, showRef, songs)
+      const track = processed[Math.min(trackIdx, processed.length - 1)]
+      if (track) {
+        setQueue(prev => [...prev, { ...track, id: `${track.id}-q${Date.now()}` }])
+      }
+    } catch (error) {
+      console.error('Failed to enqueue track:', error)
+      throw error
+    }
+  }, [])
+
   return {
     currentTrack,
     isPlaying,
@@ -275,7 +317,8 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     removeFromQueue,
     clearQueue,
     playEntireShow,
-    enqueueEntireShow
+    enqueueEntireShow,
+    enqueueShowTrack,
   }
 }
 

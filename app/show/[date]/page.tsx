@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import useSWR from 'swr'
 import { usePlayer } from '@/lib/contexts/player-context'
+import { TimelineStrip } from '@/components/ui/timeline-strip'
 
 interface ShowSet {
   name: string
@@ -49,17 +50,32 @@ export default function ShowPage() {
     { revalidateOnFocus: false, revalidateOnReconnect: false, dedupingInterval: 24 * 60 * 60 * 1000 }
   )
 
-  const { enqueueEntireShow, currentTrack, isPlaying } = usePlayer()
+  const { enqueueEntireShow, enqueueShowTrack, currentTrack, isPlaying } = usePlayer()
 
-  const handlePlayShow = async () => {
+  const [queuedSet, setQueuedSet] = useState<Set<number>>(new Set())
+  const [flashIdx, setFlashIdx] = useState<number | null>(null)
+
+  const handlePlayShow = async (startFrom?: number) => {
     if (!data) return
     try {
       const songs = data.sets.flatMap(s => s.songs)
-      await enqueueEntireShow({ date, venue: data.venue, city: data.city }, { clearExisting: true, songs })
+      await enqueueEntireShow({ date, venue: data.venue, city: data.city }, { clearExisting: true, songs, startFrom })
     } catch {
       // Archive.org may not have a recording for every show
     }
   }
+
+  const handleAddToQueue = useCallback(async (e: React.MouseEvent, flatIdx: number) => {
+    e.stopPropagation()
+    if (!data) return
+    setFlashIdx(flatIdx)
+    setQueuedSet(prev => new Set([...prev, flatIdx]))
+    setTimeout(() => setFlashIdx(null), 700)
+    try {
+      const songs = data.sets.flatMap(s => s.songs)
+      await enqueueShowTrack({ date, venue: data.venue, city: data.city }, flatIdx, songs)
+    } catch {}
+  }, [data, date, enqueueShowTrack])
 
   const autoplayedRef = useRef(false)
   useEffect(() => {
@@ -113,7 +129,7 @@ export default function ShowPage() {
           {data && (
             <>
               <span>{data.totalSongs} songs</span>
-              <button className="btn primary" onClick={handlePlayShow}>
+              <button className="btn primary" onClick={() => handlePlayShow()}>
                 <span className="play-tri">▶</span> Play entire show
               </button>
             </>
@@ -146,11 +162,22 @@ export default function ShowPage() {
         </div>
       )}
 
+      {/* Timeline strip */}
+      {data && data.sets.length > 0 && (
+        <TimelineStrip
+          sets={data.sets}
+          showDate={date}
+          onPlayFrom={handlePlayShow}
+        />
+      )}
+
       {/* Setlist */}
       {data && (
         <>
           <div className="setlist">
-            {data.sets.map((set, si) => {
+            {(() => {
+              let flatIdx = 0
+              return data.sets.map((set, si) => {
               const isEncore = set.encore
               const romanIdx = isEncore ? si : setIndex++
               const roman = isEncore ? 'E.' : SET_ROMANS[romanIdx] ?? String(romanIdx + 1)
@@ -164,12 +191,13 @@ export default function ShowPage() {
                     <div className="duration">{set.songs.length} songs</div>
                   </div>
                   {set.songs.map((song, ji) => {
+                    const songFlatIdx = flatIdx++
                     const isCurrentSong = currentTrack?.name?.toLowerCase().includes(song.toLowerCase())
                     return (
                       <div
                         key={ji}
                         className={`track${isCurrentSong && isPlaying ? ' playing' : ''}`}
-                        onClick={handlePlayShow}
+                        onClick={() => handlePlayShow(songFlatIdx)}
                       >
                         <span className="num">{String(ji + 1).padStart(2, '0')}</span>
                         <span className="play-dot">{isCurrentSong && isPlaying ? '❚❚' : '▶'}</span>
@@ -182,12 +210,18 @@ export default function ShowPage() {
                           {song}
                         </Link>
                         <span className="chev">→</span>
+                        <button
+                          className={`add-q${flashIdx === songFlatIdx ? ' flash' : queuedSet.has(songFlatIdx) ? ' queued' : ''}`}
+                          title="Add to queue"
+                          onClick={e => handleAddToQueue(e, songFlatIdx)}
+                        >+</button>
                       </div>
                     )
                   })}
                 </div>
               )
-            })}
+            })
+            })()}
           </div>
 
           <div className="margin-note" style={{ marginTop: 18 }}>

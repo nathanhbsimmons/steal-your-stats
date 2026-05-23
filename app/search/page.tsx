@@ -39,6 +39,9 @@ function SearchContent() {
   const [songsLoading, setSongsLoading] = useState(false)
   const [shows, setShows] = useState<ShowResult[]>([])
   const [showsLoading, setShowsLoading] = useState(false)
+  const [venueShows, setVenueShows] = useState<ShowResult[]>([])
+  const [venueShowsLoading, setVenueShowsLoading] = useState(false)
+  const [venueLabel, setVenueLabel] = useState('')
   const dq = useDebounce(query, 250)
 
   useEffect(() => { inputRef.current?.focus() }, [])
@@ -62,10 +65,30 @@ function SearchContent() {
       .finally(() => setShowsLoading(false))
   }, [])
 
+  // Venue fallback: when no songs match, search for shows at a venue with the query name
+  const fetchVenueShows = useCallback((name: string) => {
+    setVenueShowsLoading(true)
+    setVenueLabel(name)
+    fetch(`/api/shows/by-venue?name=${encodeURIComponent(name)}`)
+      .then(r => r.json())
+      .then(d => setVenueShows((d.shows ?? []).slice(0, 12)))
+      .catch(() => setVenueShows([]))
+      .finally(() => setVenueShowsLoading(false))
+  }, [])
+
   useEffect(() => {
-    if (songs.length > 0) fetchShows(songs[0].displayTitle)
-    else setShows([])
-  }, [songs, fetchShows])
+    if (songsLoading) return
+    if (songs.length > 0) {
+      fetchShows(songs[0].displayTitle)
+      setVenueShows([])
+    } else if (dq) {
+      setShows([])
+      fetchVenueShows(dq)
+    } else {
+      setShows([])
+      setVenueShows([])
+    }
+  }, [songs, songsLoading, dq, fetchShows, fetchVenueShows])
 
   return (
     <section className="col">
@@ -134,27 +157,53 @@ function SearchContent() {
           </div>
 
           <div className="result-col">
-            <h4>Shows {shows.length > 0 ? `featuring ${songs[0]?.displayTitle ?? ''}` : ''}</h4>
-            {showsLoading
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="skeleton-vault" style={{ height: 40, marginBottom: 4 }} />
-                ))
-              : shows.length === 0
-                ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>
-                    {songs.length === 0 ? 'Search for a song to find shows.' : 'No shows found.'}
-                  </div>
-                : shows.map(s => (
-                    <Link
-                      key={s.date}
-                      href={`/show/${s.date}`}
-                      className="row"
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <span className="t">{s.venue}</span>
-                      <span className="s">{s.date} · {s.city}{s.state ? `, ${s.state}` : ''}</span>
-                    </Link>
-                  ))
-            }
+            {venueShows.length > 0 || venueShowsLoading ? (
+              <>
+                <h4>Shows at {venueLabel}</h4>
+                {venueShowsLoading
+                  ? Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="skeleton-vault" style={{ height: 40, marginBottom: 4 }} />
+                    ))
+                  : venueShows.length === 0
+                    ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>No shows found at this venue.</div>
+                    : venueShows.map(s => (
+                        <Link
+                          key={s.date}
+                          href={`/show/${s.date}`}
+                          className="row"
+                          style={{ textDecoration: 'none' }}
+                        >
+                          <span className="t">{s.venue}</span>
+                          <span className="s">{s.date} · {s.city}{s.state ? `, ${s.state}` : ''}</span>
+                        </Link>
+                      ))
+                }
+              </>
+            ) : (
+              <>
+                <h4>Shows {shows.length > 0 ? `featuring ${songs[0]?.displayTitle ?? ''}` : ''}</h4>
+                {showsLoading
+                  ? Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="skeleton-vault" style={{ height: 40, marginBottom: 4 }} />
+                    ))
+                  : shows.length === 0
+                    ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>
+                        {songs.length === 0 ? 'Search for a song to find shows.' : 'No shows found.'}
+                      </div>
+                    : shows.map(s => (
+                        <Link
+                          key={s.date}
+                          href={`/show/${s.date}`}
+                          className="row"
+                          style={{ textDecoration: 'none' }}
+                        >
+                          <span className="t">{s.venue}</span>
+                          <span className="s">{s.date} · {s.city}{s.state ? `, ${s.state}` : ''}</span>
+                        </Link>
+                      ))
+                }
+              </>
+            )}
           </div>
         </div>
       )}

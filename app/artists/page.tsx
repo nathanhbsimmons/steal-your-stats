@@ -1,23 +1,24 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 interface YearCount { year: number; count: number }
 
 const CORE_SIX = [
-  { name: 'Jerry Garcia',    role: 'Lead guitar · vocals',      initial: 'JG', years: '1965 – 1995', mark: 'J' },
-  { name: 'Bob Weir',        role: 'Rhythm guitar · vocals',    initial: 'BW', years: '1965 – 1995', mark: 'B' },
-  { name: 'Phil Lesh',       role: 'Bass · vocals',             initial: 'PL', years: '1965 – 1995', mark: 'P' },
-  { name: 'Bill Kreutzmann', role: 'Drums',                     initial: 'BK', years: '1965 – 1995', mark: 'K' },
-  { name: 'Mickey Hart',     role: 'Drums · percussion',        initial: 'MH', years: '1967 – 1995', mark: 'M' },
-  { name: 'Pigpen',          role: 'Keys · harmonica · vocals', initial: 'PP', years: '1965 – 1972', mark: 'R' },
+  { name: 'Jerry Garcia',    role: 'Lead guitar · vocals',      initial: 'JG', years: '1965 – 1995', mark: 'J', href: '/member/jerry-garcia'    },
+  { name: 'Bob Weir',        role: 'Rhythm guitar · vocals',    initial: 'BW', years: '1965 – 1995', mark: 'B', href: '/member/bob-weir'         },
+  { name: 'Phil Lesh',       role: 'Bass · vocals',             initial: 'PL', years: '1965 – 1995', mark: 'P', href: '/member/phil-lesh'        },
+  { name: 'Bill Kreutzmann', role: 'Drums',                     initial: 'BK', years: '1965 – 1995', mark: 'K', href: '/member/bill-kreutzmann'  },
+  { name: 'Mickey Hart',     role: 'Drums · percussion',        initial: 'MH', years: '1967 – 1995', mark: 'M', href: '/member/mickey-hart'      },
+  { name: 'Pigpen',          role: 'Keys · harmonica · vocals', initial: 'PP', years: '1965 – 1972', mark: 'R', href: '/member/pigpen'           },
 ]
 
 const PASSING_THROUGH = [
-  { name: 'Keith Godchaux',  role: 'Keys',               initial: 'KG', years: '1971 – 1979', mark: 'K' },
-  { name: 'Donna Godchaux',  role: 'Vocals',             initial: 'DG', years: '1972 – 1979', mark: 'D' },
-  { name: 'Brent Mydland',   role: 'Keys · vocals',      initial: 'BM', years: '1979 – 1990', mark: 'B' },
-  { name: 'Vince Welnick',   role: 'Keys · vocals',      initial: 'VW', years: '1990 – 1995', mark: 'V' },
+  { name: 'Keith Godchaux',  role: 'Keys',          initial: 'KG', years: '1971 – 1979', mark: 'K', href: '/member/keith-godchaux'  },
+  { name: 'Donna Godchaux',  role: 'Vocals',        initial: 'DG', years: '1972 – 1979', mark: 'D', href: '/member/donna-godchaux'  },
+  { name: 'Brent Mydland',   role: 'Keys · vocals', initial: 'BM', years: '1979 – 1990', mark: 'B', href: '/member/brent-mydland'   },
+  { name: 'Vince Welnick',   role: 'Keys · vocals', initial: 'VW', years: '1990 – 1995', mark: 'V', href: '/member/vince-welnick'   },
 ]
 
 function sumYears(data: YearCount[], from: number, to: number): number {
@@ -34,22 +35,27 @@ function MemberCard({
   minor?: boolean
 }) {
   return (
-    <div className={`member-card${minor ? ' minor' : ''}`}>
-      <div className="portrait">
-        <span className="mark">{member.mark}</span>
-        <span className="lbl">{member.initial}</span>
-      </div>
-      <div className="name">{member.name}</div>
-      <div className="role">{member.role}</div>
-      <div className="stats">
-        <div>
-          Shows<span className="n">{shows > 0 ? shows.toLocaleString() : '—'}</span>
+    <Link
+      href={member.href}
+      style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+    >
+      <div className={`member-card${minor ? ' minor' : ''}`} style={{ cursor: 'pointer' }}>
+        <div className="portrait">
+          <span className="mark">{member.mark}</span>
+          <span className="lbl">{member.initial}</span>
         </div>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)', alignSelf: 'end' }}>
-          {member.years}
-        </span>
+        <div className="name">{member.name}</div>
+        <div className="role">{member.role}</div>
+        <div className="stats">
+          <div>
+            Shows<span className="n">{shows > 0 ? shows.toLocaleString() : '—'}</span>
+          </div>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)', alignSelf: 'end' }}>
+            {member.years}
+          </span>
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }
 

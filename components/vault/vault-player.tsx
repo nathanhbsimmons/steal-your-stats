@@ -25,25 +25,49 @@ export function VaultPlayer() {
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(0.72)
   const [showQueue, setShowQueue] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
   const barRef = useRef<HTMLDivElement>(null)
   const volRef = useRef<HTMLDivElement>(null)
 
+  // Load new src when track URL changes
   useEffect(() => {
-    const audio = document.querySelector('audio') as HTMLAudioElement | null
-    audioRef.current = audio
+    const audio = audioRef.current
+    if (!audio) return
+    setCurrentTime(0)
+    setDuration(0)
+    audio.src = currentTrack?.url ?? ''
+    if (currentTrack?.url) audio.load()
+  }, [currentTrack?.url])
+
+  // Attach time/duration/ended listeners (stable — ref never changes)
+  useEffect(() => {
+    const audio = audioRef.current
     if (!audio) return
     const onTime = () => setCurrentTime(audio.currentTime)
     const onDur  = () => setDuration(audio.duration || 0)
+    const onEnd  = () => next()
     audio.addEventListener('timeupdate', onTime)
     audio.addEventListener('durationchange', onDur)
     audio.addEventListener('loadedmetadata', onDur)
+    audio.addEventListener('ended', onEnd)
     return () => {
       audio.removeEventListener('timeupdate', onTime)
       audio.removeEventListener('durationchange', onDur)
       audio.removeEventListener('loadedmetadata', onDur)
+      audio.removeEventListener('ended', onEnd)
     }
-  }, [currentTrack])
+  }, [next])
+
+  // Sync isPlaying → audio.play() / audio.pause()
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (isPlaying && currentTrack?.url) {
+      audio.play().catch(err => { if (err.name !== 'AbortError') console.error('[VaultPlayer]', err) })
+    } else {
+      audio.pause()
+    }
+  }, [isPlaying, currentTrack?.url])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -69,6 +93,8 @@ export function VaultPlayer() {
 
   return (
     <>
+      {/* Hidden audio element — controlled via audioRef */}
+      <audio ref={audioRef} preload="metadata" style={{ display: 'none' }} />
       <div className="vault-player">
         <div className="inner">
           {/* Now playing */}
@@ -175,9 +201,8 @@ function VaultQueueDrawer({ onClose }: { onClose: () => void }) {
             <span className="sub">{queue.length} TRACKS · {formatQueueTime(queue)}</span>
           </h4>
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-          <button className="close-btn" onClick={() => clearQueue()}>clear all</button>
-          <button className="close-btn" onClick={onClose}>×</button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button className="close-btn queue-dismiss-btn" onClick={onClose}>×</button>
         </div>
       </header>
       <div className="list">

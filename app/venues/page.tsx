@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface VenueStat {
   name: string
@@ -27,6 +28,7 @@ export default function VenuesPage() {
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const dq = useDebounce(query, 200)
+  const router = useRouter()
 
   useEffect(() => {
     setLoading(true)
@@ -111,7 +113,12 @@ export default function VenuesPage() {
           </thead>
           <tbody>
             {filtered.map((v, i) => (
-              <tr key={v.name + v.city} className={i === 0 && !query ? 'hi' : ''}>
+              <tr
+                key={v.name + v.city}
+                className={i === 0 && !query ? 'hi' : ''}
+                style={{ cursor: 'pointer' }}
+                onClick={() => router.push(`/search?q=${encodeURIComponent(v.name)}`)}
+              >
                 <td className="num">{String(i + 1).padStart(2, '0')}</td>
                 <td>
                   <span className="tbl-title">{v.name}</span>

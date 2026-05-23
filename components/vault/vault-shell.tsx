@@ -20,6 +20,7 @@ function isWideRoute(pathname: string): boolean {
   }
   if (pathname.startsWith('/song/')) return true
   if (pathname.startsWith('/show/')) return true
+  if (pathname.startsWith('/member/')) return true
   return false
 }
 

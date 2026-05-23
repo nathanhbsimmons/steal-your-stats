@@ -56,6 +56,8 @@ export interface SetlistClient {
   getSetlistsByArtist(artistId: string, page?: number): Promise<Setlist[]>
   searchSetlistsBySong(songName: string, page?: number): Promise<Setlist[]>
   searchSetlistsBySongPage(songName: string, page?: number): Promise<SetlistSearchResult>
+  searchSetlistsByVenue(venueName: string, page?: number): Promise<Setlist[]>
+  searchSetlistsByYear(year: number, page?: number): Promise<{ setlists: Setlist[]; total: number; itemsPerPage: number }>
   getSetlistsByDate(date: string): Promise<Setlist[]>
 }
 
@@ -169,6 +171,38 @@ export class SetlistClientImpl implements SetlistClient {
       total: response.data.total || 0,
       page: response.data.page || page,
       itemsPerPage: response.data.itemsPerPage || 20,
+    }
+  }
+
+  async searchSetlistsByVenue(venueName: string, page: number = 1): Promise<Setlist[]> {
+    try {
+      const response = await this.http.get<{
+        setlist: Setlist[]
+        total: number
+        page: number
+        itemsPerPage: number
+      }>(`/search/setlists?p=${page}&venueName=${encodeURIComponent(venueName)}&artistMbid=6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6`)
+      return response.data.setlist || []
+    } catch {
+      return []
+    }
+  }
+
+  async searchSetlistsByYear(year: number, page: number = 1): Promise<{ setlists: Setlist[]; total: number; itemsPerPage: number }> {
+    try {
+      const response = await this.http.get<{
+        setlist: Setlist[]
+        total: number
+        page: number
+        itemsPerPage: number
+      }>(`/search/setlists?p=${page}&artistMbid=6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6&year=${year}`)
+      return {
+        setlists: response.data.setlist || [],
+        total: response.data.total || 0,
+        itemsPerPage: response.data.itemsPerPage || 20,
+      }
+    } catch {
+      return { setlists: [], total: 0, itemsPerPage: 20 }
     }
   }
 

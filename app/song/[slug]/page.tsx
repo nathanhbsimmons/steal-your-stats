@@ -68,6 +68,9 @@ export default function SongPage() {
   const [starred, setStarred] = useState(false)
   const [shareLabel, setShareLabel] = useState<'Share' | 'Copied!'>('Share')
   const [playError, setPlayError] = useState<string | null>(null)
+  const [playErrorDate, setPlayErrorDate] = useState<string | null>(null)
+  const [firstShowLoading, setFirstShowLoading] = useState(false)
+  const [lastShowLoading, setLastShowLoading] = useState(false)
   const [showAllOpener, setShowAllOpener] = useState(false)
   const [showAllCloser, setShowAllCloser] = useState(false)
   const [showAllEncore, setShowAllEncore] = useState(false)
@@ -142,17 +145,18 @@ export default function SongPage() {
 
   const handlePlayShowVersions = async (showRef: { date: string; venue: string; city: string }) => {
     setPlayError(null)
+    setPlayErrorDate(null)
     try {
       const archiveShow = await resolveArchiveShow(showRef)
       if (!archiveShow) {
-        setPlayError(`No Archive.org recording found for ${showRef.date} at ${showRef.venue}.`)
-        setTimeout(() => setPlayError(null), 6000)
+        setPlayError(`No Archive.org recording found for this show.`)
+        setPlayErrorDate(showRef.date)
         return
       }
       const { tracks } = await fetchSongTracks(archiveShow.identifier, songTitle)
       const formatted: Track[] = tracks.map((t: { id: string; name: string; url: string; showDate: string; venue: string; city: string; archiveItemId: string }) => ({
         ...t,
-        name: formatArchiveTrackName(t.name.replace(/\.[^.]+$/, '')),
+        name: `${songTitle} (${showRef.date})`,
         showDate: showRef.date,
         venue: showRef.venue,
         city: showRef.city,
@@ -161,14 +165,18 @@ export default function SongPage() {
       }))
       if (formatted.length === 0) {
         setPlayError(`Show found but no playable tracks for "${songTitle}" on ${showRef.date}.`)
-        setTimeout(() => setPlayError(null), 6000)
+        setPlayErrorDate(showRef.date)
         return
       }
       addToQueue(formatted)
-      if (!currentTrack && formatted.length > 0) selectTrack(formatted[0])
-    } catch {
-      setPlayError('Could not load show from Archive.org. Try again in a moment.')
-      setTimeout(() => setPlayError(null), 6000)
+      selectTrack(formatted[0])
+    } catch (err) {
+      if (err instanceof Error && err.message === '404') {
+        setPlayError('No Archive.org recording found for this show.')
+        setPlayErrorDate(showRef.date)
+      } else {
+        setPlayError('Could not reach Archive.org — check your connection and try again.')
+      }
     }
   }
 
@@ -225,11 +233,27 @@ export default function SongPage() {
           )}
         </div>
         <div className="actions">
-          <button className="btn" onClick={() => data?.first && handlePlayShowVersions(data.first)}>
-            ⟵ First show
+          <button
+            className="btn"
+            disabled={firstShowLoading || isLoading}
+            onClick={async () => {
+              if (!data?.first) return
+              setFirstShowLoading(true)
+              try { await handlePlayShowVersions(data.first) } finally { setFirstShowLoading(false) }
+            }}
+          >
+            {firstShowLoading ? '⟵ Loading…' : '⟵ First show'}
           </button>
-          <button className="btn" onClick={() => data?.last && handlePlayShowVersions(data.last)}>
-            Last show ⟶
+          <button
+            className="btn"
+            disabled={lastShowLoading || isLoading}
+            onClick={async () => {
+              if (!data?.last) return
+              setLastShowLoading(true)
+              try { await handlePlayShowVersions(data.last) } finally { setLastShowLoading(false) }
+            }}
+          >
+            {lastShowLoading ? 'Loading… ⟶' : 'Last show ⟶'}
           </button>
           <button className="btn primary" onClick={handlePlayLongest}>
             <span className="play-tri">▶</span> Play longest version
@@ -237,6 +261,14 @@ export default function SongPage() {
           {playError && (
             <span style={{ fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 13, color: 'var(--bad, #a83919)', lineHeight: 1.3 }}>
               {playError}
+              {playErrorDate && (
+                <Link
+                  href={`/show/${playErrorDate}`}
+                  style={{ marginLeft: 8, color: 'var(--rust)', fontStyle: 'normal', fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.06em' }}
+                >
+                  View setlist →
+                </Link>
+              )}
             </span>
           )}
         </div>
@@ -300,21 +332,24 @@ export default function SongPage() {
         </div>
       ) : posData ? (
         <>
-          {([
-            { key: 'opener', title: 'Opened the show',  shows: posData.opener?.shows, count: posData.opener?.count, open: showAllOpener, setOpen: setShowAllOpener },
-            { key: 'closer', title: 'Closed the show',  shows: posData.closer?.shows, count: posData.closer?.count, open: showAllCloser, setOpen: setShowAllCloser },
-            { key: 'encore', title: 'Played as encore', shows: posData.encore?.shows, count: posData.encore?.count, open: showAllEncore, setOpen: setShowAllEncore },
-          ] as const).map(({ key, title, shows, count, open, setOpen }) => (
-            count && count > 0 ? (
+          {[
+            { key: 'opener' as const, title: 'Opened the show',  data: posData.opener,  open: showAllOpener, toggle: () => setShowAllOpener(v => !v) },
+            { key: 'closer' as const, title: 'Closed the show',  data: posData.closer,  open: showAllCloser, toggle: () => setShowAllCloser(v => !v) },
+            { key: 'encore' as const, title: 'Played as encore', data: posData.encore,  open: showAllEncore, toggle: () => setShowAllEncore(v => !v) },
+          ].map(({ key, title, data, open, toggle }) => {
+            const shows = data?.shows
+            const count = data?.count
+            if (!count || count === 0) return null
+            return (
               <div key={key}>
                 <div className="section-head" style={{ marginTop: 18 }}>
                   <h3 style={{ fontSize: 22 }}>{title}</h3>
                   <div className="descr">— {count} {count === 1 ? 'time' : 'times'}</div>
-                  <span className="meta" style={{ cursor: 'pointer' }} onClick={() => setOpen(!open)}>
-                    {open ? 'collapse ↑' : `show all ↓`}
+                  <span className="meta" style={{ cursor: 'pointer' }} onClick={toggle}>
+                    {open ? 'collapse ↑' : 'show all ↓'}
                   </span>
                 </div>
-                {shows && (open ? shows : shows.slice(0, POS_PREVIEW)).map((s: { date: string; venue: string; city: string; country: string }, i: number) => (
+                {shows && (open ? shows : shows.slice(0, POS_PREVIEW)).map((s, i) => (
                   <Link
                     key={i}
                     href={`/show/${s.date}`}
@@ -332,7 +367,7 @@ export default function SongPage() {
                 ))}
                 {shows && shows.length > POS_PREVIEW && !open && (
                   <button
-                    onClick={() => setOpen(true)}
+                    onClick={toggle}
                     style={{
                       background: 'none', border: 0, cursor: 'pointer',
                       fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.1em',
@@ -343,8 +378,8 @@ export default function SongPage() {
                   </button>
                 )}
               </div>
-            ) : null
-          ))}
+            )
+          })}
         </>
       ) : null}
 
@@ -377,16 +412,9 @@ export default function SongPage() {
                 }}
               >
                 <button
+                  className="btn icon"
                   onClick={() => handlePlayTrack(track)}
-                  style={{
-                    width: 32, height: 32,
-                    background: 'var(--paper)', border: '1.5px solid var(--ink)',
-                    cursor: 'pointer', display: 'grid', placeItems: 'center',
-                    fontSize: 11, color: 'var(--ink)', flexShrink: 0,
-                    transition: 'all .1s',
-                  }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--rust)'; (e.currentTarget as HTMLElement).style.color = 'var(--paper)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--paper)'; (e.currentTarget as HTMLElement).style.color = 'var(--ink)' }}
+                  style={{ flexShrink: 0 }}
                 >
                   ▶
                 </button>
@@ -455,14 +483,8 @@ export default function SongPage() {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <button
+                        className={`btn icon${isCurrentlyPlaying && isPlaying ? ' primary' : ''}`}
                         onClick={() => handlePlayTrack(t)}
-                        style={{
-                          width: 24, height: 24,
-                          background: isCurrentlyPlaying && isPlaying ? 'var(--rust)' : 'var(--paper)',
-                          border: '1px solid var(--ink)',
-                          cursor: 'pointer', display: 'grid', placeItems: 'center',
-                          fontSize: 9, color: isCurrentlyPlaying && isPlaying ? 'var(--paper)' : 'var(--ink)',
-                        }}
                       >
                         {isCurrentlyPlaying && isPlaying ? '❚❚' : '▶'}
                       </button>
@@ -473,17 +495,6 @@ export default function SongPage() {
             </tbody>
           </table>
 
-          {/* Quick-play buttons */}
-          {data && (
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button className="btn" onClick={() => data.first && handlePlayShowVersions(data.first)}>
-                ▶ Play first-show version
-              </button>
-              <button className="btn" onClick={() => data.last && handlePlayShowVersions(data.last)}>
-                ▶ Play last-show version
-              </button>
-            </div>
-          )}
         </>
       ) : null}
 

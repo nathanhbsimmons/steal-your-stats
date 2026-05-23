@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePlayer } from '@/lib/contexts/player-context'
+import { TimelineStrip } from '@/components/ui/timeline-strip'
 
 interface ShowOnThisDay {
   date: string
@@ -61,7 +62,7 @@ export default function HomePage() {
   const [kpi, setKpi] = useState<SummaryStats | null>(null)
   const [mostPlayed, setMostPlayed] = useState<MostPlayed[]>([])
   const [loading, setLoading] = useState(true)
-  const { enqueueEntireShow } = usePlayer()
+  const { enqueueEntireShow, enqueueShowTrack } = usePlayer()
 
   // Fetch on-this-day shows
   useEffect(() => {
@@ -105,21 +106,37 @@ export default function HomePage() {
       .catch(() => {})
   }, [featured?.date])
 
-  const handlePlayShow = async () => {
+  const [queuedSet, setQueuedSet] = useState<Set<number>>(new Set())
+  const [flashIdx, setFlashIdx] = useState<number | null>(null)
+
+  const handlePlayShow = async (startFrom?: number) => {
     if (!featured) return
     try {
+      const songs = showDetail?.sets.flatMap(s => s.songs) ?? featured.songs
       await enqueueEntireShow(
         { date: featured.date, venue: featured.venue, city: featured.city },
-        { clearExisting: true, songs: featured.songs }
+        { clearExisting: true, songs, startFrom }
       )
     } catch {}
   }
 
-  // Format the featured date for the display
-  const featuredDate = featured?.date ? new Date(featured.date + 'T12:00:00') : null
-  const weekday = featuredDate ? WEEKDAY_NAMES[featuredDate.getDay()] : ''
-  const monthName = featuredDate ? MONTH_NAMES[featuredDate.getMonth()] : ''
-  const dayNum = featuredDate ? featuredDate.getDate() : 0
+  const handleAddToQueue = useCallback(async (e: React.MouseEvent, flatIdx: number) => {
+    e.stopPropagation()
+    if (!featured) return
+    setFlashIdx(flatIdx)
+    setQueuedSet(prev => new Set([...prev, flatIdx]))
+    setTimeout(() => setFlashIdx(null), 700)
+    try {
+      const songs = showDetail?.sets.flatMap(s => s.songs) ?? featured.songs
+      await enqueueShowTrack({ date: featured.date, venue: featured.venue, city: featured.city }, flatIdx, songs)
+    } catch {}
+  }, [featured, showDetail, enqueueShowTrack])
+
+  // Format the featured date for the display — use today's calendar date for weekday/month/day
+  const today = new Date()
+  const weekday = WEEKDAY_NAMES[today.getDay()]
+  const monthName = MONTH_NAMES[today.getMonth()]
+  const dayNum = today.getDate()
   const year = featured?.year ?? 0
   const yearsAgo = new Date().getFullYear() - year
   const venue = featured?.venue ?? ''
@@ -190,7 +207,7 @@ export default function HomePage() {
                   </div>
                 )}
                 <div className="actions">
-                  <button className="btn primary" onClick={handlePlayShow}>
+                  <button className="btn primary" onClick={() => handlePlayShow()}>
                     <span className="play-tri">▶</span> Play entire show
                   </button>
                   <Link href={`/show/${featured.date}`} className="btn ghost">
@@ -205,6 +222,15 @@ export default function HomePage() {
             </div>
           )}
         </div>
+
+        {/* Timeline strip */}
+        {showDetail && showDetail.sets.length > 0 && (
+          <TimelineStrip
+            sets={showDetail.sets}
+            showDate={featured?.date ?? ''}
+            onPlayFrom={handlePlayShow}
+          />
+        )}
 
         {/* Setlist from the show detail */}
         {showDetail && showDetail.sets.length > 0 && (
@@ -228,12 +254,17 @@ export default function HomePage() {
                       <div
                         key={`${si}-${ti}`}
                         className="track"
-                        onClick={handlePlayShow}
+                        onClick={() => handlePlayShow(globalNum)}
                       >
                         <span className="num">{String(globalNum + 1).padStart(2, '0')}</span>
                         <span className="play-dot">▶</span>
                         <span className="title">{song}</span>
                         <span className="chev">→</span>
+                        <button
+                          className={`add-q${flashIdx === globalNum ? ' flash' : queuedSet.has(globalNum) ? ' queued' : ''}`}
+                          title="Add to queue"
+                          onClick={e => handleAddToQueue(e, globalNum)}
+                        >+</button>
                       </div>
                     )
                   })}
@@ -252,11 +283,16 @@ export default function HomePage() {
                 <div className="duration">{featured.songs.length} songs</div>
               </div>
               {featured.songs.map((song, i) => (
-                <div key={i} className="track" onClick={handlePlayShow}>
+                <div key={i} className="track" onClick={() => handlePlayShow(i)}>
                   <span className="num">{String(i + 1).padStart(2, '0')}</span>
                   <span className="play-dot">▶</span>
                   <span className="title">{song}</span>
                   <span className="chev">→</span>
+                  <button
+                    className={`add-q${flashIdx === i ? ' flash' : queuedSet.has(i) ? ' queued' : ''}`}
+                    title="Add to queue"
+                    onClick={e => handleAddToQueue(e, i)}
+                  >+</button>
                 </div>
               ))}
             </div>
