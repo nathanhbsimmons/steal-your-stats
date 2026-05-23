@@ -85,7 +85,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Bass · vocals',
     yearsDisplay: '1965–1995', startYear: 1965, endYear: 1995,
     shows: 2328, core: true, born: 1940, mark: '◆',
-    photo: '/members/phil_lesh.jpg',
+    photo: '/members/phil_lesh.gif',
     eraId: 'europe72',
     bio: "Philip Chapman Lesh — bassist, trained on classical trumpet, no rock experience whatsoever when Garcia handed him a Fender Jazz in 1965. Played bass like a lead instrument, full chordal runs, walking up against Kreutzmann's drums. Wrote Box of Rain about his dying father; that was about all he wrote for the band, but it was enough. After Jerry he ran Phil Lesh & Friends in Marin for two decades.",
     signatureShows: [
@@ -102,7 +102,7 @@ const MEMBERS: Record<string, MemberDef> = {
     role: 'Drums',
     yearsDisplay: '1965–1995', startYear: 1965, endYear: 1995,
     shows: 2328, core: true, born: 1946, mark: '●',
-    photo: '/members/bill_kreutzmann.jpg',
+    photo: '/members/bill_kreutzmann.gif',
     eraId: 'europe72',
     bio: "William Kreutzmann Jr. — the band's first drummer, only drummer for the first two years and the back half of the run. A swing-feel jazz player at heart, more Elvin Jones than Keith Moon, which is what let Garcia stretch song forms into thirty-minute conversations. Held the floor through every roster change. Today he plays around Hawai'i with whoever passes through.",
     signatureShows: [

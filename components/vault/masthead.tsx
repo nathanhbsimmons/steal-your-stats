@@ -2,6 +2,9 @@
 
 import React, { useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
+
+const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 interface MastheadProps {
   search: string
@@ -42,6 +45,18 @@ export function Masthead({ search, setSearch }: MastheadProps) {
   const now = new Date()
   const dateStr = toRomanDate(now)
 
+  const { data: weather } = useSWR<{ temp: number | null; label: string | null }>(
+    '/api/weather',
+    fetcher,
+    { refreshInterval: 600_000 }
+  )
+
+  const weatherStr = weather?.temp != null && weather?.label
+    ? `${weather.temp}°F · ${weather.label}`
+    : weather?.label === null
+    ? ''
+    : '…'
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -77,7 +92,7 @@ export function Masthead({ search, setSearch }: MastheadProps) {
 
       <div className="right">
         <div className="rcol">
-          <div className="weather">49°F · clear sky and a Sunshine Daydream</div>
+          <div className="weather">{weatherStr}</div>
           <label className="search-box">
             <span style={{ color: 'var(--ink-3)' }}>⌕</span>
             <input

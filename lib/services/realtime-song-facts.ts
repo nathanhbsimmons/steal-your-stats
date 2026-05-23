@@ -529,6 +529,26 @@ export class RealtimeSongFactsService {
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([name, count]) => ({ name, count }))
   }
 
+  async getTopSongsByVenue(venueName: string, limit = 20): Promise<{ name: string; count: number }[]> {
+    const allSetlists = await this.getAllGDSetlists()
+    const lower = venueName.toLowerCase()
+    const matching = allSetlists.filter(s => s.venue.name.toLowerCase() === lower)
+    const counts = new Map<string, number>()
+    for (const setlist of matching) {
+      for (const set of setlist.sets.set) {
+        for (const song of set.song) {
+          if (!song.name) continue
+          const key = toTitleCase(resolveSong({ title: song.name }).normalizedTitle)
+          counts.set(key, (counts.get(key) || 0) + 1)
+        }
+      }
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([name, count]) => ({ name, count }))
+  }
+
   async getGlobalStats(): Promise<GlobalStats> {
     const allSetlists = await this.getAllGDSetlists()
 
@@ -601,11 +621,27 @@ export interface ShowOnThisDay {
   setlistUrl?: string
 }
 
+// Compute a fingerprint of the class's public API so the singleton is
+// automatically replaced when methods are added or removed (e.g. after a
+// hot-reload that would otherwise keep a stale instance in globalThis).
+const _classMethods = Object.getOwnPropertyNames(RealtimeSongFactsService.prototype).sort().join(',')
+
 declare global {
   // eslint-disable-next-line no-var
   var __realtimeSongFactsService: RealtimeSongFactsService | undefined
+  // eslint-disable-next-line no-var
+  var __realtimeSongFactsServiceMethods: string | undefined
 }
 
-export const realtimeSongFactsService =
-  globalThis.__realtimeSongFactsService ??
-  (globalThis.__realtimeSongFactsService = new RealtimeSongFactsService())
+export const realtimeSongFactsService: RealtimeSongFactsService = (() => {
+  if (
+    globalThis.__realtimeSongFactsService &&
+    globalThis.__realtimeSongFactsServiceMethods === _classMethods
+  ) {
+    return globalThis.__realtimeSongFactsService
+  }
+  const svc = new RealtimeSongFactsService()
+  globalThis.__realtimeSongFactsService = svc
+  globalThis.__realtimeSongFactsServiceMethods = _classMethods
+  return svc
+})()

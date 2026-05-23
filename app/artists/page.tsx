@@ -9,8 +9,8 @@ interface YearCount { year: number; count: number }
 const CORE_SIX = [
   { name: 'Jerry Garcia',    role: 'Lead guitar · vocals',      initial: 'JG', years: '1965 – 1995', mark: 'J', href: '/member/jerry-garcia',    photo: '/members/jerry_garcia.jpg'    },
   { name: 'Bob Weir',        role: 'Rhythm guitar · vocals',    initial: 'BW', years: '1965 – 1995', mark: 'B', href: '/member/bob-weir',         photo: '/members/bob_weir.jpg'         },
-  { name: 'Phil Lesh',       role: 'Bass · vocals',             initial: 'PL', years: '1965 – 1995', mark: 'P', href: '/member/phil-lesh',        photo: '/members/phil_lesh.jpg'        },
-  { name: 'Bill Kreutzmann', role: 'Drums',                     initial: 'BK', years: '1965 – 1995', mark: 'K', href: '/member/bill-kreutzmann',  photo: '/members/bill_kreutzmann.jpg'  },
+  { name: 'Phil Lesh',       role: 'Bass · vocals',             initial: 'PL', years: '1965 – 1995', mark: 'P', href: '/member/phil-lesh',        photo: '/members/phil_lesh.gif'        },
+  { name: 'Bill Kreutzmann', role: 'Drums',                     initial: 'BK', years: '1965 – 1995', mark: 'K', href: '/member/bill-kreutzmann',  photo: '/members/bill_kreutzmann.gif'  },
   { name: 'Mickey Hart',     role: 'Drums · percussion',        initial: 'MH', years: '1967 – 1995', mark: 'M', href: '/member/mickey-hart',      photo: '/members/mickey_hart.jpg'      },
   { name: 'Pigpen',          role: 'Keys · harmonica · vocals', initial: 'PP', years: '1965 – 1972', mark: 'R', href: '/member/pigpen',           photo: '/members/pigpen.jpg'           },
 ]

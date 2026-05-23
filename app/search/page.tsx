@@ -19,6 +19,11 @@ interface ShowResult {
   songs: string[]
 }
 
+interface VenueSong {
+  name: string
+  count: number
+}
+
 function useDebounce<T>(value: T, ms: number): T {
   const [v, setV] = useState(value)
   useEffect(() => {
@@ -42,6 +47,8 @@ function SearchContent() {
   const [venueShows, setVenueShows] = useState<ShowResult[]>([])
   const [venueShowsLoading, setVenueShowsLoading] = useState(false)
   const [venueLabel, setVenueLabel] = useState('')
+  const [venueSongs, setVenueSongs] = useState<VenueSong[]>([])
+  const [venueSongsLoading, setVenueSongsLoading] = useState(false)
   const dq = useDebounce(query, 250)
 
   useEffect(() => { inputRef.current?.focus() }, [])
@@ -65,15 +72,20 @@ function SearchContent() {
       .finally(() => setShowsLoading(false))
   }, [])
 
-  // Venue fallback: when no songs match, search for shows at a venue with the query name
   const fetchVenueShows = useCallback((name: string) => {
     setVenueShowsLoading(true)
+    setVenueSongsLoading(true)
     setVenueLabel(name)
     fetch(`/api/shows/by-venue?name=${encodeURIComponent(name)}`)
       .then(r => r.json())
       .then(d => setVenueShows((d.shows ?? []).slice(0, 12)))
       .catch(() => setVenueShows([]))
       .finally(() => setVenueShowsLoading(false))
+    fetch(`/api/venues/songs?venue=${encodeURIComponent(name)}`)
+      .then(r => r.json())
+      .then(d => setVenueSongs(d.songs ?? []))
+      .catch(() => setVenueSongs([]))
+      .finally(() => setVenueSongsLoading(false))
   }, [])
 
   useEffect(() => {
@@ -81,14 +93,19 @@ function SearchContent() {
     if (songs.length > 0) {
       fetchShows(songs[0].displayTitle)
       setVenueShows([])
+      setVenueSongs([])
     } else if (dq) {
       setShows([])
       fetchVenueShows(dq)
     } else {
       setShows([])
       setVenueShows([])
+      setVenueSongs([])
     }
   }, [songs, songsLoading, dq, fetchShows, fetchVenueShows])
+
+  const isVenueMode = venueShows.length > 0 || venueShowsLoading
+  const leaderMax = venueSongs[0]?.count ?? 1
 
   return (
     <section className="col">
@@ -132,32 +149,70 @@ function SearchContent() {
 
       {query && (
         <div className="results-cols">
+          {/* Songs column */}
           <div className="result-col">
-            <h4>Songs {songTotal > 0 ? `· ${songTotal}` : ''}</h4>
-            {songsLoading
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="skeleton-vault" style={{ height: 40, marginBottom: 4 }} />
-                ))
-              : songs.length === 0
-                ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>No songs found.</div>
-                : songs.slice(0, 12).map((s) => (
-                    <Link
-                      key={s.title}
-                      href={`/song/${encodeURIComponent(s.displayTitle)}`}
-                      className="row"
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <span className="t">{s.displayTitle}</span>
-                      {s.aliases.length > 0 && (
-                        <span className="s">{s.aliases.slice(0, 1).join(', ')}</span>
-                      )}
-                    </Link>
-                  ))
-            }
+            {isVenueMode ? (
+              <>
+                <h4>Songs · {venueLabel}</h4>
+                {venueSongsLoading
+                  ? Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="skeleton-vault" style={{ height: 36, marginBottom: 4 }} />
+                    ))
+                  : venueSongs.length === 0
+                    ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>No song data for this venue.</div>
+                    : (
+                      <ul className="toptable">
+                        {venueSongs.map((entry, i) => (
+                          <li key={entry.name}>
+                            <Link
+                              href={`/song/${encodeURIComponent(entry.name)}?venue=${encodeURIComponent(venueLabel)}`}
+                              style={{ textDecoration: 'none', display: 'block' }}
+                            >
+                              <div className="row1">
+                                <span className="rank">{i + 1}.</span>
+                                <span style={{ fontFamily: 'var(--serif-display)', fontSize: 16 }}>{entry.name}</span>
+                                <span className="plays">{entry.count}</span>
+                              </div>
+                              <div className="bar">
+                                <div className="fill" style={{ width: `${(entry.count / leaderMax) * 100}%` }} />
+                              </div>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )
+                }
+              </>
+            ) : (
+              <>
+                <h4>Songs {songTotal > 0 ? `· ${songTotal}` : ''}</h4>
+                {songsLoading
+                  ? Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="skeleton-vault" style={{ height: 40, marginBottom: 4 }} />
+                    ))
+                  : songs.length === 0
+                    ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>No songs found.</div>
+                    : songs.slice(0, 12).map((s) => (
+                        <Link
+                          key={s.title}
+                          href={`/song/${encodeURIComponent(s.displayTitle)}`}
+                          className="row"
+                          style={{ textDecoration: 'none' }}
+                        >
+                          <span className="t">{s.displayTitle}</span>
+                          {s.aliases.length > 0 && (
+                            <span className="s">{s.aliases.slice(0, 1).join(', ')}</span>
+                          )}
+                        </Link>
+                      ))
+                }
+              </>
+            )}
           </div>
 
+          {/* Shows column */}
           <div className="result-col">
-            {venueShows.length > 0 || venueShowsLoading ? (
+            {isVenueMode ? (
               <>
                 <h4>Shows at {venueLabel}</h4>
                 {venueShowsLoading

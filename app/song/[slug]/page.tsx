@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import useSWR from 'swr'
 import { usePlayer } from '@/lib/contexts/player-context'
@@ -62,7 +62,9 @@ type SortKey = 'duration-desc' | 'date' | 'venue'
 
 export default function SongPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const songTitle = decodeURIComponent(params.slug as string)
+  const venueFilter = searchParams.get('venue')
 
   const [sortKey, setSortKey] = useState<SortKey>('duration-desc')
   const [starred, setStarred] = useState(false)
@@ -180,11 +182,15 @@ export default function SongPage() {
     }
   }
 
-  const sortedTracks = versData?.tracks ? [...versData.tracks].sort((a, b) => {
-    if (sortKey === 'duration-desc') return (b.durationSec || 0) - (a.durationSec || 0)
-    if (sortKey === 'date') return a.showDate.localeCompare(b.showDate)
-    return a.venue.localeCompare(b.venue)
-  }) : []
+  const sortedTracks = versData?.tracks ? [...versData.tracks]
+    .filter(t => !venueFilter || t.venue.toLowerCase() === venueFilter.toLowerCase())
+    .sort((a, b) => {
+      if (sortKey === 'duration-desc') return (b.durationSec || 0) - (a.durationSec || 0)
+      if (sortKey === 'date') return a.showDate.localeCompare(b.showDate)
+      return a.venue.localeCompare(b.venue)
+    }) : []
+
+  const displayTracks = venueFilter ? sortedTracks : sortedTracks.slice(0, 8)
 
   const POS_PREVIEW = 6
 
@@ -337,9 +343,12 @@ export default function SongPage() {
             { key: 'closer' as const, title: 'Closed the show',  data: posData.closer,  open: showAllCloser, toggle: () => setShowAllCloser(v => !v) },
             { key: 'encore' as const, title: 'Played as encore', data: posData.encore,  open: showAllEncore, toggle: () => setShowAllEncore(v => !v) },
           ].map(({ key, title, data, open, toggle }) => {
-            const shows = data?.shows
-            const count = data?.count
-            if (!count || count === 0) return null
+            const allShows = data?.shows ?? []
+            const shows = venueFilter
+              ? allShows.filter(s => s.venue.toLowerCase() === venueFilter.toLowerCase())
+              : allShows
+            const count = shows.length
+            if (!count) return null
             return (
               <div key={key}>
                 <div className="section-head" style={{ marginTop: 18 }}>
@@ -349,7 +358,7 @@ export default function SongPage() {
                     {open ? 'collapse ↑' : 'show all ↓'}
                   </span>
                 </div>
-                {shows && (open ? shows : shows.slice(0, POS_PREVIEW)).map((s, i) => (
+                {(open ? shows : shows.slice(0, POS_PREVIEW)).map((s, i) => (
                   <Link
                     key={i}
                     href={`/show/${s.date}`}
@@ -365,7 +374,7 @@ export default function SongPage() {
                     </span>
                   </Link>
                 ))}
-                {shows && shows.length > POS_PREVIEW && !open && (
+                {shows.length > POS_PREVIEW && !open && (
                   <button
                     onClick={toggle}
                     style={{
@@ -389,47 +398,32 @@ export default function SongPage() {
           <div className="skeleton-vault" style={{ height: 36, marginBottom: 4 }} />
           <div className="skeleton-vault" style={{ height: 200 }} />
         </div>
-      ) : versData?.extremes ? (
+      ) : versData?.tracks?.length ? (
         <>
           <div className="section-head">
             <h3>Versions</h3>
             <div className="descr">— Archive.org recordings</div>
-            <span className="meta">{versData.tracks?.length ?? 0} tracked</span>
+            <span className="meta">{sortedTracks.length} tracked</span>
           </div>
 
-          {/* Extremes */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, borderTop: '3px solid var(--ink)', borderBottom: '1px solid var(--rule)', marginBottom: 14 }}>
-            {[
-              { label: '⟶ Longest', track: versData.extremes.longest, isAccent: true },
-              { label: '⟵ Shortest', track: versData.extremes.shortest, isAccent: false },
-            ].map(({ label, track, isAccent }) => track ? (
-              <div
-                key={label}
-                style={{
-                  padding: '14px 18px',
-                  borderRight: isAccent ? '1px solid var(--rule)' : 0,
-                  display: 'flex', alignItems: 'center', gap: 14,
-                }}
+          {venueFilter && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              background: 'var(--paper-3)', border: '1.5px solid var(--ink)',
+              padding: '6px 12px', marginBottom: 14,
+              fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+            }}>
+              <span style={{ color: 'var(--ink-3)' }}>Venue</span>
+              <span style={{ color: 'var(--ink)' }}>{venueFilter}</span>
+              <Link
+                href={`/song/${encodeURIComponent(songTitle)}`}
+                style={{ color: 'var(--rust)', textDecoration: 'none', marginLeft: 4 }}
+                title="Clear venue filter"
               >
-                <button
-                  className="btn icon"
-                  onClick={() => handlePlayTrack(track)}
-                  style={{ flexShrink: 0 }}
-                >
-                  ▶
-                </button>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: isAccent ? 'var(--rust)' : 'var(--ink-3)', marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 26, color: 'var(--ink)', letterSpacing: '-0.02em', lineHeight: 1 }}>
-                    {formatDuration(track.durationSec)}
-                  </div>
-                  <div style={{ fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 13, color: 'var(--ink-3)', marginTop: 2 }}>
-                    {formatDate(track.showDate)} · {track.venue}
-                  </div>
-                </div>
-              </div>
-            ) : null)}
-          </div>
+                ×
+              </Link>
+            </div>
+          )}
 
           {/* Sort filters */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -451,7 +445,7 @@ export default function SongPage() {
             ))}
             <span style={{ flex: 1 }} />
             <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)' }}>
-              Showing {Math.min(8, sortedTracks.length)} of {sortedTracks.length}
+              Showing {displayTracks.length}{!venueFilter && sortedTracks.length > 8 ? ` of ${sortedTracks.length}` : ''}
             </span>
           </div>
 
@@ -468,7 +462,7 @@ export default function SongPage() {
               </tr>
             </thead>
             <tbody>
-              {sortedTracks.slice(0, 8).map((t, i) => {
+              {displayTracks.map((t, i) => {
                 const isLongest = versData.extremes?.longest?.archiveItemId === t.archiveItemId
                 const isShortest = versData.extremes?.shortest?.archiveItemId === t.archiveItemId
                 const isCurrentlyPlaying = currentTrack?.id?.includes(t.id || '')
@@ -483,7 +477,7 @@ export default function SongPage() {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <button
-                        className={`btn icon${isCurrentlyPlaying && isPlaying ? ' primary' : ''}`}
+                        className={`tbl-play${isCurrentlyPlaying && isPlaying ? ' playing' : ''}`}
                         onClick={() => handlePlayTrack(t)}
                       >
                         {isCurrentlyPlaying && isPlaying ? '❚❚' : '▶'}
