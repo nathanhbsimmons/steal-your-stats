@@ -64,8 +64,6 @@
   border-bottom: 3px double var(--ink);
   padding: 12px 18px 14px;
   text-align: center;
-  position: relative;
-  z-index: 3;
   background: var(--paper);
 }
 .mv-mast .pub {
@@ -214,25 +212,6 @@
   .mv-status .dot { animation: none !important; }
 }
 
-.mv-reel .mv-reel-stamp {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  width: 32px;
-  height: 32px;
-  border: 1.5px solid var(--rust);
-  color: var(--rust);
-  border-radius: 50%;
-  font-family: var(--mono);
-  font-size: 7px;
-  letter-spacing: 0.08em;
-  display: grid;
-  place-items: center;
-  transform: rotate(-14deg);
-  text-align: center;
-  line-height: 1.1;
-  opacity: 0.7;
-}
 
 .mv-now-title {
   font-family: var(--serif-display);
@@ -248,14 +227,6 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-3);
-}
-.mv-now-sub .reel-tag {
-  color: var(--rust);
-  border: 1px solid var(--rust);
-  padding: 1px 5px;
-  margin-left: 6px;
-  font-size: 9px;
-  letter-spacing: 0.14em;
 }
 
 /* ---------------------------------------- TRANSPORT */
@@ -617,6 +588,40 @@
   background: var(--rust);
 }
 
+/* ---------------------------------------- BACK BUTTON */
+.mv-back {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--rule-soft);
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  cursor: pointer;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------- LOAD MORE */
+.mv-load-more {
+  display: block;
+  width: 100%;
+  padding: 12px 18px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--rule-soft);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rust);
+  cursor: pointer;
+  text-align: left;
+}
+.mv-load-more:hover { background: var(--paper-2); }
+
 /* ---------------------------------------- SONGS LIST */
 .mv-search {
   padding: 12px 18px;
@@ -925,7 +930,7 @@
 }
 .mv-ledger .row {
   display: grid;
-  grid-template-columns: 22px 1fr auto;
+  grid-template-columns: 44px 1fr auto;
   align-items: baseline;
   gap: 10px;
   padding: 9px 0;

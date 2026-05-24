@@ -86,9 +86,9 @@ function MobileTabBar({ pathname }: { pathname: string }) {
   const active = getActiveTab(pathname)
   const tabs = [
     { id: 'deck', num: 'I', label: 'Deck', href: '/' },
-    { id: 'songs', num: 'III', label: 'Songs', href: '/songs' },
-    { id: 'stats', num: 'VIII', label: 'Stats', href: '/stats' },
-    { id: 'search', num: 'II', label: 'Search', href: '/search' },
+    { id: 'songs', num: 'II', label: 'Songs', href: '/songs' },
+    { id: 'stats', num: 'III', label: 'Stats', href: '/stats' },
+    { id: 'search', num: 'IV', label: 'Search', href: '/search' },
   ]
   return (
     <div className="mv-tabs" role="navigation" aria-label="Main navigation">
@@ -115,33 +115,46 @@ function chapterMeta(pathname: string, songTitle?: string): { left: React.ReactN
     right: '0001',
   }
   if (pathname.startsWith('/song/') && songTitle) return {
-    left: <><span className="num">III·a</span> SONGS › DETAIL</>,
+    left: <><span className="num">II·a</span> SONGS › DETAIL</>,
     right: '0214 / 2333',
   }
   if (pathname.startsWith('/songs')) return {
-    left: <><span className="num">III.</span> SONGS · CATALOG</>,
+    left: <><span className="num">II.</span> SONGS · CATALOG</>,
     right: '442',
   }
   if (pathname.startsWith('/stats')) return {
-    left: <><span className="num">VIII.</span> STATS · ALMANAC</>,
+    left: <><span className="num">III.</span> STATS · ALMANAC</>,
     right: '1842 / 2333',
   }
   if (pathname.startsWith('/search')) return {
-    left: <><span className="num">II.</span> SEARCH · CATALOG</>,
+    left: <><span className="num">IV.</span> SEARCH · CATALOG</>,
     right: '2333',
   }
   if (pathname.startsWith('/show/')) return {
-    left: <><span className="num">I.</span> THE DECK · SETLIST</>,
+    left: <><span className="num">I·a</span> THE DECK · SETLIST</>,
     right: '0001',
   }
   return { left: <><span className="num">I.</span> THE VAULT</>, right: '0001' }
 }
 
 function MobileChapter({ pathname, songTitle }: { pathname: string; songTitle?: string }) {
+  const router = useRouter()
   const { left, right } = chapterMeta(pathname, songTitle)
+  const isDetail = pathname.startsWith('/song/') || pathname.startsWith('/show/')
   return (
     <div className="mv-chapter">
-      <span>{left}</span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, overflow: 'hidden' }}>
+        {isDetail && (
+          <button
+            className="mv-back"
+            onClick={() => router.back()}
+            aria-label="Go back"
+          >
+            ← Back
+          </button>
+        )}
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{left}</span>
+      </span>
       <span className="pg">{right}</span>
     </div>
   )
@@ -228,6 +241,23 @@ function DeckScreen() {
       .catch(() => {})
   }, [displayDate])
 
+  const [audioTime, setAudioTime] = useState({ currentTime: 0, duration: 0 })
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { currentTime, duration } = (e as CustomEvent<{ currentTime: number; duration: number }>).detail
+      setAudioTime({ currentTime, duration })
+    }
+    window.addEventListener('vault-time-update', handler)
+    return () => window.removeEventListener('vault-time-update', handler)
+  }, [])
+
+  const handleBarInteract = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX
+    const fraction = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    window.dispatchEvent(new CustomEvent('vault-seek-to-fraction', { detail: { fraction } }))
+  }, [])
+
   const handlePlay = useCallback(async () => {
     const show = currentTrack ? { date: currentTrack.showDate!, venue: currentTrack.venue!, city: currentTrack.city! } : featured ? { date: featured.date, venue: featured.venue, city: featured.city } : null
     if (!show) return
@@ -266,7 +296,6 @@ function DeckScreen() {
             <span style={{ transform: 'translateX(-50%) rotate(240deg)' }} />
           </div>
           <div className="hub">A · 01</div>
-          <div className="mv-reel-stamp">REEL<br />TO<br />REEL</div>
         </div>
 
         {loading ? (
@@ -278,7 +307,6 @@ function DeckScreen() {
             </div>
             <div className="mv-now-sub">
               {subLine}
-              <span className="reel-tag">REEL TO REEL</span>
             </div>
           </>
         ) : (
@@ -291,26 +319,36 @@ function DeckScreen() {
       {/* Transport */}
       <div className="mv-transport">
         <div className="mv-progress">
-          <span className="t">0:00</span>
-          <div className="mv-bar" aria-hidden="true">
+          <span className="t">{formatDur(audioTime.currentTime)}</span>
+          <div
+            className="mv-bar"
+            onClick={handleBarInteract}
+            onTouchStart={handleBarInteract}
+            role="slider"
+            aria-label="Seek"
+            aria-valuenow={Math.round(audioTime.currentTime)}
+            aria-valuemin={0}
+            aria-valuemax={Math.round(audioTime.duration)}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="rule" />
             <div className="ticks">
               {Array.from({ length: 11 }).map((_, i) => <span key={i} />)}
             </div>
-            <div className="fill" style={{ width: '0%' }} />
-            <div className="needle" style={{ left: '0%' }} />
+            <div className="fill" style={{ width: `${audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0}%` }} />
+            <div className="needle" style={{ left: `${audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0}%` }} />
           </div>
           <span className="t right">
-            {currentTrack?.duration ? formatDur(currentTrack.duration) : '—'}
+            {audioTime.duration > 0 ? formatDur(audioTime.duration) : currentTrack?.duration ? formatDur(currentTrack.duration) : '—'}
           </span>
         </div>
         <div className="mv-ctrls">
           <button className="mv-iconbtn ghost" onClick={previous} aria-label="Previous track">◀◀</button>
-          <button className="mv-iconbtn ghost" aria-label="Skip back 10 seconds" disabled style={{ opacity: 0.4 }}>−10</button>
+          <button className="mv-iconbtn ghost" aria-label="Skip back 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: -10 } }))}>−10</button>
           <button className="mv-iconbtn play" onClick={handlePlay} aria-label={isPlaying_ ? 'Pause' : 'Play'}>
             {isPlaying_ ? '❚❚' : '▶'}
           </button>
-          <button className="mv-iconbtn ghost" aria-label="Skip forward 10 seconds" disabled style={{ opacity: 0.4 }}>+10</button>
+          <button className="mv-iconbtn ghost" aria-label="Skip forward 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: 10 } }))}>+10</button>
           <button className="mv-iconbtn ghost" onClick={next} aria-label="Next track">▶▶</button>
         </div>
       </div>
@@ -507,9 +545,12 @@ function SongDetailScreen({ slug }: { slug: string }) {
     }).catch(() => {}).finally(() => setLoading(false))
   }, [slug])
 
+  const [showAllVersions, setShowAllVersions] = useState(false)
   const shortest = versions?.extremes?.shortest
   const longest = versions?.extremes?.longest
-  const recentVersions = (versions?.tracks ?? []).slice(0, 12)
+  const allVersions = versions?.tracks ?? []
+  const VERSIONS_LIMIT = 12
+  const displayedVersions = showAllVersions ? allVersions : allVersions.slice(0, VERSIONS_LIMIT)
 
   return (
     <>
@@ -562,14 +603,14 @@ function SongDetailScreen({ slug }: { slug: string }) {
         </div>
       )}
 
-      {/* Recent versions */}
-      {recentVersions.length > 0 && (
+      {/* Versions list */}
+      {displayedVersions.length > 0 && (
         <>
           <div className="mv-sec">
-            <span className="name">Recent versions</span>
-            <span className="more">of {facts?.totalPerformances ?? '—'} ›</span>
+            <span className="name">Versions</span>
+            <span className="more">{displayedVersions.length} / {allVersions.length} ›</span>
           </div>
-          {recentVersions.map(v => (
+          {displayedVersions.map(v => (
             <div
               key={v.id}
               className="mv-version"
@@ -585,6 +626,14 @@ function SongDetailScreen({ slug }: { slug: string }) {
               <span className="dur">{formatDur(v.durationSec)}</span>
             </div>
           ))}
+          {!showAllVersions && allVersions.length > VERSIONS_LIMIT && (
+            <button
+              className="mv-load-more"
+              onClick={() => setShowAllVersions(true)}
+            >
+              Show all {allVersions.length} versions ↓
+            </button>
+          )}
         </>
       )}
 
@@ -910,8 +959,8 @@ export function MobileShell() {
 
   return (
     <div className="mv" role="main">
-      {showMast && <MobileMast />}
       <div className={`mv-scroll${isNoMini ? ' no-mini' : ''}`}>
+        {showMast && <MobileMast />}
         <MobileChapter pathname={pathname} songTitle={songSlug} />
         {isHome && <DeckScreen />}
         {isSongs && <SongsScreen />}
