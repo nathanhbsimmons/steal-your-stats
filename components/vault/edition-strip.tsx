@@ -7,7 +7,7 @@ export function EditionStrip() {
         <span>An Annotated Guide to Grateful Dead Songlists</span>
         <span className="glyph">❦</span>
       </div>
-      <div>setlist.fm · archive.org · this volume</div>
+      <div>setlist.fm · archive.org</div>
     </div>
   )
 }
