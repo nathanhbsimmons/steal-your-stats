@@ -21,7 +21,7 @@ test.describe('Member detail page — Jerry Garcia', () => {
   })
 
   test('shows show count', async ({ page }) => {
-    await expect(page.getByText('2,328')).toBeVisible()
+    await expect(page.getByText('2,328').first()).toBeVisible()
   })
 
   test('shows bio text', async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe('Member detail page — Jerry Garcia', () => {
   })
 
   test('debut songs are pill links to song pages', async ({ page }) => {
-    const sugareeLink = page.locator('a.pill', { hasText: 'Sugaree' })
+    const sugareeLink = page.locator('a.pill', { hasText: 'Sugaree' }).first()
     await expect(sugareeLink).toBeVisible()
     await expect(sugareeLink).toHaveAttribute('href', /\/song\/Sugaree/)
   })
@@ -69,8 +69,8 @@ test.describe('Member detail page — Jerry Garcia', () => {
   })
 
   test('shows breadcrumb navigation', async ({ page }) => {
-    await expect(page.getByText('BAND MEMBERS')).toBeVisible()
-    await expect(page.getByText('JERRY GARCIA')).toBeVisible()
+    await expect(page.getByRole('link', { name: 'BAND MEMBERS' })).toBeVisible()
+    await expect(page.getByText('JERRY GARCIA').first()).toBeVisible()
   })
 
   test('no JS errors on load', async ({ page }) => {

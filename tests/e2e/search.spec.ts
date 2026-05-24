@@ -13,13 +13,15 @@ test.describe('Search page — song mode', () => {
 
   test('shows song results when query matches a song', async ({ page }) => {
     await page.route('**/api/songs**', r => r.fulfill({ json: mockSongSearchResults }))
+    // Keep venue-shows empty so the page stays in song mode (not venue mode)
+    await page.route('**/api/shows/by-venue**', r => r.fulfill({ json: { shows: [] } }))
     await page.goto('/search?q=Dark+Star')
-    // a.row is the song result link; distinct from venue leaderboard entries
     await expect(page.locator('a.row', { hasText: 'Dark Star' })).toBeVisible({ timeout: 8_000 })
   })
 
   test('navigates to song page when a song result is clicked', async ({ page }) => {
     await page.route('**/api/songs**', r => r.fulfill({ json: mockSongSearchResults }))
+    await page.route('**/api/shows/by-venue**', r => r.fulfill({ json: { shows: [] } }))
     await page.goto('/search?q=Dark+Star')
     await expect(page.locator('a.row', { hasText: 'Dark Star' })).toBeVisible({ timeout: 8_000 })
     await page.locator('a.row', { hasText: 'Dark Star' }).click()

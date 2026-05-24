@@ -26,7 +26,7 @@ test.describe('Export page — layout and navigation', () => {
 
   test('clicking Data Export tab switches content', async ({ page }) => {
     await page.getByRole('button', { name: /Data Export/ }).click()
-    await expect(page.getByText('Song Dossier')).toBeVisible({ timeout: 8_000 })
+    await expect(page.getByText('Song Dossier — Markdown')).toBeVisible({ timeout: 8_000 })
   })
 
   test('no JS errors on load', async ({ page }) => {
@@ -42,7 +42,7 @@ test.describe('Export page — Data Export tab', () => {
     await mockAllApis(page)
     await page.goto('/export')
     await page.getByRole('button', { name: /Data Export/ }).click()
-    await expect(page.getByText('Song Dossier')).toBeVisible({ timeout: 8_000 })
+    await expect(page.getByText('Song Dossier — Markdown')).toBeVisible({ timeout: 8_000 })
   })
 
   test('song input has default value "Dark Star"', async ({ page }) => {
@@ -51,9 +51,9 @@ test.describe('Export page — Data Export tab', () => {
   })
 
   test('shows dossier section checkboxes', async ({ page }) => {
-    await expect(page.getByText('Performance facts')).toBeVisible()
-    await expect(page.getByText('Position breakdown')).toBeVisible()
-    await expect(page.getByText('Versions table (top 25)')).toBeVisible()
+    await expect(page.getByText('Performance facts').first()).toBeVisible()
+    await expect(page.getByText('Position breakdown').first()).toBeVisible()
+    await expect(page.getByText('Versions table (top 25)').first()).toBeVisible()
   })
 
   test('live preview shows the song title', async ({ page }) => {
@@ -97,14 +97,13 @@ test.describe('Export page — Data Export tab', () => {
   })
 
   test('toggling a section checkbox hides it from preview', async ({ page }) => {
-    // "Aliases & attribution" is off by default — toggling "Performance facts" off
-    const perfRow = page.locator('div', { hasText: 'Performance facts' }).first()
-    await perfRow.click()
-    // The preview "sections" panel should no longer include Performance facts bullet
-    await expect(page.getByText('Performance facts').first()).toBeVisible() // label still in left panel
-    // but the preview panel's bullet should be gone
-    const previewBullets = page.locator('.col').filter({ hasText: 'STEAL YOUR STATS · SONG DOSSIER' })
-    await expect(previewBullets).not.toContainText('Performance facts')
+    // Click the checkbox label span — event bubbles up to the row div's onClick
+    await page.locator('span', { hasText: 'Performance facts' }).first().click()
+    // Checkbox label is still visible in the left panel
+    await expect(page.getByText('Performance facts').first()).toBeVisible()
+    // Preview panel (right column — parent of "Live preview" label) no longer shows the bullet
+    const rightColumn = page.getByText('Live preview', { exact: true }).locator('..')
+    await expect(rightColumn).not.toContainText('Performance facts')
   })
 
   test('"coming in the next pressing" placeholder is visible', async ({ page }) => {

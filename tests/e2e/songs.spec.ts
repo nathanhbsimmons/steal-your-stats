@@ -9,7 +9,7 @@ test.describe('Songs catalog page', () => {
 
   test('renders page heading', async ({ page }) => {
     await page.goto('/songs')
-    await expect(page.getByText(/catalog/i)).toBeVisible({ timeout: 8_000 })
+    await expect(page.getByRole('heading', { level: 2, name: /catalog/i })).toBeVisible({ timeout: 8_000 })
   })
 
   test('shows total count in lede', async ({ page }) => {

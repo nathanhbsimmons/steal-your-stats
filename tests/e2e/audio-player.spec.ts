@@ -107,7 +107,7 @@ test.describe('VaultPlayer — initial state', () => {
 
   test('play button is present (aria-label Play)', async ({ page }) => {
     await loadSongPage(page)
-    await expect(page.getByRole('button', { name: 'Play' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible()
   })
 
   test('Queue badge shows 0 initially', async ({ page }) => {
@@ -180,8 +180,7 @@ test.describe('VaultPlayer — queue management', () => {
 test.describe('VaultPlayer — playback controls', () => {
   test('play/pause button exists', async ({ page }) => {
     await loadSongPage(page)
-    // Initially shows "Play" label
-    await expect(page.getByRole('button', { name: 'Play' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible()
   })
 
   test('Previous and Next buttons are present', async ({ page }) => {

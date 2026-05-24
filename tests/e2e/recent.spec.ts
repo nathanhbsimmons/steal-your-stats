@@ -82,7 +82,7 @@ test.describe('Recent play log page — with entries', () => {
   })
 
   test('lede updates to show track and day count', async ({ page }) => {
-    await expect(page.getByText(/2 tracks/)).toBeVisible({ timeout: 8_000 })
+    await expect(page.getByText(/2 tracks/).first()).toBeVisible({ timeout: 8_000 })
   })
 
   test('no JS errors with play log entries', async ({ page }) => {

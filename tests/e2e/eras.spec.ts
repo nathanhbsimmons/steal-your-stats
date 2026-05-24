@@ -115,8 +115,8 @@ test.describe('Era detail page', () => {
   })
 
   test('"Most played" sidebar shows top song names', async ({ page }) => {
-    await expect(page.getByText('Dark Star')).toBeVisible({ timeout: 8_000 })
-    await expect(page.getByText("Playing in the Band")).toBeVisible({ timeout: 8_000 })
+    await expect(page.getByText('Dark Star').first()).toBeVisible({ timeout: 8_000 })
+    await expect(page.getByText("Playing in the Band").first()).toBeVisible({ timeout: 8_000 })
   })
 
   test('show rows link to show pages', async ({ page }) => {
