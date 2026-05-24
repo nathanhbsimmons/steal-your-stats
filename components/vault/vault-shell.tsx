@@ -8,6 +8,7 @@ import { EditionStrip } from './edition-strip'
 import { Chapters } from './chapters'
 import { Colophon } from './colophon'
 import { VaultPlayer } from './vault-player'
+import { MobileShell } from '@/components/mobile/mobile-shell'
 
 const WIDE_ROUTES = new Set([
   '/search', '/songs', '/stats', '/venues', '/eras', '/artists', '/recent', '/export',
@@ -53,6 +54,7 @@ export function VaultShell({ children }: { children: React.ReactNode }) {
   return (
     <PlayerProvider>
       <ShellInner>{children}</ShellInner>
+      <MobileShell />
     </PlayerProvider>
   )
 }

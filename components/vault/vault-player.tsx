@@ -43,8 +43,18 @@ export function VaultPlayer() {
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
-    const onTime = () => setCurrentTime(audio.currentTime)
-    const onDur  = () => setDuration(audio.duration || 0)
+    const onTime = () => {
+      setCurrentTime(audio.currentTime)
+      window.dispatchEvent(new CustomEvent('vault-time-update', {
+        detail: { currentTime: audio.currentTime, duration: audio.duration || 0 }
+      }))
+    }
+    const onDur  = () => {
+      setDuration(audio.duration || 0)
+      window.dispatchEvent(new CustomEvent('vault-time-update', {
+        detail: { currentTime: audio.currentTime, duration: audio.duration || 0 }
+      }))
+    }
     const onEnd  = () => next()
     audio.addEventListener('timeupdate', onTime)
     audio.addEventListener('durationchange', onDur)
@@ -73,6 +83,25 @@ export function VaultPlayer() {
     const audio = audioRef.current
     if (audio) audio.volume = volume
   }, [volume])
+
+  useEffect(() => {
+    const seekByHandler = (e: Event) => {
+      const { seconds } = (e as CustomEvent<{ seconds: number }>).detail
+      const audio = audioRef.current
+      if (audio) audio.currentTime = Math.max(0, audio.currentTime + seconds)
+    }
+    const seekToHandler = (e: Event) => {
+      const { fraction } = (e as CustomEvent<{ fraction: number }>).detail
+      const audio = audioRef.current
+      if (audio && audio.duration > 0) audio.currentTime = fraction * audio.duration
+    }
+    window.addEventListener('vault-seek-by', seekByHandler)
+    window.addEventListener('vault-seek-to-fraction', seekToHandler)
+    return () => {
+      window.removeEventListener('vault-seek-by', seekByHandler)
+      window.removeEventListener('vault-seek-to-fraction', seekToHandler)
+    }
+  }, [])
 
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0
 

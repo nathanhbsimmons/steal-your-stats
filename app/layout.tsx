@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { VaultShell } from "@/components/vault/vault-shell";
 import "./globals.css";
+import "./mobile.css";
 
 export const metadata: Metadata = {
   title: "StealyourStats — Grateful Dead",
@@ -19,7 +20,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&family=UnifrakturMaguntia&display=swap"
+          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&family=UnifrakturMaguntia&display=swap"
           rel="stylesheet"
         />
       </head>
