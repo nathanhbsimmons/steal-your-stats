@@ -1,5 +1,0 @@
-[    4207ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:14537
-[    5298ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/api/position-facts/page?songTitle=Sugaree&positionType=opener&page=2:0
-[   15570ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/api/position-facts/page?songTitle=Sugaree&positionType=opener&page=2:0
-[   30831ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/api/position-facts/page?songTitle=Sugaree&positionType=opener&page=2:0
-[   56119ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/api/position-facts/page?songTitle=Sugaree&positionType=opener&page=2:0
