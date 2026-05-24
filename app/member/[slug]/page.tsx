@@ -38,11 +38,11 @@ interface MemberDef {
 }
 
 const ERA_INFO: Record<string, { name: string; years: string }> = {
-  primal:   { name: 'Primal Dead',      years: '1965–1971' },
-  europe72: { name: "Europe '72",        years: '1972–1974' },
-  hiatus:   { name: 'Hiatus & Return',   years: '1975–1979' },
-  brent:    { name: 'Brent Years',       years: '1980–1990' },
-  final:    { name: 'Final Tours',       years: '1991–1995' },
+  primal: { name: 'Primal Dead', years: '1965–1971' },
+  europe72: { name: "Europe '72", years: '1972–1974' },
+  hiatus: { name: 'Hiatus & Return', years: '1975–1979' },
+  brent: { name: 'Brent Years', years: '1980–1990' },
+  final: { name: 'Final Tours', years: '1991–1995' },
 }
 
 const MEMBERS: Record<string, MemberDef> = {
@@ -53,12 +53,12 @@ const MEMBERS: Record<string, MemberDef> = {
     shows: 2328, core: true, born: 1942, mark: '▲',
     photo: '/members/jerry_garcia.jpg',
     eraId: 'europe72',
-    bio: "Jerome John Garcia — guitarist, singer, reluctant figurehead. Wandered in from the Palo Alto folk scene in 1965 with banjo fingers and never put the Stratocaster down. Over thirty years his lead-guitar voice — singing, conversational, halfway to a pedal-steel sigh — defined whatever a Grateful Dead song was. He wrote most of the catalog with Robert Hunter, took the longest solos, and held the band together by drift. He died in his sleep at a rehab clinic on August 9th, 1995, five weeks after the last show.",
+    bio: "Jerome John Garcia: guitarist, singer, reluctant figurehead. Wandered in from the Palo Alto folk scene in 1965 with banjo fingers, and cycled through Strats and SGs and worse before Doug Irwin built him Wolf, then Tiger. Over thirty years his lead-guitar voice, singing, conversational, halfway to a pedal-steel sigh, defined whatever a Grateful Dead song was. He wrote most of the catalog with Robert Hunter, took the longest solos, and held the band together by drift. He died in his sleep at a rehab clinic on August 9th, 1995, a month after the last show.",
     signatureShows: [
-      { date: '1977-05-08', venue: 'Barton Hall',     city: 'Ithaca, NY',    note: 'the canonical Cornell · 13-min Morning Dew' },
-      { date: '1973-02-09', venue: 'Maples Pavilion', city: 'Stanford, CA',  note: 'the Stanford Eyes · first outing' },
-      { date: '1977-05-19', venue: 'Fox Theatre',     city: 'Atlanta, GA',   note: "this volume's featured Peggy-O" },
-      { date: '1995-07-09', venue: 'Soldier Field',   city: 'Chicago, IL',   note: 'his last show on earth' },
+      { date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca, NY', note: 'the canonical Cornell · 13-min Morning Dew' },
+      { date: '1973-02-09', venue: 'Maples Pavilion', city: 'Stanford, CA', note: 'the Stanford Eyes · first outing' },
+      { date: '1977-05-19', venue: 'Fox Theatre', city: 'Atlanta, GA', note: "this volume's featured Peggy-O" },
+      { date: '1995-07-09', venue: 'Soldier Field', city: 'Chicago, IL', note: 'his last show on earth' },
     ],
     debuts: ['Sugaree', 'Bertha', 'Loser', 'Eyes of the World', 'Scarlet Begonias', 'Althea', 'Lazy River Road', 'Brokedown Palace'],
     signatureSongs: ['Eyes of the World', 'Sugaree', 'Althea', 'Morning Dew', 'Bird Song', 'Stella Blue', 'Terrapin Station', 'Brokedown Palace'],
@@ -70,12 +70,12 @@ const MEMBERS: Record<string, MemberDef> = {
     shows: 2328, core: true, born: 1947, mark: '■',
     photo: '/members/bob_weir.jpg',
     eraId: 'brent',
-    bio: "Robert Hall Weir — rhythm guitar, occasional lead, the cowboy songs. Joined at 16 after Garcia heard him goof a Jorma part. He turned the rhythm-guitar role on its head: no chord pads, just inverted voicings and counterlines that argued with Garcia all night. The Bobby ballads — Looks Like Rain, Cassidy, Estimated Prophet — anchor the back half of any setlist. He outlasted everybody and is still on the road with Dead & Company.",
+    bio: "Robert Hall Weir: rhythm guitar, occasional lead, the cowboy songs. Joined at 16 after Garcia heard him goof a Jorma part. He turned the rhythm-guitar role on its head: no chord pads, just inverted voicings and counterlines that argued with Garcia all night. The Bobby ballads, Looks Like Rain, Cassidy, Estimated Prophet, anchor the back half of any setlist. He died on January 10, 2026, at 78, not long after his final performance at a Grateful Dead 60th anniversary run in Golden Gate Park the previous August.",
     signatureShows: [
-      { date: '1972-05-26', venue: 'Strand Lyceum',   city: 'London, England', note: 'the 32-minute Dark Star bridge' },
-      { date: '1977-05-08', venue: 'Barton Hall',     city: 'Ithaca, NY',      note: 'Estimated > Eyes' },
-      { date: '1989-10-09', venue: 'Hampton Coliseum', city: 'Hampton, VA',    note: 'the formal Dark Star revival' },
-      { date: '1990-03-29', venue: 'Nassau Coliseum', city: 'Uniondale, NY',   note: "Help > Slip > Franklin's, definitive" },
+      { date: '1972-05-26', venue: 'Strand Lyceum', city: 'London, England', note: 'the 32-minute Dark Star bridge' },
+      { date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca, NY', note: 'Estimated > Eyes' },
+      { date: '1989-10-09', venue: 'Hampton Coliseum', city: 'Hampton, VA', note: 'the formal Dark Star revival' },
+      { date: '1990-03-29', venue: 'Nassau Coliseum', city: 'Uniondale, NY', note: "Help > Slip > Franklin's, definitive" },
     ],
     debuts: ['Estimated Prophet', 'Jack Straw', 'Looks Like Rain', 'Hell in a Bucket', 'Throwing Stones', 'Cassidy', 'Black-Throated Wind'],
     signatureSongs: ['Estimated Prophet', 'Looks Like Rain', 'Jack Straw', 'Cassidy', 'Sugar Magnolia', 'Hell in a Bucket', 'Throwing Stones'],
@@ -87,12 +87,12 @@ const MEMBERS: Record<string, MemberDef> = {
     shows: 2328, core: true, born: 1940, mark: '◆',
     photo: '/members/phil_lesh.gif',
     eraId: 'europe72',
-    bio: "Philip Chapman Lesh — bassist, trained on classical trumpet, no rock experience whatsoever when Garcia handed him a Fender Jazz in 1965. Played bass like a lead instrument, full chordal runs, walking up against Kreutzmann's drums. Wrote Box of Rain about his dying father; that was about all he wrote for the band, but it was enough. After Jerry he ran Phil Lesh & Friends in Marin for two decades.",
+    bio: "Philip Chapman Lesh: bassist, trained on classical trumpet, no rock experience whatsoever when Garcia handed him a Fender Jazz in 1965. Played bass like a lead instrument, full chordal runs, walking up against Kreutzmann's drums. Wrote Box of Rain about his dying father; that was about all he wrote for the band, but it was enough. After Jerry he ran Phil Lesh & Friends in Marin for two decades. He died on October 25, 2024.",
     signatureShows: [
-      { date: '1974-06-23', venue: 'Jai-Alai Fronton', city: 'Miami, FL',          note: 'Wall-of-Sound era · low end you can feel' },
-      { date: '1972-05-03', venue: 'Olympia Theatre',  city: 'Paris, France',      note: "Europe '72 · Truckin'" },
-      { date: '1973-11-11', venue: 'Winterland Arena', city: 'San Francisco, CA',  note: 'the 16-min Eyes' },
-      { date: '1995-07-09', venue: 'Soldier Field',    city: 'Chicago, IL',        note: 'his Box of Rain encore' },
+      { date: '1974-06-23', venue: 'Jai-Alai Fronton', city: 'Miami, FL', note: 'Wall-of-Sound era · low end you can feel' },
+      { date: '1972-05-03', venue: 'Olympia Theatre', city: 'Paris, France', note: "Europe '72 · Truckin'" },
+      { date: '1973-11-11', venue: 'Winterland Arena', city: 'San Francisco, CA', note: 'the 16-min Eyes' },
+      { date: '1995-07-09', venue: 'Soldier Field', city: 'Chicago, IL', note: 'his Box of Rain encore' },
     ],
     debuts: ['Box of Rain', 'Unbroken Chain', 'Pride of Cucamonga'],
     signatureSongs: ['Box of Rain', "Truckin'", 'The Other One', 'Unbroken Chain', 'Dark Star'],
@@ -104,12 +104,12 @@ const MEMBERS: Record<string, MemberDef> = {
     shows: 2328, core: true, born: 1946, mark: '●',
     photo: '/members/bill_kreutzmann.gif',
     eraId: 'europe72',
-    bio: "William Kreutzmann Jr. — the band's first drummer, only drummer for the first two years and the back half of the run. A swing-feel jazz player at heart, more Elvin Jones than Keith Moon, which is what let Garcia stretch song forms into thirty-minute conversations. Held the floor through every roster change. Today he plays around Hawai'i with whoever passes through.",
+    bio: "William Kreutzmann Jr.: the band's first drummer, only drummer for the first two years and the back half of the run. A swing-feel jazz player at heart, more Elvin Jones than Keith Moon, which is what let Garcia stretch song forms into thirty-minute conversations. Held the floor through every roster change. He retired to Hawai'i after decades of holding the floor and is the last surviving member of the Grateful Dead's original lineup.",
     signatureShows: [
-      { date: '1970-05-02', venue: 'Harpur College',      city: 'Binghamton, NY',  note: 'acoustic + electric · classic Bill' },
-      { date: '1972-05-26', venue: 'Strand Lyceum',       city: 'London, England', note: 'Bertha opener · drives the whole set' },
-      { date: '1977-05-19', venue: 'Fox Theatre',         city: 'Atlanta, GA',     note: 'Scarlet > Fire pocket' },
-      { date: '1991-09-10', venue: 'Madison Square Garden', city: 'New York, NY',  note: 'Bruce Hornsby tour · Bill loose' },
+      { date: '1970-05-02', venue: 'Harpur College', city: 'Binghamton, NY', note: 'acoustic + electric · classic Bill' },
+      { date: '1972-05-26', venue: 'Strand Lyceum', city: 'London, England', note: 'Bertha opener · drives the whole set' },
+      { date: '1977-05-19', venue: 'Fox Theatre', city: 'Atlanta, GA', note: 'Scarlet > Fire pocket' },
+      { date: '1991-09-10', venue: 'Madison Square Garden', city: 'New York, NY', note: 'Bruce Hornsby tour · Bill loose' },
     ],
     debuts: ['Drums', "King Solomon's Marbles"],
     signatureSongs: ['Drums', 'The Other One', 'Bertha', 'Playing in the Band', "Truckin'"],
@@ -121,12 +121,12 @@ const MEMBERS: Record<string, MemberDef> = {
     shows: 2205, core: true, born: 1943, mark: '○',
     photo: '/members/mickey_hart.jpg',
     eraId: 'brent',
-    bio: "Mickey Hart — the second drummer. Sat in on a Halloween in 1967 and stayed twenty-eight years. Brought the band tabla, dumbek, the Beast — a wall of timpani and gongs that became Rhythm Devils. Took a leave from 1971–1974 after his father embezzled the band's money. Wrote a stack of books about percussion as world ritual. Without Mickey there is no Drums > Space.",
+    bio: "Mickey Hart: the second drummer. Sat in at the Straight Theater in San Francisco on September 29, 1967, and stayed twenty-eight years. Brought the band tabla, dumbek, the Beast, a wall of timpani and gongs that became Rhythm Devils. Took a leave from 1971 to 1974 after his father embezzled the band's money. Wrote a stack of books about percussion as world ritual. Without Mickey there is no Drums > Space.",
     signatureShows: [
-      { date: '1968-08-24', venue: 'Shrine Exposition Hall',    city: 'Los Angeles, CA', note: 'first months with the band' },
-      { date: '1977-05-08', venue: 'Barton Hall',               city: 'Ithaca, NY',      note: 'Drums > Space, formative' },
-      { date: '1985-06-30', venue: 'Merriweather Post Pavilion', city: 'Columbia, MD',   note: 'the Beast in full' },
-      { date: '1990-03-29', venue: 'Nassau Coliseum',           city: 'Uniondale, NY',   note: 'Rhythm Devils, peak arrangement' },
+      { date: '1968-08-24', venue: 'Shrine Exposition Hall', city: 'Los Angeles, CA', note: 'first months with the band' },
+      { date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca, NY', note: 'Drums > Space, formative' },
+      { date: '1985-06-30', venue: 'Merriweather Post Pavilion', city: 'Columbia, MD', note: 'the Beast in full' },
+      { date: '1990-03-29', venue: 'Nassau Coliseum', city: 'Uniondale, NY', note: 'Rhythm Devils, peak arrangement' },
     ],
     debuts: ['Space', 'Fire on the Mountain', 'Samson and Delilah', 'Iko Iko'],
     signatureSongs: ['Drums', 'Space', 'Fire on the Mountain', 'Samson and Delilah', 'Iko Iko'],
@@ -138,12 +138,12 @@ const MEMBERS: Record<string, MemberDef> = {
     shows: 815, core: true, born: 1945, died: 1973, mark: '✕',
     photo: '/members/pigpen.jpg',
     eraId: 'primal',
-    bio: "Ron 'Pigpen' McKernan — keys, harmonica, raconteur, the band's blues conscience. Grew up listening to his father's R&B record collection in San Bruno. Sang Lovelight, Caution, Smokestack Lightning until they were sermons. Drank himself into liver failure and died at 27 on March 8th, 1973. The band stopped playing his songs the night he died and never really started again.",
+    bio: "Ron 'Pigpen' McKernan: keys, harmonica, raconteur, the band's blues conscience. Grew up soaking in R&B through his father, a Bay Area radio DJ who spun that music for a living. Sang Lovelight, Caution, Smokestack Lightning until they were sermons. Drank himself into liver failure and died at 27 on March 8th, 1973. The band stopped playing his songs the night he died and never really started again.",
     signatureShows: [
-      { date: '1969-02-27', venue: 'Fillmore West',  city: 'San Francisco, CA', note: 'Live/Dead · the document' },
-      { date: '1970-05-02', venue: 'Harpur College', city: 'Binghamton, NY',    note: 'Lovelight in full sermon mode' },
-      { date: '1971-04-29', venue: 'Fillmore East',  city: 'New York, NY',      note: 'last great Pig run · NFA > GDTRFB' },
-      { date: '1972-05-26', venue: 'Strand Lyceum',  city: 'London, England',   note: 'his last European show' },
+      { date: '1969-02-27', venue: 'Fillmore West', city: 'San Francisco, CA', note: 'Live/Dead · the document' },
+      { date: '1970-05-02', venue: 'Harpur College', city: 'Binghamton, NY', note: 'Lovelight in full sermon mode' },
+      { date: '1971-04-29', venue: 'Fillmore East', city: 'New York, NY', note: 'last great Pig run · NFA > GDTRFB' },
+      { date: '1972-05-26', venue: 'Strand Lyceum', city: 'London, England', note: 'his last European show' },
     ],
     debuts: ['Lovelight', 'Caution', 'Smokestack Lightning', 'Hard to Handle', 'Mr. Charlie', 'Operator'],
     signatureSongs: ['Lovelight', 'Caution', 'Hard to Handle', "Good Lovin'", 'Smokestack Lightning', 'Mr. Charlie'],
@@ -155,12 +155,12 @@ const MEMBERS: Record<string, MemberDef> = {
     shows: 685, core: false, born: 1948, died: 1980, mark: '+',
     photo: '/members/keith_godchaux.jpg',
     eraId: 'hiatus',
-    bio: "Keith Godchaux — piano, joined in late 1971 when his wife Donna walked up to Garcia after a show and said her husband should be the next keyboardist. He was. A precise, jazz-leaning player; his fills under Garcia in the '72–'74 stretch are the conversational peak of the band. By 1979 his playing had drifted; he was let go and died in a car crash in 1980.",
+    bio: "Keith Godchaux: piano, joined in late 1971 when his wife Donna walked up to Garcia after a show and said her husband should be the next keyboardist. He was. A precise, jazz-leaning player; his fills under Garcia in the '72-'74 stretch are the conversational peak of the band. By 1979 his playing had drifted; he was let go and died in a car crash in 1980.",
     signatureShows: [
-      { date: '1972-05-03', venue: 'Olympia Theatre',  city: 'Paris, France',  note: "Europe '72 · canonical Keith" },
-      { date: '1973-02-09', venue: 'Maples Pavilion',  city: 'Stanford, CA',  note: 'first Eyes · piano definitional' },
-      { date: '1974-06-23', venue: 'Jai-Alai Fronton', city: 'Miami, FL',     note: "Wall-of-Sound, piano fully mic'd" },
-      { date: '1977-05-08', venue: 'Barton Hall',       city: 'Ithaca, NY',   note: 'the Scarlet > Fire' },
+      { date: '1972-05-03', venue: 'Olympia Theatre', city: 'Paris, France', note: "Europe '72 · canonical Keith" },
+      { date: '1973-02-09', venue: 'Maples Pavilion', city: 'Stanford, CA', note: 'first Eyes · piano definitional' },
+      { date: '1974-06-23', venue: 'Jai-Alai Fronton', city: 'Miami, FL', note: "Wall-of-Sound, piano fully mic'd" },
+      { date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca, NY', note: 'the Scarlet > Fire' },
     ],
     debuts: ["He's Gone", 'Stella Blue', 'Eyes of the World', 'Row Jimmy', 'Wave That Flag'],
     signatureSongs: ['Eyes of the World', 'Stella Blue', "He's Gone", 'Row Jimmy', 'Brown-Eyed Women'],
@@ -172,12 +172,12 @@ const MEMBERS: Record<string, MemberDef> = {
     shows: 502, core: false, born: 1947, mark: '*',
     photo: '/members/donna_godchaux.jpeg',
     eraId: 'hiatus',
-    bio: "Donna Jean Godchaux — vocals, formerly a Muscle Shoals session singer (her voice is on Suspicious Minds and When a Man Loves a Woman). Eight years on stage with the band; her harmonies on Sunrise, Playing in the Band, Stella Blue. Left with Keith in 1979. Still records and tours in Alabama with the Donna Jean Godchaux Band.",
+    bio: "Donna Jean Godchaux: vocals, formerly a Muscle Shoals session singer (her voice is on Suspicious Minds and When a Man Loves a Woman). Eight years on stage with the band; her harmonies on Sunrise, Playing in the Band, Stella Blue. Left with Keith in 1979. Still records and tours in Alabama with the Donna Jean Godchaux Band.",
     signatureShows: [
-      { date: '1973-02-09', venue: 'Maples Pavilion',  city: 'Stanford, CA', note: 'Eyes of the World · first call-and-response' },
-      { date: '1974-06-23', venue: 'Jai-Alai Fronton', city: 'Miami, FL',    note: 'Playing in the Band · soaring' },
-      { date: '1977-05-08', venue: 'Barton Hall',       city: 'Ithaca, NY',  note: 'Morning Dew harmony' },
-      { date: '1978-04-22', venue: 'Spring Tour Civic', city: 'Nassau, NY',  note: 'Sunrise · her composition' },
+      { date: '1973-02-09', venue: 'Maples Pavilion', city: 'Stanford, CA', note: 'Eyes of the World · first call-and-response' },
+      { date: '1974-06-23', venue: 'Jai-Alai Fronton', city: 'Miami, FL', note: 'Playing in the Band · soaring' },
+      { date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca, NY', note: 'Morning Dew harmony' },
+      { date: '1978-04-22', venue: 'Nassau Veterans Memorial Coliseum', city: 'Uniondale, NY', note: 'Sunrise · her composition' },
     ],
     debuts: ['Sunrise', 'From the Heart of Me'],
     signatureSongs: ['Sunrise', 'Playing in the Band', 'Eyes of the World', 'Stella Blue', 'Loose Lucy'],
@@ -189,12 +189,12 @@ const MEMBERS: Record<string, MemberDef> = {
     shows: 968, core: false, born: 1952, died: 1990, mark: '†',
     photo: '/members/brent_mydland.jpg',
     eraId: 'brent',
-    bio: "Brent Mydland — Hammond, Rhodes, lead vocals on his own songs. Eleven years, the longest tenure of any non-original member. A gruff, melodic singer; wrote Hell in a Bucket, Far From Me, Just a Little Light. Struggled with depression and chemistry; died of a speedball overdose on July 26th, 1990, days after his last show. The band never sounded the same without his harmony stack.",
+    bio: "Brent Mydland: Hammond, Rhodes, lead vocals on his own songs. Eleven years, the longest tenure of any non-original member. A gruff, melodic singer; wrote Hell in a Bucket, Far From Me, Just a Little Light. Struggled with depression and chemistry; died of a speedball overdose on July 26th, 1990, days after his last show. The band never sounded the same without his harmony stack.",
     signatureShows: [
-      { date: '1981-03-22', venue: 'Rainbow Theatre',          city: 'London, England', note: 'early Brent · still learning the book' },
-      { date: '1985-06-30', venue: 'Merriweather Post Pavilion', city: 'Columbia, MD',  note: 'peak Brent · the B3 wail' },
-      { date: '1989-10-09', venue: 'Hampton Coliseum',         city: 'Hampton, VA',     note: 'Dark Star revival · Brent leads the modulation' },
-      { date: '1990-03-29', venue: 'Nassau Coliseum',          city: 'Uniondale, NY',   note: 'his last great run' },
+      { date: '1981-03-22', venue: 'Rainbow Theatre', city: 'London, England', note: 'early Brent · still learning the book' },
+      { date: '1985-06-30', venue: 'Merriweather Post Pavilion', city: 'Columbia, MD', note: 'peak Brent · the B3 wail' },
+      { date: '1989-10-09', venue: 'Hampton Coliseum', city: 'Hampton, VA', note: 'Dark Star revival · Brent leads the modulation' },
+      { date: '1990-03-29', venue: 'Nassau Coliseum', city: 'Uniondale, NY', note: 'his last great run' },
     ],
     debuts: ['Hell in a Bucket', 'Throwing Stones', 'Far From Me', 'Just a Little Light', 'I Will Take You Home', 'Blow Away'],
     signatureSongs: ['Hell in a Bucket', 'Far From Me', 'Just a Little Light', 'Throwing Stones', 'I Will Take You Home'],
@@ -206,12 +206,12 @@ const MEMBERS: Record<string, MemberDef> = {
     shows: 290, core: false, born: 1951, died: 2006, mark: '‡',
     photo: '/members/vince_welnick.jpeg',
     eraId: 'final',
-    bio: "Vince Welnick — keys, harmonies, former Tubes synth player. Auditioned the week Brent died and was on stage in two weeks. Five years of holding the keys chair through Garcia's decline. Took the band's dissolution hard; left music for years, then took his own life in 2006. The Way You Do is his. He deserved more.",
+    bio: "Vince Welnick: keys, harmonies, former Tubes synth player. Auditioned the week Brent died and was on stage six weeks later when the fall tour opened on September 7th. Five years of holding the keys chair through Garcia's decline. Took the band's dissolution hard; left music for years, then took his own life in 2006. Samba in the Rain and Way to Go Home are his. He deserved more.",
     signatureShows: [
-      { date: '1991-09-10', venue: 'Madison Square Garden',   city: 'New York, NY',       note: 'first MSG run · Vince finds the seat' },
-      { date: '1993-06-26', venue: 'Sandstone Amphitheatre',  city: 'Bonner Springs, KS', note: 'Lazy River Road · the late grace note' },
-      { date: '1994-10-04', venue: 'Boston Garden',           city: 'Boston, MA',         note: 'Days Between, gorgeous' },
-      { date: '1995-07-09', venue: 'Soldier Field',           city: 'Chicago, IL',        note: 'the last show ever played' },
+      { date: '1991-09-10', venue: 'Madison Square Garden', city: 'New York, NY', note: 'first MSG run · Vince finds the seat' },
+      { date: '1993-06-26', venue: 'Sandstone Amphitheatre', city: 'Bonner Springs, KS', note: 'Lazy River Road · the late grace note' },
+      { date: '1994-10-04', venue: 'Boston Garden', city: 'Boston, MA', note: 'Days Between, gorgeous' },
+      { date: '1995-07-09', venue: 'Soldier Field', city: 'Chicago, IL', note: 'the last show ever played' },
     ],
     debuts: ['Lazy River Road', 'Days Between', 'So Many Roads', 'Samba in the Rain', 'Easy Answers'],
     signatureSongs: ['Lazy River Road', 'Days Between', 'So Many Roads', 'Way to Go Home', 'Samba in the Rain'],
@@ -246,7 +246,7 @@ export default function MemberPage() {
     fetch('/api/stats')
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.showsPerYear) setShowsPerYear(d.showsPerYear) })
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   const fetchBrowse = useCallback(async (year: number, page: number) => {
@@ -271,7 +271,7 @@ export default function MemberPage() {
   const handlePlayShow = async (show: { date: string; venue: string; city: string }) => {
     try {
       await enqueueEntireShow({ date: show.date, venue: show.venue, city: show.city }, { clearExisting: true })
-    } catch {}
+    } catch { }
   }
 
   const jumpToYear = (year: number) => {

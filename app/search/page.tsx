@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { usePlayer } from '@/lib/contexts/player-context'
 
 interface SongResult {
   title: string
@@ -50,6 +51,7 @@ function SearchContent() {
   const [venueSongs, setVenueSongs] = useState<VenueSong[]>([])
   const [venueSongsLoading, setVenueSongsLoading] = useState(false)
   const dq = useDebounce(query, 250)
+  const { playShowTrack } = usePlayer()
 
   useEffect(() => { inputRef.current?.focus() }, [])
 
@@ -106,6 +108,26 @@ function SearchContent() {
 
   const isVenueMode = venueShows.length > 0 || venueShowsLoading
   const leaderMax = venueSongs[0]?.count ?? 1
+
+  const handlePlayVenueSong = useCallback(async (songName: string) => {
+    const matchingShow = venueShows.find(show =>
+      show.songs.some(s => s.toLowerCase() === songName.toLowerCase())
+    )
+    if (!matchingShow) {
+      router.push(`/song/${encodeURIComponent(songName)}?venue=${encodeURIComponent(venueLabel)}`)
+      return
+    }
+    const songIdx = matchingShow.songs.findIndex(s => s.toLowerCase() === songName.toLowerCase())
+    try {
+      await playShowTrack(
+        { date: matchingShow.date, venue: matchingShow.venue, city: matchingShow.city },
+        songIdx,
+        matchingShow.songs
+      )
+    } catch {
+      router.push(`/song/${encodeURIComponent(songName)}?venue=${encodeURIComponent(venueLabel)}`)
+    }
+  }, [venueShows, venueLabel, playShowTrack, router])
 
   return (
     <section className="col">
@@ -164,19 +186,26 @@ function SearchContent() {
                       <ul className="toptable">
                         {venueSongs.map((entry, i) => (
                           <li key={entry.name}>
-                            <Link
-                              href={`/song/${encodeURIComponent(entry.name)}?venue=${encodeURIComponent(venueLabel)}`}
-                              style={{ textDecoration: 'none', display: 'block' }}
+                            <div
+                              style={{ textDecoration: 'none', display: 'block', cursor: 'pointer' }}
+                              onClick={() => handlePlayVenueSong(entry.name)}
                             >
                               <div className="row1">
                                 <span className="rank">{i + 1}.</span>
                                 <span style={{ fontFamily: 'var(--serif-display)', fontSize: 16 }}>{entry.name}</span>
                                 <span className="plays">{entry.count}</span>
+                                <Link
+                                  href={`/song/${encodeURIComponent(entry.name)}?venue=${encodeURIComponent(venueLabel)}`}
+                                  onClick={e => e.stopPropagation()}
+                                  style={{ textDecoration: 'none', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.04em', padding: '0 2px', whiteSpace: 'nowrap' }}
+                                  onMouseOver={e => (e.currentTarget.style.color = 'var(--rust)')}
+                                  onMouseOut={e => (e.currentTarget.style.color = 'var(--ink-3)')}
+                                >Song ↗</Link>
                               </div>
                               <div className="bar">
                                 <div className="fill" style={{ width: `${(entry.count / leaderMax) * 100}%` }} />
                               </div>
-                            </Link>
+                            </div>
                           </li>
                         ))}
                       </ul>

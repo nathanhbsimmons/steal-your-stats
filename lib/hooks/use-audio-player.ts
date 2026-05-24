@@ -53,6 +53,7 @@ export interface UseAudioPlayerReturn {
   playEntireShow: (tracks: Track[]) => void
   enqueueEntireShow: (showRef: ShowRef, options?: EnqueueEntireShowOptions) => Promise<void>
   enqueueShowTrack: (showRef: ShowRef, trackIdx: number, songs?: string[]) => Promise<void>
+  playShowTrack: (showRef: ShowRef, trackIdx: number, songs?: string[]) => Promise<void>
 }
 
 export function useAudioPlayer(): UseAudioPlayerReturn {
@@ -304,6 +305,39 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     }
   }, [])
 
+  // Play a single track from a show, replacing the current queue.
+  const playShowTrack = useCallback(async (showRef: ShowRef, trackIdx: number, songs?: string[]) => {
+    try {
+      const resolveResponse = await fetch('/api/archive/resolve-show', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(showRef),
+      })
+      if (!resolveResponse.ok) throw new Error(`resolve: ${resolveResponse.status}`)
+      const archiveShow = await resolveResponse.json()
+
+      const tracksResponse = await fetch('/api/archive/song-tracks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: archiveShow.identifier, songTitle: '' }),
+      })
+      if (!tracksResponse.ok) throw new Error(`tracks: ${tracksResponse.status}`)
+      const { tracks } = await tracksResponse.json()
+
+      const processed = processTracksForEnqueue(tracks, ['mp3'], archiveShow, showRef, songs)
+      const track = processed[Math.min(trackIdx, processed.length - 1)]
+      if (track) {
+        const uniqueTrack = { ...track, id: `${track.id}-single${Date.now()}` }
+        setQueue([uniqueTrack])
+        setCurrentTrack(uniqueTrack)
+        setIsPlaying(true)
+      }
+    } catch (error) {
+      console.error('Failed to play show track:', error)
+      throw error
+    }
+  }, [])
+
   return {
     currentTrack,
     isPlaying,
@@ -319,6 +353,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     playEntireShow,
     enqueueEntireShow,
     enqueueShowTrack,
+    playShowTrack,
   }
 }
 

@@ -63,7 +63,7 @@ export default function HomePage() {
   const [kpi, setKpi] = useState<SummaryStats | null>(null)
   const [mostPlayed, setMostPlayed] = useState<MostPlayed[]>([])
   const [loading, setLoading] = useState(true)
-  const { enqueueEntireShow, enqueueShowTrack } = usePlayer()
+  const { enqueueEntireShow, enqueueShowTrack, playShowTrack } = usePlayer()
 
   // Fetch on-this-day shows
   useEffect(() => {
@@ -133,6 +133,14 @@ export default function HomePage() {
     } catch {}
   }, [featured, showDetail, enqueueShowTrack])
 
+  const handlePlaySingleSong = useCallback(async (flatIdx: number) => {
+    if (!featured) return
+    try {
+      const songs = showDetail?.sets.flatMap(s => s.songs) ?? featured.songs
+      await playShowTrack({ date: featured.date, venue: featured.venue, city: featured.city }, flatIdx, songs)
+    } catch {}
+  }, [featured, showDetail, playShowTrack])
+
   // Format the featured date for the display — use today's calendar date for weekday/month/day
   const today = new Date()
   const weekday = WEEKDAY_NAMES[today.getDay()]
@@ -180,13 +188,13 @@ export default function HomePage() {
           ) : featured ? (
             <>
               <h2>
-                <span style={{ fontSize: '0.88em' }}>
+                <span style={{ fontSize: '0.75em' }}>
                   {weekday}, the {ordinal(dayNum)}{' '}
                   <span className="italic">of</span>{' '}
                   {monthName}
                 </span>
                 {' '}
-                <span style={{ fontSize: '0.72em', color: 'var(--ink-3)', fontStyle: 'italic' }}>
+                <span style={{ fontSize: '0.90em', color: 'var(--ink-3)', fontStyle: 'italic' }}>
                   {year}
                 </span>
               </h2>
@@ -263,12 +271,16 @@ export default function HomePage() {
                       <div
                         key={`${si}-${ti}`}
                         className="track"
-                        onClick={() => handlePlayShow(globalNum)}
+                        onClick={() => handlePlaySingleSong(globalNum)}
                       >
                         <span className="num">{String(globalNum + 1).padStart(2, '0')}</span>
                         <span className="play-dot">▶</span>
                         <span className="title">{song}</span>
-                        <span className="chev">→</span>
+                        <Link
+                          href={`/song/${encodeURIComponent(song)}`}
+                          className="chev"
+                          onClick={e => e.stopPropagation()}
+                        >Song ↗</Link>
                         <button
                           className={`add-q${flashIdx === globalNum ? ' flash' : queuedSet.has(globalNum) ? ' queued' : ''}`}
                           title="Add to queue"
@@ -292,11 +304,15 @@ export default function HomePage() {
                 <div className="duration">{featured.songs.length} songs</div>
               </div>
               {featured.songs.map((song, i) => (
-                <div key={i} className="track" onClick={() => handlePlayShow(i)}>
+                <div key={i} className="track" onClick={() => handlePlaySingleSong(i)}>
                   <span className="num">{String(i + 1).padStart(2, '0')}</span>
                   <span className="play-dot">▶</span>
                   <span className="title">{song}</span>
-                  <span className="chev">→</span>
+                  <Link
+                    href={`/song/${encodeURIComponent(song)}`}
+                    className="chev"
+                    onClick={e => e.stopPropagation()}
+                  >Song ↗</Link>
                   <button
                     className={`add-q${flashIdx === i ? ' flash' : queuedSet.has(i) ? ' queued' : ''}`}
                     title="Add to queue"

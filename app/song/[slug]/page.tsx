@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import useSWR from 'swr'
 import { usePlayer } from '@/lib/contexts/player-context'
@@ -63,6 +63,7 @@ type SortKey = 'duration-desc' | 'date' | 'venue'
 export default function SongPage() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const songTitle = decodeURIComponent(params.slug as string)
   const venueFilter = searchParams.get('venue')
 
@@ -76,6 +77,7 @@ export default function SongPage() {
   const [showAllOpener, setShowAllOpener] = useState(false)
   const [showAllCloser, setShowAllCloser] = useState(false)
   const [showAllEncore, setShowAllEncore] = useState(false)
+  const [showAllVersions, setShowAllVersions] = useState(false)
 
   const FAVORITES_KEY = 'steal-your-stats-favorites'
 
@@ -190,7 +192,8 @@ export default function SongPage() {
       return a.venue.localeCompare(b.venue)
     }) : []
 
-  const displayTracks = venueFilter ? sortedTracks : sortedTracks.slice(0, 8)
+  const VERSIONS_PREVIEW = 8
+  const displayTracks = (venueFilter || showAllVersions) ? sortedTracks : sortedTracks.slice(0, VERSIONS_PREVIEW)
 
   const POS_PREVIEW = 6
 
@@ -444,8 +447,20 @@ export default function SongPage() {
               </button>
             ))}
             <span style={{ flex: 1 }} />
+            {!venueFilter && sortedTracks.length > VERSIONS_PREVIEW && (
+              <button
+                onClick={() => setShowAllVersions(v => !v)}
+                style={{
+                  background: 'none', border: 0, cursor: 'pointer',
+                  fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.1em',
+                  textTransform: 'uppercase', color: 'var(--rust)', marginRight: 10,
+                }}
+              >
+                {showAllVersions ? 'Show fewer ↑' : `Show all ${sortedTracks.length} ↓`}
+              </button>
+            )}
             <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)' }}>
-              Showing {displayTracks.length}{!venueFilter && sortedTracks.length > 8 ? ` of ${sortedTracks.length}` : ''}
+              Showing {displayTracks.length}{!venueFilter && !showAllVersions && sortedTracks.length > VERSIONS_PREVIEW ? ` of ${sortedTracks.length}` : ''}
             </span>
           </div>
 
@@ -467,7 +482,12 @@ export default function SongPage() {
                 const isShortest = versData.extremes?.shortest?.archiveItemId === t.archiveItemId
                 const isCurrentlyPlaying = currentTrack?.id?.includes(t.id || '')
                 return (
-                  <tr key={i} className={isLongest || isShortest ? 'hi' : ''}>
+                  <tr
+                    key={i}
+                    className={isLongest || isShortest ? 'hi' : ''}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => router.push(`/show/${t.showDate}`)}
+                  >
                     <td className="num">{String(i + 1).padStart(2, '0')}</td>
                     <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{formatDate(t.showDate)}</td>
                     <td><span className="tbl-title">{t.venue}</span></td>
@@ -478,7 +498,7 @@ export default function SongPage() {
                     <td style={{ textAlign: 'center' }}>
                       <button
                         className={`tbl-play${isCurrentlyPlaying && isPlaying ? ' playing' : ''}`}
-                        onClick={() => handlePlayTrack(t)}
+                        onClick={e => { e.stopPropagation(); handlePlayTrack(t) }}
                       >
                         {isCurrentlyPlaying && isPlaying ? '❚❚' : '▶'}
                       </button>
