@@ -4,6 +4,44 @@ A Grateful Dead statistics and audio player built like a vintage newspaper. Brow
 
 ---
 
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="public/screenshots/home.png" alt="Home — On This Day" /></td>
+    <td><img src="public/screenshots/song-detail.png" alt="Song detail — Dark Star" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Home — On This Day</em></td>
+    <td align="center"><em>Song detail — Dark Star (248 performances)</em></td>
+  </tr>
+  <tr>
+    <td><img src="public/screenshots/stats.png" alt="Stats — Almanac" /></td>
+    <td><img src="public/screenshots/artists.png" alt="Artists — Band roster" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Stats — Almanac with shows-per-year chart</em></td>
+    <td align="center"><em>Artists — full band roster with photos</em></td>
+  </tr>
+</table>
+
+**Mobile**
+
+<table>
+  <tr>
+    <td><img src="public/screenshots/mobile-deck.png" alt="Mobile — Deck" width="260" /></td>
+    <td><img src="public/screenshots/mobile-stats.png" alt="Mobile — Stats" width="260" /></td>
+    <td><img src="public/screenshots/mobile-songs.png" alt="Mobile — Songs" width="260" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Deck — reel player + setlist</em></td>
+    <td align="center"><em>Stats — leaderboard</em></td>
+    <td align="center"><em>Songs — alphabetical catalog</em></td>
+  </tr>
+</table>
+
+---
+
 ## Features
 
 ### On This Day
