@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { TimelineStrip } from '@/components/ui/timeline-strip'
+import { getVenueTidbit } from '@/lib/venue-tidbits'
 
 interface ShowOnThisDay {
   date: string
@@ -144,6 +145,8 @@ export default function HomePage() {
     ? `${featured.city}${featured.state ? `, ${featured.state}` : ''}`
     : ''
 
+  const venueTidbit = featured ? getVenueTidbit(featured.venue, featured.city) : null
+
   const totalSongs = showDetail?.totalSongs ?? featured?.songs?.length ?? 0
   const opener = showDetail?.sets?.[0]?.songs?.[0] ?? featured?.songs?.[0] ?? ''
   const lastSet = showDetail?.sets ? [...showDetail.sets].reverse().find(s => !s.encore) : null
@@ -182,8 +185,8 @@ export default function HomePage() {
                   <span className="italic">of</span>{' '}
                   {monthName}
                 </span>
-                <br />
-                <span style={{ fontSize: '0.85em', color: 'var(--ink-3)', fontStyle: 'italic' }}>
+                {' '}
+                <span style={{ fontSize: '0.72em', color: 'var(--ink-3)', fontStyle: 'italic' }}>
                   {year}
                 </span>
               </h2>
@@ -191,6 +194,12 @@ export default function HomePage() {
               <div className="venue-line">
                 <strong>{venue}</strong>{location ? ` · ${location}` : ''}
               </div>
+
+              {venueTidbit && (
+                <div style={{ fontStyle: 'italic', fontSize: 13, color: 'var(--ink-3)', marginTop: 6, lineHeight: 1.55, maxWidth: 540 }}>
+                  {venueTidbit}
+                </div>
+              )}
 
               <div className="meta-row">
                 {totalSongs > 0 && (
