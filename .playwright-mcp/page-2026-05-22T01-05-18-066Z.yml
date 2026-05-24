@@ -1,0 +1,245 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]: INDEXED THU 21 MAY MMXXVI
+      - generic [ref=e5]:
+        - heading "StealyourStats" [level=1] [ref=e6] [cursor=pointer]
+        - generic [ref=e7]: The Dead Archive · compiled by hand, played through the deck
+      - generic [ref=e9]:
+        - generic [ref=e10]: 49°F · clear sky and a Sunshine Daydream
+        - generic [ref=e11]:
+          - generic [ref=e12]: ⌕
+          - textbox "⌕ ⌘K" [ref=e13]:
+            - /placeholder: search songs, shows, venues…
+          - generic [ref=e14]: ⌘K
+    - generic [ref=e15]:
+      - generic [ref=e16]: Pp. 0001 — 2333
+      - generic [ref=e17]:
+        - generic [ref=e18]: ❦
+        - generic [ref=e19]: An Annotated Guide to Grateful Dead Songlists
+        - generic [ref=e20]: ❦
+      - generic [ref=e21]: setlist.fm · archive.org · this volume
+    - navigation "Chapter navigation" [ref=e22]:
+      - button "I. Home" [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: I.
+        - text: Home
+      - button "II. Search ⌘K" [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]: II.
+        - text: Search
+        - generic [ref=e27]: ⌘K
+      - button "III. Songs 442" [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: III.
+        - text: Songs
+        - generic [ref=e30]: "442"
+      - button "IV. Recent" [ref=e31] [cursor=pointer]:
+        - generic [ref=e32]: IV.
+        - text: Recent
+      - button "V. Band Members" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: V.
+        - text: Band Members
+      - button "VI. Venues" [ref=e35] [cursor=pointer]:
+        - generic [ref=e36]: VI.
+        - text: Venues
+      - button "VII. Eras" [ref=e37] [cursor=pointer]:
+        - generic [ref=e38]: VII.
+        - text: Eras
+      - button "VIII. Stats" [ref=e39] [cursor=pointer]:
+        - generic [ref=e40]: VIII.
+        - text: Stats
+      - button "IX. Export" [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: IX.
+        - text: Export
+      - generic [ref=e44]: PG. 0003 of 2333
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - link "Home" [ref=e48] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e49]: /
+        - link "Songs" [ref=e50] [cursor=pointer]:
+          - /url: /songs
+        - generic [ref=e51]: /
+        - generic [ref=e52]: Scarlet Begonias
+        - button "Share" [ref=e53] [cursor=pointer]
+        - button "☆" [ref=e54] [cursor=pointer]
+      - generic [ref=e55]:
+        - generic [ref=e56]:
+          - generic [ref=e57]: Song · jam vehicle
+          - heading "Scarlet Begonias" [level=2] [ref=e58]
+          - generic [ref=e110]: "Also known as: scarlet begonias, scarlet begonias (live), scarlet"
+        - generic [ref=e59]:
+          - button "⟵ First show" [ref=e60] [cursor=pointer]
+          - button "Last show ⟶" [ref=e61] [cursor=pointer]
+          - button "▶ Play longest version" [ref=e62] [cursor=pointer]:
+            - generic [ref=e63]: ▶
+            - text: Play longest version
+      - generic [ref=e64]:
+        - generic [ref=e111]:
+          - generic [ref=e112]: First Performance
+          - generic [ref=e113]: 1974 · 03 · 23
+          - generic [ref=e114]: Cow Palace · Daly City
+          - link "View setlist ↗" [ref=e115] [cursor=pointer]:
+            - /url: https://www.setlist.fm/setlist/grateful-dead/1974/cow-palace-daly-city-ca-13d60571.html
+        - generic [ref=e116]:
+          - generic [ref=e117]: Last Performance
+          - generic [ref=e118]: 2015 · 07 · 03
+          - generic [ref=e119]: Soldier Field · Chicago
+          - link "View setlist ↗" [ref=e120] [cursor=pointer]:
+            - /url: https://www.setlist.fm/setlist/grateful-dead/2015/soldier-field-chicago-il-1bf6b9cc.html
+        - generic [ref=e121]:
+          - generic [ref=e122]: Total Performances
+          - generic [ref=e123]: "317"
+          - generic [ref=e124]: across 41 years
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - heading "Opened the show" [level=3] [ref=e127]
+          - generic [ref=e128]: — 3 times
+          - generic [ref=e129] [cursor=pointer]: show all ↓
+        - link "1988 · 04 · 15 Rosemont Horizon · Rosemont" [ref=e130] [cursor=pointer]:
+          - /url: /show/1988-04-15
+          - generic [ref=e131]: 1988 · 04 · 15
+          - generic [ref=e132]: Rosemont Horizon · Rosemont
+        - link "1974 · 09 · 11 Alexandra Palace · London" [ref=e133] [cursor=pointer]:
+          - /url: /show/1974-09-11
+          - generic [ref=e134]: 1974 · 09 · 11
+          - generic [ref=e135]: Alexandra Palace · London
+        - link "1974 · 07 · 31 Dillon Stadium · Hartford" [ref=e136] [cursor=pointer]:
+          - /url: /show/1974-07-31
+          - generic [ref=e137]: 1974 · 07 · 31
+          - generic [ref=e138]: Dillon Stadium · Hartford
+      - generic [ref=e139]:
+        - heading "Versions" [level=3] [ref=e140]
+        - generic [ref=e141]: — Archive.org recordings
+        - generic [ref=e142]: 317 tracked
+      - generic [ref=e143]:
+        - generic [ref=e144]:
+          - button "▶" [ref=e145] [cursor=pointer]
+          - generic [ref=e146]:
+            - generic [ref=e147]: ⟶ Longest
+            - generic [ref=e148]: 14:04
+            - generic [ref=e149]: 1982 · 04 · 03 · Scope Arena
+        - generic [ref=e150]:
+          - button "▶" [ref=e151] [cursor=pointer]
+          - generic [ref=e152]:
+            - generic [ref=e153]: ⟵ Shortest
+            - generic [ref=e154]: 1:28
+            - generic [ref=e155]: 1988 · 09 · 02 · Capital Centre
+      - generic [ref=e156]:
+        - generic [ref=e157]: Sort
+        - button "Duration ↓" [ref=e158] [cursor=pointer]
+        - button "Date" [ref=e159] [cursor=pointer]
+        - button "Venue" [ref=e160] [cursor=pointer]
+        - generic [ref=e161]: Showing 8 of 317
+      - table [ref=e162]:
+        - rowgroup [ref=e163]:
+          - row "# Date Venue City Duration" [ref=e164]:
+            - columnheader "#" [ref=e165]
+            - columnheader "Date" [ref=e166]
+            - columnheader "Venue" [ref=e167]
+            - columnheader "City" [ref=e168]
+            - columnheader "Duration" [ref=e169]
+            - columnheader [ref=e170]
+        - rowgroup [ref=e171]:
+          - row "01 1982 · 04 · 03 Scope Arena Norfolk 14:04 ▶" [ref=e172] [cursor=pointer]:
+            - cell "01" [ref=e173]
+            - cell "1982 · 04 · 03" [ref=e174]
+            - cell "Scope Arena" [ref=e175]
+            - cell "Norfolk" [ref=e176]
+            - cell "14:04" [ref=e177]
+            - cell "▶" [ref=e178]:
+              - button "▶" [ref=e179]
+          - row "02 1976 · 10 · 01 Market Square Arena Indianapolis 12:22 ▶" [ref=e180] [cursor=pointer]:
+            - cell "02" [ref=e181]
+            - cell "1976 · 10 · 01" [ref=e182]
+            - cell "Market Square Arena" [ref=e183]
+            - cell "Indianapolis" [ref=e184]
+            - cell "12:22" [ref=e185]
+            - cell "▶" [ref=e186]:
+              - button "▶" [ref=e187]
+          - row "03 1985 · 03 · 22 Hampton Coliseum Hampton 10:25 ▶" [ref=e188] [cursor=pointer]:
+            - cell "03" [ref=e189]
+            - cell "1985 · 03 · 22" [ref=e190]
+            - cell "Hampton Coliseum" [ref=e191]
+            - cell "Hampton" [ref=e192]
+            - cell "10:25" [ref=e193]
+            - cell "▶" [ref=e194]:
+              - button "▶" [ref=e195]
+          - row "04 1980 · 06 · 29 Pauley Pavilion Los Angeles 7:44 ▶" [ref=e196] [cursor=pointer]:
+            - cell "04" [ref=e197]
+            - cell "1980 · 06 · 29" [ref=e198]
+            - cell "Pauley Pavilion" [ref=e199]
+            - cell "Los Angeles" [ref=e200]
+            - cell "7:44" [ref=e201]
+            - cell "▶" [ref=e202]:
+              - button "▶" [ref=e203]
+          - row "05 1991 · 08 · 16 Shoreline Amphitheatre Mountain View 6:52 ▶" [ref=e204] [cursor=pointer]:
+            - cell "05" [ref=e205]
+            - cell "1991 · 08 · 16" [ref=e206]
+            - cell "Shoreline Amphitheatre" [ref=e207]
+            - cell "Mountain View" [ref=e208]
+            - cell "6:52" [ref=e209]
+            - cell "▶" [ref=e210]:
+              - button "▶" [ref=e211]
+          - row "06 1988 · 09 · 02 Capital Centre Landover 1:28 ▶" [ref=e212] [cursor=pointer]:
+            - cell "06" [ref=e213]
+            - cell "1988 · 09 · 02" [ref=e214]
+            - cell "Capital Centre" [ref=e215]
+            - cell "Landover" [ref=e216]
+            - cell "1:28" [ref=e217]
+            - cell "▶" [ref=e218]:
+              - button "▶" [ref=e219]
+          - row "07 2015 · 07 · 03 Soldier Field Chicago — ▶" [ref=e220] [cursor=pointer]:
+            - cell "07" [ref=e221]
+            - cell "2015 · 07 · 03" [ref=e222]
+            - cell "Soldier Field" [ref=e223]
+            - cell "Chicago" [ref=e224]
+            - cell "—" [ref=e225]
+            - cell "▶" [ref=e226]:
+              - button "▶" [ref=e227]
+          - row "08 1995 · 07 · 02 Deer Creek Music Center Noblesville — ▶" [ref=e228] [cursor=pointer]:
+            - cell "08" [ref=e229]
+            - cell "1995 · 07 · 02" [ref=e230]
+            - cell "Deer Creek Music Center" [ref=e231]
+            - cell "Noblesville" [ref=e232]
+            - cell "—" [ref=e233]
+            - cell "▶" [ref=e234]:
+              - button "▶" [ref=e235]
+      - generic [ref=e236]:
+        - button "▶ Play first-show version" [ref=e237] [cursor=pointer]
+        - button "▶ Play last-show version" [ref=e238] [cursor=pointer]
+      - generic [ref=e72]:
+        - generic [ref=e73]: Provenance
+        - text: Performance data from
+        - link "setlist.fm" [ref=e74] [cursor=pointer]:
+          - /url: https://www.setlist.fm
+        - text: . Audio recordings via
+        - link "Archive.org" [ref=e75] [cursor=pointer]:
+          - /url: https://archive.org
+        - text: — community-contributed tapes.
+    - contentinfo [ref=e76]:
+      - generic [ref=e77]: © MMXXVI · Steal Your Stats Press · Made by hand
+      - generic [ref=e78]: ❦ If you get confused, listen to the music play ❦
+      - generic [ref=e79]: v.11.5 · cached locally · last sync 1h ago
+    - generic [ref=e80]:
+      - generic [ref=e81]:
+        - generic [ref=e85]:
+          - generic [ref=e86]: nothing in the deck
+          - generic [ref=e87]: cue a show to begin · play the featured tape
+        - generic [ref=e88]:
+          - generic [ref=e89]:
+            - button "Previous" [ref=e90] [cursor=pointer]: ◀◀
+            - button "Play" [ref=e91] [cursor=pointer]: ▶
+            - button "Next" [ref=e92] [cursor=pointer]: ▶▶
+          - generic [ref=e93]:
+            - generic [ref=e94]: 0:00
+            - generic [ref=e97]: 0:00
+        - generic [ref=e98]:
+          - generic [ref=e100]: VOL
+          - button "Queue 1" [ref=e239] [cursor=pointer]:
+            - text: Queue
+            - generic [ref=e106]: "1"
+      - generic [ref=e107]:
+        - generic [ref=e108]: cued · 1 track
+        - generic [ref=e109]: —
+  - button "Open Next.js Dev Tools" [ref=e245] [cursor=pointer]:
+    - img [ref=e246]
+  - alert [ref=e249]

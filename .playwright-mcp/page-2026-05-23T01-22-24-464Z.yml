@@ -1,0 +1,221 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]: INDEXED FRI 22 MAY MMXXVI
+    - generic [ref=e5]:
+      - heading "StealyourStats" [level=1] [ref=e6] [cursor=pointer]
+      - generic [ref=e7]: The Dead Archive · compiled by hand, played through the deck
+    - generic [ref=e9]:
+      - generic [ref=e10]: 49°F · clear sky and a Sunshine Daydream
+      - generic [ref=e11]:
+        - generic [ref=e12]: ⌕
+        - textbox "⌕ ⌘K" [ref=e13]:
+          - /placeholder: search songs, shows, venues…
+        - generic [ref=e14]: ⌘K
+  - generic [ref=e15]:
+    - generic [ref=e16]: Pp. 0001 — 2333
+    - generic [ref=e17]:
+      - generic [ref=e18]: ❦
+      - generic [ref=e19]: An Annotated Guide to Grateful Dead Songlists
+      - generic [ref=e20]: ❦
+    - generic [ref=e21]: setlist.fm · archive.org · this volume
+  - navigation "Chapter navigation" [ref=e22]:
+    - button "I. Home" [ref=e23] [cursor=pointer]:
+      - generic [ref=e24]: I.
+      - text: Home
+    - button "II. Search ⌘K" [ref=e25] [cursor=pointer]:
+      - generic [ref=e26]: II.
+      - text: Search
+      - generic [ref=e27]: ⌘K
+    - button "III. Songs 442" [ref=e28] [cursor=pointer]:
+      - generic [ref=e29]: III.
+      - text: Songs
+      - generic [ref=e30]: "442"
+    - button "IV. Recent" [ref=e31] [cursor=pointer]:
+      - generic [ref=e32]: IV.
+      - text: Recent
+    - button "V. Band Members" [ref=e33] [cursor=pointer]:
+      - generic [ref=e34]: V.
+      - text: Band Members
+    - button "VI. Venues" [ref=e35] [cursor=pointer]:
+      - generic [ref=e36]: VI.
+      - text: Venues
+    - button "VII. Eras" [ref=e37] [cursor=pointer]:
+      - generic [ref=e38]: VII.
+      - text: Eras
+    - button "VIII. Stats" [ref=e39] [cursor=pointer]:
+      - generic [ref=e40]: VIII.
+      - text: Stats
+    - button "IX. Export" [ref=e41] [cursor=pointer]:
+      - generic [ref=e42]: IX.
+      - text: Export
+    - generic [ref=e44]: PG. 0005 of 2333
+  - generic [ref=e46]:
+    - generic [ref=e48]:
+      - generic [ref=e49]: Band Members · V
+      - heading "The lineup, assembled." [level=2] [ref=e50]
+      - generic [ref=e51]: Ten people sat in a Grateful Dead lineup between 1965 and 1995. Six core, four just passing through.
+    - generic [ref=e52]:
+      - heading "The core six" [level=3] [ref=e53]
+      - generic [ref=e54]: — the founding lineup
+      - generic [ref=e55]: 1965 — 1995
+    - generic [ref=e56]:
+      - link "J JG Jerry Garcia Lead guitar · vocals Shows — 1965 – 1995" [ref=e57] [cursor=pointer]:
+        - /url: /eras?focus=europe72
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - generic [ref=e60]: J
+            - generic [ref=e61]: JG
+          - generic [ref=e62]: Jerry Garcia
+          - generic [ref=e63]: Lead guitar · vocals
+          - generic [ref=e64]:
+            - generic [ref=e65]:
+              - text: Shows
+              - generic [ref=e66]: —
+            - generic [ref=e67]: 1965 – 1995
+      - link "B BW Bob Weir Rhythm guitar · vocals Shows — 1965 – 1995" [ref=e68] [cursor=pointer]:
+        - /url: /eras?focus=europe72
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - generic [ref=e71]: B
+            - generic [ref=e72]: BW
+          - generic [ref=e73]: Bob Weir
+          - generic [ref=e74]: Rhythm guitar · vocals
+          - generic [ref=e75]:
+            - generic [ref=e76]:
+              - text: Shows
+              - generic [ref=e77]: —
+            - generic [ref=e78]: 1965 – 1995
+      - link "P PL Phil Lesh Bass · vocals Shows — 1965 – 1995" [ref=e79] [cursor=pointer]:
+        - /url: /eras?focus=primal
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - generic [ref=e82]: P
+            - generic [ref=e83]: PL
+          - generic [ref=e84]: Phil Lesh
+          - generic [ref=e85]: Bass · vocals
+          - generic [ref=e86]:
+            - generic [ref=e87]:
+              - text: Shows
+              - generic [ref=e88]: —
+            - generic [ref=e89]: 1965 – 1995
+      - link "K BK Bill Kreutzmann Drums Shows — 1965 – 1995" [ref=e90] [cursor=pointer]:
+        - /url: /eras?focus=primal
+        - generic [ref=e91]:
+          - generic [ref=e92]:
+            - generic [ref=e93]: K
+            - generic [ref=e94]: BK
+          - generic [ref=e95]: Bill Kreutzmann
+          - generic [ref=e96]: Drums
+          - generic [ref=e97]:
+            - generic [ref=e98]:
+              - text: Shows
+              - generic [ref=e99]: —
+            - generic [ref=e100]: 1965 – 1995
+      - link "M MH Mickey Hart Drums · percussion Shows — 1967 – 1995" [ref=e101] [cursor=pointer]:
+        - /url: /eras?focus=hiatus
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - generic [ref=e104]: M
+            - generic [ref=e105]: MH
+          - generic [ref=e106]: Mickey Hart
+          - generic [ref=e107]: Drums · percussion
+          - generic [ref=e108]:
+            - generic [ref=e109]:
+              - text: Shows
+              - generic [ref=e110]: —
+            - generic [ref=e111]: 1967 – 1995
+      - link "R PP Pigpen Keys · harmonica · vocals Shows — 1965 – 1972" [ref=e112] [cursor=pointer]:
+        - /url: /eras?focus=primal
+        - generic [ref=e113]:
+          - generic [ref=e114]:
+            - generic [ref=e115]: R
+            - generic [ref=e116]: PP
+          - generic [ref=e117]: Pigpen
+          - generic [ref=e118]: Keys · harmonica · vocals
+          - generic [ref=e119]:
+            - generic [ref=e120]:
+              - text: Shows
+              - generic [ref=e121]: —
+            - generic [ref=e122]: 1965 – 1972
+    - generic [ref=e123]:
+      - heading "Passing through" [level=3] [ref=e124]
+      - generic [ref=e125]: — keyboardists and harmony singers
+      - generic [ref=e126]: 1971 — 1995
+    - generic [ref=e127]:
+      - link "K KG Keith Godchaux Keys Shows — 1971 – 1979" [ref=e128] [cursor=pointer]:
+        - /url: /eras?focus=hiatus
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - generic [ref=e131]: K
+            - generic [ref=e132]: KG
+          - generic [ref=e133]: Keith Godchaux
+          - generic [ref=e134]: Keys
+          - generic [ref=e135]:
+            - generic [ref=e136]:
+              - text: Shows
+              - generic [ref=e137]: —
+            - generic [ref=e138]: 1971 – 1979
+      - link "D DG Donna Godchaux Vocals Shows — 1972 – 1979" [ref=e139] [cursor=pointer]:
+        - /url: /eras?focus=hiatus
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - generic [ref=e142]: D
+            - generic [ref=e143]: DG
+          - generic [ref=e144]: Donna Godchaux
+          - generic [ref=e145]: Vocals
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - text: Shows
+              - generic [ref=e148]: —
+            - generic [ref=e149]: 1972 – 1979
+      - link "B BM Brent Mydland Keys · vocals Shows — 1979 – 1990" [ref=e150] [cursor=pointer]:
+        - /url: /eras?focus=brent
+        - generic [ref=e151]:
+          - generic [ref=e152]:
+            - generic [ref=e153]: B
+            - generic [ref=e154]: BM
+          - generic [ref=e155]: Brent Mydland
+          - generic [ref=e156]: Keys · vocals
+          - generic [ref=e157]:
+            - generic [ref=e158]:
+              - text: Shows
+              - generic [ref=e159]: —
+            - generic [ref=e160]: 1979 – 1990
+      - link "V VW Vince Welnick Keys · vocals Shows — 1990 – 1995" [ref=e161] [cursor=pointer]:
+        - /url: /eras?focus=final
+        - generic [ref=e162]:
+          - generic [ref=e163]:
+            - generic [ref=e164]: V
+            - generic [ref=e165]: VW
+          - generic [ref=e166]: Vince Welnick
+          - generic [ref=e167]: Keys · vocals
+          - generic [ref=e168]:
+            - generic [ref=e169]:
+              - text: Shows
+              - generic [ref=e170]: —
+            - generic [ref=e171]: 1990 – 1995
+  - contentinfo [ref=e172]:
+    - generic [ref=e173]: © MMXXVI · Steal Your Stats Press · Made by hand
+    - generic [ref=e174]: ❦ If you get confused, listen to the music play ❦
+    - generic [ref=e175]: v.11.5 · cached locally · last sync 1h ago
+  - generic [ref=e176]:
+    - generic [ref=e177]:
+      - generic [ref=e181]:
+        - generic [ref=e182]: nothing in the deck
+        - generic [ref=e183]: cue a show to begin · play the featured tape
+      - generic [ref=e184]:
+        - generic [ref=e185]:
+          - button "Previous" [ref=e186] [cursor=pointer]: ◀◀
+          - button "Play" [ref=e187] [cursor=pointer]: ▶
+          - button "Next" [ref=e188] [cursor=pointer]: ▶▶
+        - generic [ref=e189]:
+          - generic [ref=e190]: 0:00
+          - generic [ref=e193]: 0:00
+      - generic [ref=e194]:
+        - generic [ref=e196]: VOL
+        - button "Queue 0" [ref=e201] [cursor=pointer]:
+          - text: Queue
+          - generic [ref=e202]: "0"
+    - generic [ref=e203]:
+      - generic [ref=e204]: standby · no queue · click a setlist track to begin
+      - generic [ref=e205]: —

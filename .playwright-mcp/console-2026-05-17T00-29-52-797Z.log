@@ -1,0 +1,8 @@
+[     378ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:14537
+[   34361ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[   34486ms] [LOG] [Fast Refresh] done in 227ms @ http://localhost:3001/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  131342ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[  131372ms] [LOG] [Fast Refresh] done in 109ms @ http://localhost:3001/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  458210ms] [ERROR] Failed to load resource: net::ERR_HTTP2_PROTOCOL_ERROR @ https://dn720306.ca.archive.org/0/items/gd72-04-14.sbd.hurwitt.8828.sbeok.shnf/gd72-04-14d3t01.mp3:0
+[  768146ms] [ERROR] Failed to load resource: net::ERR_HTTP2_PROTOCOL_ERROR @ https://dn720306.ca.archive.org/0/items/gd72-04-14.sbd.hurwitt.8828.sbeok.shnf/gd72-04-14d3t01.mp3:0
+[ 1200450ms] [ERROR] Failed to load resource: net::ERR_HTTP2_PROTOCOL_ERROR @ https://dn720306.ca.archive.org/0/items/gd72-04-14.sbd.hurwitt.8828.sbeok.shnf/gd72-04-14d3t01.mp3:0

@@ -1,0 +1,6 @@
+[    4574ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/cab68_next_dist_compiled_react-dom_8362e125._.js:14537
+[   35972ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[   36126ms] [LOG] [Fast Refresh] done in 255ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[   92227ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5949
+[   92248ms] [LOG] [Fast Refresh] done in 92ms @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5809
+[  272932ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed:  @ http://localhost:3000/_next/static/chunks/cab68_next_dist_client_6d3ecf6e._.js:5696

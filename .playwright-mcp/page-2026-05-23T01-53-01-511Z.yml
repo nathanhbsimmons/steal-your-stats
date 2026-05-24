@@ -1,0 +1,255 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]: INDEXED FRI 22 MAY MMXXVI
+      - generic [ref=e5]:
+        - heading "StealyourStats" [level=1] [ref=e6] [cursor=pointer]
+        - generic [ref=e7]: The Dead Archive · compiled by hand, played through the deck
+      - generic [ref=e9]:
+        - generic [ref=e10]: 49°F · clear sky and a Sunshine Daydream
+        - generic [ref=e11]:
+          - generic [ref=e12]: ⌕
+          - textbox "⌕ ⌘K" [ref=e13]:
+            - /placeholder: search songs, shows, venues…
+          - generic [ref=e14]: ⌘K
+    - generic [ref=e15]:
+      - generic [ref=e16]: Pp. 0001 — 2333
+      - generic [ref=e17]:
+        - generic [ref=e18]: ❦
+        - generic [ref=e19]: An Annotated Guide to Grateful Dead Songlists
+        - generic [ref=e20]: ❦
+      - generic [ref=e21]: setlist.fm · archive.org · this volume
+    - navigation "Chapter navigation" [ref=e22]:
+      - button "I. Home" [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: I.
+        - text: Home
+      - button "II. Search ⌘K" [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]: II.
+        - text: Search
+        - generic [ref=e27]: ⌘K
+      - button "III. Songs 442" [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: III.
+        - text: Songs
+        - generic [ref=e30]: "442"
+      - button "IV. Recent" [ref=e31] [cursor=pointer]:
+        - generic [ref=e32]: IV.
+        - text: Recent
+      - button "V. Band Members" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: V.
+        - text: Band Members
+      - button "VI. Venues" [ref=e35] [cursor=pointer]:
+        - generic [ref=e36]: VI.
+        - text: Venues
+      - button "VII. Eras" [ref=e37] [cursor=pointer]:
+        - generic [ref=e38]: VII.
+        - text: Eras
+      - button "VIII. Stats" [ref=e39] [cursor=pointer]:
+        - generic [ref=e40]: VIII.
+        - text: Stats
+      - button "IX. Export" [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: IX.
+        - text: Export
+      - generic [ref=e44]: PG. 0003 of 2333
+    - generic [ref=e229]:
+      - generic [ref=e230]:
+        - link "Home" [ref=e231] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e232]: /
+        - link "Songs" [ref=e233] [cursor=pointer]:
+          - /url: /songs
+        - generic [ref=e234]: /
+        - generic [ref=e235]: Greatest Story Ever Told
+        - button "Share" [ref=e236] [cursor=pointer]
+        - button "☆" [ref=e237] [cursor=pointer]
+      - generic [ref=e238]:
+        - generic [ref=e239]:
+          - generic [ref=e240]: Song · jam vehicle
+          - heading "Greatest Story Ever Told" [level=2] [ref=e241]
+          - generic [ref=e242]: "Also known as: Greatest Story Ever Told"
+        - generic [ref=e243]:
+          - button "⟵ First show" [ref=e244] [cursor=pointer]
+          - button "Last show ⟶" [ref=e245] [cursor=pointer]
+          - button "▶ Play longest version" [ref=e246] [cursor=pointer]:
+            - generic [ref=e247]: ▶
+            - text: Play longest version
+      - generic [ref=e248]:
+        - generic [ref=e249]:
+          - generic [ref=e250]: First Performance
+          - generic [ref=e251]: 1971 · 02 · 18
+          - generic [ref=e252]: Capitol Theatre · Port Chester
+          - link "View setlist ↗" [ref=e253] [cursor=pointer]:
+            - /url: https://www.setlist.fm/setlist/grateful-dead/1971/capitol-theatre-port-chester-ny-7bc7a2fc.html
+        - generic [ref=e254]:
+          - generic [ref=e255]: Last Performance
+          - generic [ref=e256]: 1995 · 06 · 27
+          - generic [ref=e257]: The Palace of Auburn Hills · Auburn Hills
+          - link "View setlist ↗" [ref=e258] [cursor=pointer]:
+            - /url: https://www.setlist.fm/setlist/grateful-dead/1995/the-palace-of-auburn-hills-auburn-hills-mi-3bd600e8.html
+        - generic [ref=e259]:
+          - generic [ref=e260]: Total Performances
+          - generic [ref=e261]: "283"
+          - generic [ref=e262]: across 24 years
+      - generic [ref=e263]:
+        - generic [ref=e264]:
+          - heading "Opened the show" [level=3] [ref=e265]
+          - generic [ref=e266]: — 14 times
+          - generic [ref=e267] [cursor=pointer]: show all ↓
+        - link "1995 · 06 · 27 The Palace of Auburn Hills · Auburn Hills" [ref=e268] [cursor=pointer]:
+          - /url: /show/1995-06-27
+          - generic [ref=e269]: 1995 · 06 · 27
+          - generic [ref=e270]: The Palace of Auburn Hills · Auburn Hills
+        - link "1994 · 03 · 21 Richfield Coliseum · Richfield" [ref=e271] [cursor=pointer]:
+          - /url: /show/1994-03-21
+          - generic [ref=e272]: 1994 · 03 · 21
+          - generic [ref=e273]: Richfield Coliseum · Richfield
+        - link "1992 · 03 · 12 Nassau Veterans Memorial Coliseum · Uniondale" [ref=e274] [cursor=pointer]:
+          - /url: /show/1992-03-12
+          - generic [ref=e275]: 1992 · 03 · 12
+          - generic [ref=e276]: Nassau Veterans Memorial Coliseum · Uniondale
+        - link "1990 · 03 · 25 Knickerbocker Arena · Albany" [ref=e277] [cursor=pointer]:
+          - /url: /show/1990-03-25
+          - generic [ref=e278]: 1990 · 03 · 25
+          - generic [ref=e279]: Knickerbocker Arena · Albany
+        - link "1989 · 04 · 03 Civic Arena · Pittsburgh" [ref=e280] [cursor=pointer]:
+          - /url: /show/1989-04-03
+          - generic [ref=e281]: 1989 · 04 · 03
+          - generic [ref=e282]: Civic Arena · Pittsburgh
+        - link "1987 · 04 · 09 UIC Pavilion · Chicago" [ref=e283] [cursor=pointer]:
+          - /url: /show/1987-04-09
+          - generic [ref=e284]: 1987 · 04 · 09
+          - generic [ref=e285]: UIC Pavilion · Chicago
+        - button "Load 8 more ↓" [ref=e286] [cursor=pointer]
+      - generic [ref=e287]:
+        - heading "Versions" [level=3] [ref=e288]
+        - generic [ref=e289]: — Archive.org recordings
+        - generic [ref=e290]: 283 tracked
+      - generic [ref=e291]:
+        - generic [ref=e292]:
+          - button "▶" [ref=e293] [cursor=pointer]
+          - generic [ref=e294]:
+            - generic [ref=e295]: ⟶ Longest
+            - generic [ref=e296]: 5:59
+            - generic [ref=e297]: 1972 · 08 · 12 · Sacramento Memorial Auditorium
+        - generic [ref=e298]:
+          - button "▶" [ref=e299] [cursor=pointer]
+          - generic [ref=e300]:
+            - generic [ref=e301]: ⟵ Shortest
+            - generic [ref=e302]: 4:12
+            - generic [ref=e303]: 1995 · 06 · 27 · The Palace of Auburn Hills
+      - generic [ref=e304]:
+        - generic [ref=e305]: Sort
+        - button "Duration ↓" [ref=e306] [cursor=pointer]
+        - button "Date" [ref=e307] [cursor=pointer]
+        - button "Venue" [ref=e308] [cursor=pointer]
+        - generic [ref=e309]: Showing 8 of 283
+      - table [ref=e310]:
+        - rowgroup [ref=e311]:
+          - row "# Date Venue City Duration" [ref=e312]:
+            - columnheader "#" [ref=e313]
+            - columnheader "Date" [ref=e314]
+            - columnheader "Venue" [ref=e315]
+            - columnheader "City" [ref=e316]
+            - columnheader "Duration" [ref=e317]
+            - columnheader [ref=e318]
+        - rowgroup [ref=e319]:
+          - row "01 1972 · 08 · 12 Sacramento Memorial Auditorium Sacramento 5:59 ▶" [ref=e320] [cursor=pointer]:
+            - cell "01" [ref=e321]
+            - cell "1972 · 08 · 12" [ref=e322]
+            - cell "Sacramento Memorial Auditorium" [ref=e323]
+            - cell "Sacramento" [ref=e324]
+            - cell "5:59" [ref=e325]
+            - cell "▶" [ref=e326]:
+              - button "▶" [ref=e327]
+          - row "02 1973 · 04 · 02 Boston Garden Boston 4:49 ▶" [ref=e328] [cursor=pointer]:
+            - cell "02" [ref=e329]
+            - cell "1973 · 04 · 02" [ref=e330]
+            - cell "Boston Garden" [ref=e331]
+            - cell "Boston" [ref=e332]
+            - cell "4:49" [ref=e333]
+            - cell "▶" [ref=e334]:
+              - button "▶" [ref=e335]
+          - row "03 1987 · 06 · 19 William Randolph Hearst Greek Theatre Berkeley 4:25 ▶" [ref=e336] [cursor=pointer]:
+            - cell "03" [ref=e337]
+            - cell "1987 · 06 · 19" [ref=e338]
+            - cell "William Randolph Hearst Greek Theatre" [ref=e339]
+            - cell "Berkeley" [ref=e340]
+            - cell "4:25" [ref=e341]
+            - cell "▶" [ref=e342]:
+              - button "▶" [ref=e343]
+          - row "04 1983 · 10 · 14 Hartford Civic Center Hartford 4:25 ▶" [ref=e344] [cursor=pointer]:
+            - cell "04" [ref=e345]
+            - cell "1983 · 10 · 14" [ref=e346]
+            - cell "Hartford Civic Center" [ref=e347]
+            - cell "Hartford" [ref=e348]
+            - cell "4:25" [ref=e349]
+            - cell "▶" [ref=e350]:
+              - button "▶" [ref=e351]
+          - row "05 1981 · 05 · 06 Nassau Veterans Memorial Coliseum Uniondale 4:17 ▶" [ref=e352] [cursor=pointer]:
+            - cell "05" [ref=e353]
+            - cell "1981 · 05 · 06" [ref=e354]
+            - cell "Nassau Veterans Memorial Coliseum" [ref=e355]
+            - cell "Uniondale" [ref=e356]
+            - cell "4:17" [ref=e357]
+            - cell "▶" [ref=e358]:
+              - button "▶" [ref=e359]
+          - row "06 1991 · 03 · 25 Knickerbocker Arena Albany 4:16 ▶" [ref=e360] [cursor=pointer]:
+            - cell "06" [ref=e361]
+            - cell "1991 · 03 · 25" [ref=e362]
+            - cell "Knickerbocker Arena" [ref=e363]
+            - cell "Albany" [ref=e364]
+            - cell "4:16" [ref=e365]
+            - cell "▶" [ref=e366]:
+              - button "▶" [ref=e367]
+          - row "07 1995 · 06 · 27 The Palace of Auburn Hills Auburn Hills 4:12 ▶" [ref=e368] [cursor=pointer]:
+            - cell "07" [ref=e369]
+            - cell "1995 · 06 · 27" [ref=e370]
+            - cell "The Palace of Auburn Hills" [ref=e371]
+            - cell "Auburn Hills" [ref=e372]
+            - cell "4:12" [ref=e373]
+            - cell "▶" [ref=e374]:
+              - button "▶" [ref=e375]
+          - row "08 1995 · 06 · 02 Shoreline Amphitheatre Mountain View — ▶" [ref=e376] [cursor=pointer]:
+            - cell "08" [ref=e377]
+            - cell "1995 · 06 · 02" [ref=e378]
+            - cell "Shoreline Amphitheatre" [ref=e379]
+            - cell "Mountain View" [ref=e380]
+            - cell "—" [ref=e381]
+            - cell "▶" [ref=e382]:
+              - button "▶" [ref=e383]
+      - generic [ref=e384]:
+        - generic [ref=e385]: Provenance
+        - text: Performance data from
+        - link "setlist.fm" [ref=e386] [cursor=pointer]:
+          - /url: https://www.setlist.fm
+        - text: . Audio recordings via
+        - link "Archive.org" [ref=e387] [cursor=pointer]:
+          - /url: https://archive.org
+        - text: — community-contributed tapes.
+    - contentinfo [ref=e59]:
+      - generic [ref=e60]: © MMXXVI · Steal Your Stats Press · Made by hand
+      - generic [ref=e61]: ❦ If you get confused, listen to the music play ❦
+      - generic [ref=e62]: v.11.5 · cached locally · last sync 1h ago
+    - generic [ref=e63]:
+      - generic [ref=e64]:
+        - generic [ref=e68]:
+          - generic [ref=e69]: nothing in the deck
+          - generic [ref=e70]: cue a show to begin · play the featured tape
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - button "Previous" [ref=e73] [cursor=pointer]: ◀◀
+            - button "Play" [ref=e74] [cursor=pointer]: ▶
+            - button "Next" [ref=e75] [cursor=pointer]: ▶▶
+          - generic [ref=e76]:
+            - generic [ref=e77]: 0:00
+            - generic [ref=e80]: 0:00
+        - generic [ref=e81]:
+          - generic [ref=e83]: VOL
+          - button "Queue 2" [ref=e218] [cursor=pointer]:
+            - text: Queue
+            - generic [ref=e89]: "2"
+      - generic [ref=e90]:
+        - generic [ref=e91]: cued · 2 tracks
+        - generic [ref=e92]: —
+  - button "Open Next.js Dev Tools" [ref=e224] [cursor=pointer]:
+    - img [ref=e225]
+  - alert [ref=e228]

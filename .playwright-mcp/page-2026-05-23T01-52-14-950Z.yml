@@ -1,0 +1,275 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]: INDEXED FRI 22 MAY MMXXVI
+      - generic [ref=e5]:
+        - heading "StealyourStats" [level=1] [ref=e6] [cursor=pointer]
+        - generic [ref=e7]: The Dead Archive · compiled by hand, played through the deck
+      - generic [ref=e9]:
+        - generic [ref=e10]: 49°F · clear sky and a Sunshine Daydream
+        - generic [ref=e11]:
+          - generic [ref=e12]: ⌕
+          - textbox "⌕ ⌘K" [ref=e13]:
+            - /placeholder: search songs, shows, venues…
+          - generic [ref=e14]: ⌘K
+    - generic [ref=e15]:
+      - generic [ref=e16]: Pp. 0001 — 2333
+      - generic [ref=e17]:
+        - generic [ref=e18]: ❦
+        - generic [ref=e19]: An Annotated Guide to Grateful Dead Songlists
+        - generic [ref=e20]: ❦
+      - generic [ref=e21]: setlist.fm · archive.org · this volume
+    - navigation "Chapter navigation" [ref=e22]:
+      - button "I. Home" [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: I.
+        - text: Home
+      - button "II. Search ⌘K" [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]: II.
+        - text: Search
+        - generic [ref=e27]: ⌘K
+      - button "III. Songs 442" [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: III.
+        - text: Songs
+        - generic [ref=e30]: "442"
+      - button "IV. Recent" [ref=e31] [cursor=pointer]:
+        - generic [ref=e32]: IV.
+        - text: Recent
+      - button "V. Band Members" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: V.
+        - text: Band Members
+      - button "VI. Venues" [ref=e35] [cursor=pointer]:
+        - generic [ref=e36]: VI.
+        - text: Venues
+      - button "VII. Eras" [ref=e37] [cursor=pointer]:
+        - generic [ref=e38]: VII.
+        - text: Eras
+      - button "VIII. Stats" [ref=e39] [cursor=pointer]:
+        - generic [ref=e40]: VIII.
+        - text: Stats
+      - button "IX. Export" [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: IX.
+        - text: Export
+      - generic [ref=e44]: PG. 0003 of 2333
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - link "Home" [ref=e48] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e49]: /
+        - link "Songs" [ref=e50] [cursor=pointer]:
+          - /url: /songs
+        - generic [ref=e51]: /
+        - generic [ref=e52]: Bertha
+        - button "Share" [ref=e53] [cursor=pointer]
+        - button "☆" [ref=e54] [cursor=pointer]
+      - generic [ref=e55]:
+        - generic [ref=e56]:
+          - generic [ref=e57]: Song · jam vehicle
+          - heading "Bertha" [level=2] [ref=e58]
+          - generic [ref=e110]: "Also known as: bertha, bertha (live)"
+        - generic [ref=e59]:
+          - button "⟵ First show" [ref=e60] [cursor=pointer]
+          - button "Last show ⟶" [ref=e61] [cursor=pointer]
+          - button "▶ Play longest version" [active] [ref=e62] [cursor=pointer]:
+            - generic [ref=e63]: ▶
+            - text: Play longest version
+      - generic [ref=e64]:
+        - generic [ref=e111]:
+          - generic [ref=e112]: First Performance
+          - generic [ref=e113]: 1971 · 02 · 18
+          - generic [ref=e114]: Capitol Theatre · Port Chester
+          - link "View setlist ↗" [ref=e115] [cursor=pointer]:
+            - /url: https://www.setlist.fm/setlist/grateful-dead/1971/capitol-theatre-port-chester-ny-7bc7a2fc.html
+        - generic [ref=e116]:
+          - generic [ref=e117]: Last Performance
+          - generic [ref=e118]: 2015 · 07 · 03
+          - generic [ref=e119]: Soldier Field · Chicago
+          - link "View setlist ↗" [ref=e120] [cursor=pointer]:
+            - /url: https://www.setlist.fm/setlist/grateful-dead/2015/soldier-field-chicago-il-1bf6b9cc.html
+        - generic [ref=e121]:
+          - generic [ref=e122]: Total Performances
+          - generic [ref=e123]: "401"
+          - generic [ref=e124]: across 44 years
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - heading "Opened the show" [level=3] [ref=e127]
+          - generic [ref=e128]: — 158 times
+          - generic [ref=e129] [cursor=pointer]: show all ↓
+        - link "1995 · 06 · 04 Shoreline Amphitheatre · Mountain View" [ref=e130] [cursor=pointer]:
+          - /url: /show/1995-06-04
+          - generic [ref=e131]: 1995 · 06 · 04
+          - generic [ref=e132]: Shoreline Amphitheatre · Mountain View
+        - link "1995 · 02 · 20 Delta Center · Salt Lake City" [ref=e133] [cursor=pointer]:
+          - /url: /show/1995-02-20
+          - generic [ref=e134]: 1995 · 02 · 20
+          - generic [ref=e135]: Delta Center · Salt Lake City
+        - link "1994 · 12 · 08 Oakland-Alameda County Coliseum Arena · Oakland" [ref=e136] [cursor=pointer]:
+          - /url: /show/1994-12-08
+          - generic [ref=e137]: 1994 · 12 · 08
+          - generic [ref=e138]: Oakland-Alameda County Coliseum Arena · Oakland
+        - link "1994 · 06 · 17 Autzen Stadium · Eugene" [ref=e139] [cursor=pointer]:
+          - /url: /show/1994-06-17
+          - generic [ref=e140]: 1994 · 06 · 17
+          - generic [ref=e141]: Autzen Stadium · Eugene
+        - link "1993 · 12 · 19 Oakland-Alameda County Coliseum Arena · Oakland" [ref=e142] [cursor=pointer]:
+          - /url: /show/1993-12-19
+          - generic [ref=e143]: 1993 · 12 · 19
+          - generic [ref=e144]: Oakland-Alameda County Coliseum Arena · Oakland
+        - link "1993 · 05 · 25 Cal Expo Amphitheatre · Sacramento" [ref=e145] [cursor=pointer]:
+          - /url: /show/1993-05-25
+          - generic [ref=e146]: 1993 · 05 · 25
+          - generic [ref=e147]: Cal Expo Amphitheatre · Sacramento
+        - button "Load 152 more ↓" [ref=e148] [cursor=pointer]
+      - generic [ref=e149]:
+        - generic [ref=e150]:
+          - heading "Closed the show" [level=3] [ref=e151]
+          - generic [ref=e152]: — 1 time
+          - generic [ref=e153] [cursor=pointer]: show all ↓
+        - link "1982 · 09 · 14 University Hall · Charlottesville" [ref=e154] [cursor=pointer]:
+          - /url: /show/1982-09-14
+          - generic [ref=e155]: 1982 · 09 · 14
+          - generic [ref=e156]: University Hall · Charlottesville
+      - generic [ref=e157]:
+        - generic [ref=e158]:
+          - heading "Played as encore" [level=3] [ref=e159]
+          - generic [ref=e160]: — 1 time
+          - generic [ref=e161] [cursor=pointer]: show all ↓
+        - link "1979 · 08 · 05 Oakland Civic Auditorium · Oakland" [ref=e162] [cursor=pointer]:
+          - /url: /show/1979-08-05
+          - generic [ref=e163]: 1979 · 08 · 05
+          - generic [ref=e164]: Oakland Civic Auditorium · Oakland
+      - generic [ref=e176]:
+        - heading "Versions" [level=3] [ref=e177]
+        - generic [ref=e178]: — Archive.org recordings
+        - generic [ref=e179]: 401 tracked
+      - generic [ref=e180]:
+        - generic [ref=e181]:
+          - button "▶" [ref=e182] [cursor=pointer]
+          - generic [ref=e183]:
+            - generic [ref=e184]: ⟶ Longest
+            - generic [ref=e185]: 8:29
+            - generic [ref=e186]: 1990 · 09 · 19 · Madison Square Garden
+        - generic [ref=e187]:
+          - button "▶" [ref=e188] [cursor=pointer]
+          - generic [ref=e189]:
+            - generic [ref=e190]: ⟵ Shortest
+            - generic [ref=e191]: 5:21
+            - generic [ref=e192]: 1977 · 04 · 26 · Capitol Theatre
+      - generic [ref=e193]:
+        - generic [ref=e194]: Sort
+        - button "Duration ↓" [ref=e195] [cursor=pointer]
+        - button "Date" [ref=e196] [cursor=pointer]
+        - button "Venue" [ref=e197] [cursor=pointer]
+        - generic [ref=e198]: Showing 8 of 401
+      - table [ref=e199]:
+        - rowgroup [ref=e200]:
+          - row "# Date Venue City Duration" [ref=e201]:
+            - columnheader "#" [ref=e202]
+            - columnheader "Date" [ref=e203]
+            - columnheader "Venue" [ref=e204]
+            - columnheader "City" [ref=e205]
+            - columnheader "Duration" [ref=e206]
+            - columnheader [ref=e207]
+        - rowgroup [ref=e208]:
+          - row "01 1990 · 09 · 19 Madison Square Garden New York 8:29 ❚❚" [ref=e273] [cursor=pointer]:
+            - cell "01" [ref=e210]
+            - cell "1990 · 09 · 19" [ref=e211]
+            - cell "Madison Square Garden" [ref=e212]
+            - cell "New York" [ref=e213]
+            - cell "8:29" [ref=e214]
+            - cell "❚❚" [ref=e274]:
+              - button "❚❚" [ref=e275]
+          - row "02 1985 · 04 · 27 Frost Amphitheater Stanford 7:46 ▶" [ref=e217] [cursor=pointer]:
+            - cell "02" [ref=e218]
+            - cell "1985 · 04 · 27" [ref=e219]
+            - cell "Frost Amphitheater" [ref=e220]
+            - cell "Stanford" [ref=e221]
+            - cell "7:46" [ref=e222]
+            - cell "▶" [ref=e223]:
+              - button "▶" [ref=e224]
+          - row "03 1981 · 12 · 03 Dane County Coliseum Madison 6:40 ▶" [ref=e225] [cursor=pointer]:
+            - cell "03" [ref=e226]
+            - cell "1981 · 12 · 03" [ref=e227]
+            - cell "Dane County Coliseum" [ref=e228]
+            - cell "Madison" [ref=e229]
+            - cell "6:40" [ref=e230]
+            - cell "▶" [ref=e231]:
+              - button "▶" [ref=e232]
+          - row "04 1978 · 12 · 12 Miami Jai-Alai Fronton Miami 5:50 ▶" [ref=e233] [cursor=pointer]:
+            - cell "04" [ref=e234]
+            - cell "1978 · 12 · 12" [ref=e235]
+            - cell "Miami Jai-Alai Fronton" [ref=e236]
+            - cell "Miami" [ref=e237]
+            - cell "5:50" [ref=e238]
+            - cell "▶" [ref=e239]:
+              - button "▶" [ref=e240]
+          - row "05 1977 · 04 · 26 Capitol Theatre Passaic 5:21 ▶" [ref=e241] [cursor=pointer]:
+            - cell "05" [ref=e242]
+            - cell "1977 · 04 · 26" [ref=e243]
+            - cell "Capitol Theatre" [ref=e244]
+            - cell "Passaic" [ref=e245]
+            - cell "5:21" [ref=e246]
+            - cell "▶" [ref=e247]:
+              - button "▶" [ref=e248]
+          - row "06 2015 · 07 · 03 Soldier Field Chicago — ▶" [ref=e249] [cursor=pointer]:
+            - cell "06" [ref=e250]
+            - cell "2015 · 07 · 03" [ref=e251]
+            - cell "Soldier Field" [ref=e252]
+            - cell "Chicago" [ref=e253]
+            - cell "—" [ref=e254]
+            - cell "▶" [ref=e255]:
+              - button "▶" [ref=e256]
+          - row "07 1995 · 06 · 27 The Palace of Auburn Hills Auburn Hills — ▶" [ref=e257] [cursor=pointer]:
+            - cell "07" [ref=e258]
+            - cell "1995 · 06 · 27" [ref=e259]
+            - cell "The Palace of Auburn Hills" [ref=e260]
+            - cell "Auburn Hills" [ref=e261]
+            - cell "—" [ref=e262]
+            - cell "▶" [ref=e263]:
+              - button "▶" [ref=e264]
+          - row "08 1995 · 06 · 18 Giants Stadium East Rutherford — ▶" [ref=e265] [cursor=pointer]:
+            - cell "08" [ref=e266]
+            - cell "1995 · 06 · 18" [ref=e267]
+            - cell "Giants Stadium" [ref=e268]
+            - cell "East Rutherford" [ref=e269]
+            - cell "—" [ref=e270]
+            - cell "▶" [ref=e271]:
+              - button "▶" [ref=e272]
+      - generic [ref=e72]:
+        - generic [ref=e73]: Provenance
+        - text: Performance data from
+        - link "setlist.fm" [ref=e74] [cursor=pointer]:
+          - /url: https://www.setlist.fm
+        - text: . Audio recordings via
+        - link "Archive.org" [ref=e75] [cursor=pointer]:
+          - /url: https://archive.org
+        - text: — community-contributed tapes.
+    - contentinfo [ref=e76]:
+      - generic [ref=e77]: © MMXXVI · Steal Your Stats Press · Made by hand
+      - generic [ref=e78]: ❦ If you get confused, listen to the music play ❦
+      - generic [ref=e79]: v.11.5 · cached locally · last sync 1h ago
+    - generic [ref=e80]:
+      - generic [ref=e81]:
+        - generic [ref=e85]:
+          - generic [ref=e86]: Bertha (1990-09-19)
+          - generic [ref=e87]: 1990-09-19 · Madison Square Garden · REEL TO REEL
+        - generic [ref=e88]:
+          - generic [ref=e89]:
+            - button "Previous" [ref=e90] [cursor=pointer]: ◀◀
+            - button "Pause" [ref=e276] [cursor=pointer]: ❚❚
+            - button "Next" [ref=e92] [cursor=pointer]: ▶▶
+          - generic [ref=e93]:
+            - generic [ref=e94]: 0:00
+            - generic [ref=e97]: 0:00
+        - generic [ref=e98]:
+          - generic [ref=e100]: VOL
+          - button "Queue 2" [ref=e277] [cursor=pointer]:
+            - text: Queue
+            - generic [ref=e106]: "2"
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - generic [ref=e278]: playing
+          - text: · 2 tracks · 0:00 left
+        - generic [ref=e109]: Track 2 / 2 · 72 dB
+  - button "Open Next.js Dev Tools" [ref=e171] [cursor=pointer]:
+    - img [ref=e172]
+  - alert [ref=e175]

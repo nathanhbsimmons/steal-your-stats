@@ -1,0 +1,226 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e5]
+        - generic [ref=e8]:
+          - generic [ref=e9]: Steal Your Stats
+          - generic [ref=e10]: The Dead Archive
+      - navigation [ref=e11]:
+        - link "Home" [ref=e12] [cursor=pointer]:
+          - /url: /
+          - img [ref=e14]
+          - generic [ref=e16]: Home
+        - link "Search" [ref=e17] [cursor=pointer]:
+          - /url: /search
+          - img [ref=e19]
+          - generic [ref=e21]: Search
+        - link "Recent 12" [ref=e22] [cursor=pointer]:
+          - /url: /recent
+          - img [ref=e24]
+          - generic [ref=e26]: Recent
+          - generic [ref=e27]: "12"
+        - link "Artists" [ref=e28] [cursor=pointer]:
+          - /url: /artists
+          - img [ref=e30]
+          - generic [ref=e32]: Artists
+        - link "Venues" [ref=e33] [cursor=pointer]:
+          - /url: /venues
+          - img [ref=e35]
+          - generic [ref=e37]: Venues
+        - link "Eras" [ref=e38] [cursor=pointer]:
+          - /url: /eras
+          - img [ref=e40]
+          - generic [ref=e42]: Eras
+        - link "Stats" [ref=e43] [cursor=pointer]:
+          - /url: /stats
+          - img [ref=e45]
+          - generic [ref=e47]: Stats
+        - link "Export" [ref=e48] [cursor=pointer]:
+          - /url: /export
+          - img [ref=e50]
+          - generic [ref=e52]: Export
+      - generic [ref=e53]:
+        - generic [ref=e54]: Pinned
+        - generic [ref=e55]:
+          - link "Dark Star" [ref=e56] [cursor=pointer]:
+            - /url: /song/Dark%20Star
+            - img [ref=e58]
+            - generic [ref=e60]: Dark Star
+          - link "St. Stephen" [ref=e61] [cursor=pointer]:
+            - /url: /song/St.%20Stephen
+            - img [ref=e63]
+            - generic [ref=e65]: St. Stephen
+          - link "Scarlet › Fire" [ref=e66] [cursor=pointer]:
+            - /url: /song/Scarlet%20Begonias
+            - img [ref=e68]
+            - generic [ref=e70]: Scarlet › Fire
+          - link "Eyes of the World" [ref=e71] [cursor=pointer]:
+            - /url: /song/Eyes%20of%20the%20World
+            - img [ref=e73]
+            - generic [ref=e75]: Eyes of the World
+          - link "Morning Dew" [ref=e76] [cursor=pointer]:
+            - /url: /song/Morning%20Dew
+            - img [ref=e78]
+            - generic [ref=e80]: Morning Dew
+      - generic [ref=e82]:
+        - generic [ref=e83]: JG
+        - generic [ref=e84]:
+          - generic [ref=e85]: jerry@archive
+          - generic [ref=e86]: cached · 24h
+        - img [ref=e88]
+    - generic [ref=e90]:
+      - banner [ref=e91]:
+        - generic [ref=e92]:
+          - generic [ref=e93]: Welcome back
+          - heading "Pull up a tape, dust off the deck." [level=1] [ref=e94]
+        - generic [ref=e95]:
+          - img [ref=e97]
+          - textbox "Songs, venues, dates, eras…" [ref=e99]
+          - generic [ref=e100]: ⌘K
+        - button "Rebuild index" [ref=e101] [cursor=pointer]:
+          - img [ref=e102]
+          - text: Rebuild index
+        - button "Today's tape" [ref=e104] [cursor=pointer]:
+          - img [ref=e105]
+          - text: Today's tape
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - img
+          - generic [ref=e109]:
+            - generic [ref=e110]:
+              - generic [ref=e111]: On this day · 1978
+              - generic [ref=e214]: May 14
+            - heading "Providence Civic Center Mississippi Half-Step Uptown Toodeloo and the all-time tape." [level=2] [ref=e215]:
+              - text: Providence Civic Center
+              - generic [ref=e216]: Mississippi Half-Step Uptown Toodeloo and the all-time tape.
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - generic [ref=e116]: Show length
+                - generic [ref=e117]: 2:36:14
+              - generic [ref=e118]:
+                - generic [ref=e119]: Tracks
+                - generic [ref=e120]: "22"
+              - generic [ref=e121]:
+                - generic [ref=e122]: Soundboard
+                - generic [ref=e123]: SBD · A+
+            - generic [ref=e124]:
+              - link "Play the show" [ref=e217] [cursor=pointer]:
+                - /url: /show/1978-05-14
+                - img [ref=e218]
+                - text: Play the show
+              - button "Open setlist" [ref=e128] [cursor=pointer]
+          - generic [ref=e129]:
+            - generic [ref=e130]: Providence Civic Center
+            - generic [ref=e131]: Providence, Rhode Island, United States
+            - generic [ref=e132]:
+              - generic [ref=e133]:
+                - generic [ref=e134]: MAY
+                - generic [ref=e135]: "14"
+              - generic [ref=e136]: "'78"
+            - generic [ref=e138]: 48 years ago today
+        - generic [ref=e139]:
+          - generic [ref=e140]:
+            - generic [ref=e141]: Shows indexed
+            - generic [ref=e142]: 2,317
+            - generic [ref=e143]: ↑ 14 this week
+          - generic [ref=e144]:
+            - generic [ref=e145]: Unique songs
+            - generic [ref=e146]: "484"
+            - generic [ref=e147]: 346 with audio
+          - generic [ref=e148]:
+            - generic [ref=e149]: Hours archived
+            - generic [ref=e150]: 6,189
+            - generic [ref=e151]: Archive.org synced
+          - generic [ref=e152]:
+            - generic [ref=e153]: Last rebuild
+            - generic [ref=e154]: 2h ago
+            - generic [ref=e155]: Auto-refreshes daily
+        - generic [ref=e156]:
+          - generic [ref=e157]:
+            - generic [ref=e158]:
+              - heading "Recent Activity" [level=3] [ref=e159]
+              - generic [ref=e160]: 7 NEW
+              - link "View all" [ref=e161] [cursor=pointer]:
+                - /url: /recent
+            - generic [ref=e162]:
+              - generic [ref=e220]:
+                - generic [ref=e221]: 1966-05-14
+                - generic [ref=e222]:
+                  - generic [ref=e223]: Veterans Memorial Hall
+                  - generic [ref=e224]: Berkeley, California · United States
+                - generic [ref=e225]: "1966"
+                - img [ref=e227] [cursor=pointer]
+              - generic [ref=e229]:
+                - generic [ref=e230]: 1970-05-14
+                - generic [ref=e231]:
+                  - generic [ref=e232]: Meramec Community College
+                  - generic [ref=e233]: Kirkwood, Missouri · United States
+                - generic [ref=e234]: "1970"
+                - img [ref=e236] [cursor=pointer]
+              - generic [ref=e238]:
+                - generic [ref=e239]: 1974-05-14
+                - generic [ref=e240]:
+                  - generic [ref=e241]: Adams Field House
+                  - generic [ref=e242]: Missoula, Montana · United States
+                - generic [ref=e243]: "1974"
+                - img [ref=e245] [cursor=pointer]
+              - generic [ref=e247]:
+                - generic [ref=e248]: 1978-05-14
+                - generic [ref=e249]:
+                  - generic [ref=e250]: Providence Civic Center
+                  - generic [ref=e251]: Providence, Rhode Island · United States
+                - generic [ref=e252]: "1978"
+                - img [ref=e254] [cursor=pointer]
+              - generic [ref=e256]:
+                - generic [ref=e257]: 1980-05-14
+                - generic [ref=e258]:
+                  - generic [ref=e259]: Nassau Veterans Memorial Coliseum
+                  - generic [ref=e260]: Uniondale, New York · United States
+                - generic [ref=e261]: "1980"
+                - img [ref=e263] [cursor=pointer]
+              - generic [ref=e265]:
+                - generic [ref=e266]: 1983-05-14
+                - generic [ref=e267]:
+                  - generic [ref=e268]: William Randolph Hearst Greek Theatre
+                  - generic [ref=e269]: Berkeley, California · United States
+                - generic [ref=e270]: "1983"
+                - img [ref=e272] [cursor=pointer]
+          - generic [ref=e167]:
+            - generic [ref=e168]:
+              - heading "Most-Played" [level=3] [ref=e169]
+              - generic [ref=e170]: all-time
+            - generic [ref=e171]:
+              - generic [ref=e173]:
+                - generic [ref=e174]: "01"
+                - link "Me & My Uncle" [ref=e175] [cursor=pointer]:
+                  - /url: /song/Me%20%26%20My%20Uncle
+                - generic [ref=e176]: "615"
+              - generic [ref=e180]:
+                - generic [ref=e181]: "02"
+                - link "Sugar Magnolia" [ref=e182] [cursor=pointer]:
+                  - /url: /song/Sugar%20Magnolia
+                - generic [ref=e183]: "596"
+              - generic [ref=e187]:
+                - generic [ref=e188]: "03"
+                - link "Truckin'" [ref=e189] [cursor=pointer]:
+                  - /url: /song/Truckin'
+                - generic [ref=e190]: "519"
+              - generic [ref=e194]:
+                - generic [ref=e195]: "04"
+                - link "Playing in the Band" [ref=e196] [cursor=pointer]:
+                  - /url: /song/Playing%20in%20the%20Band
+                - generic [ref=e197]: "583"
+              - generic [ref=e201]:
+                - generic [ref=e202]: "05"
+                - link "Bertha" [ref=e203] [cursor=pointer]:
+                  - /url: /song/Bertha
+                - generic [ref=e204]: "396"
+              - generic [ref=e208]:
+                - generic [ref=e209]: "06"
+                - link "Casey Jones" [ref=e210] [cursor=pointer]:
+                  - /url: /song/Casey%20Jones
+                - generic [ref=e211]: "332"
+  - button "Open Next.js Dev Tools" [ref=e279] [cursor=pointer]:
+    - img [ref=e280]
+  - alert [ref=e283]

@@ -1,0 +1,240 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e5]
+        - generic [ref=e8]:
+          - generic [ref=e9]: Steal Your Stats
+          - generic [ref=e10]: The Dead Archive
+      - navigation [ref=e11]:
+        - link "Home" [ref=e12] [cursor=pointer]:
+          - /url: /
+          - img [ref=e14]
+          - generic [ref=e16]: Home
+        - link "Search" [ref=e17] [cursor=pointer]:
+          - /url: /search
+          - img [ref=e19]
+          - generic [ref=e21]: Search
+        - link "Recent 12" [ref=e22] [cursor=pointer]:
+          - /url: /recent
+          - img [ref=e24]
+          - generic [ref=e26]: Recent
+          - generic [ref=e27]: "12"
+        - link "Artists" [ref=e28] [cursor=pointer]:
+          - /url: /artists
+          - img [ref=e30]
+          - generic [ref=e32]: Artists
+        - link "Venues" [ref=e33] [cursor=pointer]:
+          - /url: /venues
+          - img [ref=e35]
+          - generic [ref=e37]: Venues
+        - link "Eras" [ref=e38] [cursor=pointer]:
+          - /url: /eras
+          - img [ref=e40]
+          - generic [ref=e42]: Eras
+        - link "Stats" [ref=e43] [cursor=pointer]:
+          - /url: /stats
+          - img [ref=e45]
+          - generic [ref=e47]: Stats
+        - link "Export" [ref=e48] [cursor=pointer]:
+          - /url: /export
+          - img [ref=e50]
+          - generic [ref=e52]: Export
+      - generic [ref=e53]:
+        - generic [ref=e54]: Pinned
+        - generic [ref=e55]:
+          - link "Dark Star" [ref=e56] [cursor=pointer]:
+            - /url: /song/Dark%20Star
+            - img [ref=e58]
+            - generic [ref=e60]: Dark Star
+          - link "St. Stephen" [ref=e61] [cursor=pointer]:
+            - /url: /song/St.%20Stephen
+            - img [ref=e63]
+            - generic [ref=e65]: St. Stephen
+          - link "Scarlet › Fire" [ref=e66] [cursor=pointer]:
+            - /url: /song/Scarlet%20Begonias
+            - img [ref=e68]
+            - generic [ref=e70]: Scarlet › Fire
+          - link "Eyes of the World" [ref=e71] [cursor=pointer]:
+            - /url: /song/Eyes%20of%20the%20World
+            - img [ref=e73]
+            - generic [ref=e75]: Eyes of the World
+          - link "Morning Dew" [ref=e76] [cursor=pointer]:
+            - /url: /song/Morning%20Dew
+            - img [ref=e78]
+            - generic [ref=e80]: Morning Dew
+      - generic [ref=e82]:
+        - generic [ref=e83]: JG
+        - generic [ref=e84]:
+          - generic [ref=e85]: jerry@archive
+          - generic [ref=e86]: cached · 24h
+        - img [ref=e88]
+    - generic [ref=e90]:
+      - generic [ref=e284]:
+        - button [ref=e285] [cursor=pointer]:
+          - img [ref=e286]
+        - generic [ref=e288]: SHOWS / 1978-05-14
+        - link "setlist.fm" [ref=e289] [cursor=pointer]:
+          - /url: https://www.setlist.fm/setlist/grateful-dead/1978/providence-civic-center-providence-ri-13d605b9.html
+          - text: setlist.fm
+          - img [ref=e290]
+      - banner [ref=e292]:
+        - img [ref=e294]
+        - generic [ref=e296]:
+          - generic [ref=e297]: Show · Grateful Dead
+          - heading "Sunday, May 14, 1978" [level=1] [ref=e298]
+          - generic [ref=e299]: Providence Civic Center · Providence, Rhode Island · United States
+        - generic [ref=e300]:
+          - button "Play entire show" [active] [ref=e301] [cursor=pointer]:
+            - img [ref=e302]
+            - text: Play entire show
+          - generic [ref=e304]: 18 songs
+      - generic [ref=e305]:
+        - generic [ref=e306]:
+          - generic [ref=e307]:
+            - generic [ref=e308]: "Set 1:"
+            - generic [ref=e309]: 9 songs
+          - list [ref=e310]:
+            - listitem [ref=e311]:
+              - generic [ref=e312]: "01"
+              - link "Mississippi Half-Step Uptown Toodeloo" [ref=e313] [cursor=pointer]:
+                - /url: /song/Mississippi%20Half-Step%20Uptown%20Toodeloo
+              - img [ref=e314]
+            - listitem [ref=e316]:
+              - generic [ref=e317]: "02"
+              - link "Cassidy" [ref=e318] [cursor=pointer]:
+                - /url: /song/Cassidy
+              - img [ref=e319]
+            - listitem [ref=e321]:
+              - generic [ref=e322]: "03"
+              - link "They Love Each Other" [ref=e323] [cursor=pointer]:
+                - /url: /song/They%20Love%20Each%20Other
+              - img [ref=e324]
+            - listitem [ref=e326]:
+              - generic [ref=e327]: "04"
+              - link "Looks Like Rain" [ref=e328] [cursor=pointer]:
+                - /url: /song/Looks%20Like%20Rain
+              - img [ref=e329]
+            - listitem [ref=e331]:
+              - generic [ref=e332]: "05"
+              - link "It Must Have Been the Roses" [ref=e333] [cursor=pointer]:
+                - /url: /song/It%20Must%20Have%20Been%20the%20Roses
+              - img [ref=e334]
+            - listitem [ref=e336]:
+              - generic [ref=e337]: "06"
+              - link "Me and My Uncle" [ref=e338] [cursor=pointer]:
+                - /url: /song/Me%20and%20My%20Uncle
+              - img [ref=e339]
+            - listitem [ref=e341]:
+              - generic [ref=e342]: "07"
+              - link "Big River" [ref=e343] [cursor=pointer]:
+                - /url: /song/Big%20River
+              - img [ref=e344]
+            - listitem [ref=e346]:
+              - generic [ref=e347]: "08"
+              - link "Brown-Eyed Women" [ref=e348] [cursor=pointer]:
+                - /url: /song/Brown-Eyed%20Women
+              - img [ref=e349]
+            - listitem [ref=e351]:
+              - generic [ref=e352]: "09"
+              - link "Let It Grow" [ref=e353] [cursor=pointer]:
+                - /url: /song/Let%20It%20Grow
+              - img [ref=e354]
+        - generic [ref=e356]:
+          - generic [ref=e357]:
+            - generic [ref=e358]: "Set 2:"
+            - generic [ref=e359]: 8 songs
+          - list [ref=e360]:
+            - listitem [ref=e361]:
+              - generic [ref=e362]: "01"
+              - link "Samson and Delilah" [ref=e363] [cursor=pointer]:
+                - /url: /song/Samson%20and%20Delilah
+              - img [ref=e364]
+            - listitem [ref=e366]:
+              - generic [ref=e367]: "02"
+              - link "Ship of Fools" [ref=e368] [cursor=pointer]:
+                - /url: /song/Ship%20of%20Fools
+              - img [ref=e369]
+            - listitem [ref=e371]:
+              - generic [ref=e372]: "03"
+              - link "Estimated Prophet" [ref=e373] [cursor=pointer]:
+                - /url: /song/Estimated%20Prophet
+              - img [ref=e374]
+            - listitem [ref=e376]:
+              - generic [ref=e377]: "04"
+              - link "Eyes of the World" [ref=e378] [cursor=pointer]:
+                - /url: /song/Eyes%20of%20the%20World
+              - img [ref=e379]
+            - listitem [ref=e381]:
+              - generic [ref=e382]: "05"
+              - link "Drums" [ref=e383] [cursor=pointer]:
+                - /url: /song/Drums
+              - img [ref=e384]
+            - listitem [ref=e386]:
+              - generic [ref=e387]: "06"
+              - link "Not Fade Away" [ref=e388] [cursor=pointer]:
+                - /url: /song/Not%20Fade%20Away
+              - img [ref=e389]
+            - listitem [ref=e391]:
+              - generic [ref=e392]: "07"
+              - link "Going Down the Road Feeling Bad" [ref=e393] [cursor=pointer]:
+                - /url: /song/Going%20Down%20the%20Road%20Feeling%20Bad
+              - img [ref=e394]
+            - listitem [ref=e396]:
+              - generic [ref=e397]: "08"
+              - link "Around and Around" [ref=e398] [cursor=pointer]:
+                - /url: /song/Around%20and%20Around
+              - img [ref=e399]
+        - generic [ref=e401]:
+          - generic [ref=e402]:
+            - generic [ref=e403]: Encore
+            - generic [ref=e404]: 1 songs
+          - list [ref=e405]:
+            - listitem [ref=e406]:
+              - generic [ref=e407]: "01"
+              - link "U.S. Blues" [ref=e408] [cursor=pointer]:
+                - /url: /song/U.S.%20Blues
+              - img [ref=e409]
+        - contentinfo [ref=e411]:
+          - generic [ref=e412]:
+            - text: Data from
+            - link "setlist.fm" [ref=e413] [cursor=pointer]:
+              - /url: https://www.setlist.fm
+            - text: and
+            - link "Archive.org" [ref=e414] [cursor=pointer]:
+              - /url: https://archive.org
+          - generic [ref=e415]: ·
+          - generic [ref=e416]: Cached 24h
+          - generic [ref=e417]: SWR · refreshed 2026-05-15 02:20 UTC
+      - generic [ref=e418]:
+        - generic [ref=e422]:
+          - img [ref=e432]
+          - generic [ref=e434]:
+            - generic [ref=e435]: Mississippi Half-Step Uptown Toodeloo
+            - generic [ref=e436]: 1978·05·14 · Providence Civic Center
+          - generic [ref=e437]:
+            - button [ref=e438] [cursor=pointer]:
+              - img [ref=e439]
+            - button [ref=e441] [cursor=pointer]:
+              - img [ref=e442]
+            - button [ref=e444] [cursor=pointer]:
+              - img [ref=e445]
+          - generic [ref=e447]:
+            - generic [ref=e448]: 0:00
+            - slider [ref=e451] [cursor=pointer]: "0"
+            - generic [ref=e452]: 0:00
+          - generic [ref=e453]:
+            - img [ref=e455]
+            - slider [ref=e460] [cursor=pointer]: "1"
+          - generic [ref=e461]:
+            - button [ref=e462] [cursor=pointer]:
+              - img [ref=e463]
+            - button [ref=e465] [cursor=pointer]:
+              - img [ref=e466]
+        - generic [ref=e425]:
+          - generic [ref=e426]: playing entire show
+          - generic [ref=e427]: queue · 19 tracks · 2:59:06 left
+          - button "Clear & play entire show" [ref=e469] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e279] [cursor=pointer]:
+    - img [ref=e280]
+  - alert [ref=e283]

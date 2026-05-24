@@ -1,0 +1,176 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]: INDEXED FRI 22 MAY MMXXVI
+      - generic [ref=e5]:
+        - heading "StealyourStats" [level=1] [ref=e6] [cursor=pointer]
+        - generic [ref=e7]: The Dead Archive · compiled by hand, played through the deck
+      - generic [ref=e9]:
+        - generic [ref=e10]: 49°F · clear sky and a Sunshine Daydream
+        - generic [ref=e11]:
+          - generic [ref=e12]: ⌕
+          - textbox "⌕ ⌘K" [ref=e13]:
+            - /placeholder: search songs, shows, venues…
+          - generic [ref=e14]: ⌘K
+    - generic [ref=e15]:
+      - generic [ref=e16]: Pp. 0001 — 2333
+      - generic [ref=e17]:
+        - generic [ref=e18]: ❦
+        - generic [ref=e19]: An Annotated Guide to Grateful Dead Songlists
+        - generic [ref=e20]: ❦
+      - generic [ref=e21]: setlist.fm · archive.org · this volume
+    - navigation "Chapter navigation" [ref=e22]:
+      - button "I. Home" [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: I.
+        - text: Home
+      - button "II. Search ⌘K" [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]: II.
+        - text: Search
+        - generic [ref=e27]: ⌘K
+      - button "III. Songs 442" [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: III.
+        - text: Songs
+        - generic [ref=e30]: "442"
+      - button "IV. Recent" [ref=e31] [cursor=pointer]:
+        - generic [ref=e32]: IV.
+        - text: Recent
+      - button "V. Band Members" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: V.
+        - text: Band Members
+      - button "VI. Venues" [ref=e35] [cursor=pointer]:
+        - generic [ref=e36]: VI.
+        - text: Venues
+      - button "VII. Eras" [ref=e37] [cursor=pointer]:
+        - generic [ref=e38]: VII.
+        - text: Eras
+      - button "VIII. Stats" [ref=e39] [cursor=pointer]:
+        - generic [ref=e40]: VIII.
+        - text: Stats
+      - button "IX. Export" [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: IX.
+        - text: Export
+      - generic [ref=e44]: PG. 0007 of 2333
+    - generic [ref=e227]:
+      - generic [ref=e228]:
+        - generic [ref=e229]:
+          - generic [ref=e230]: Eras · VII
+          - heading "The band's five lives." [level=2] [ref=e231]
+          - generic [ref=e232]: From the Acid Tests to Soldier Field — three decades, in five chapters.
+        - generic [ref=e234]: 2,328 shows · 1965–1995
+      - generic [ref=e235]:
+        - generic [ref=e236]: "1965"
+        - generic [ref=e237]: "1970"
+        - generic [ref=e238]: "1975"
+        - generic [ref=e239]: "1980"
+        - generic [ref=e240]: "1985"
+        - generic [ref=e241]: "1990"
+        - generic [ref=e242]: "1995"
+      - generic [ref=e249]:
+        - generic [ref=e250] [cursor=pointer]:
+          - generic [ref=e251]: Pigpen era
+          - heading "Primal Dead" [level=4] [ref=e252]
+          - generic [ref=e253]: 1965 – 1971
+          - generic [ref=e254]:
+            - text: Shows
+            - generic [ref=e255]: "729"
+          - generic [ref=e256]: Lovelight, Caution, Viola Lee Blues
+          - link "Explore ⟶" [ref=e257]:
+            - /url: /eras/primal
+        - generic [ref=e258] [cursor=pointer]:
+          - generic [ref=e259]: Wall-of-Sound
+          - heading "Europe '72" [level=4] [ref=e260]
+          - generic [ref=e261]: 1972 – 1974
+          - generic [ref=e262]:
+            - text: Shows
+            - generic [ref=e263]: "198"
+          - generic [ref=e264]: Dark Star, Playing in the Band, Eyes
+          - link "Explore ⟶" [ref=e265]:
+            - /url: /eras/europe72
+        - generic [ref=e266] [cursor=pointer]:
+          - generic [ref=e267]: Studio era
+          - heading "Hiatus & Return" [level=4] [ref=e268]
+          - generic [ref=e269]: 1975 – 1979
+          - generic [ref=e270]:
+            - text: Shows
+            - generic [ref=e271]: "261"
+          - generic [ref=e272]: Estimated Prophet, Terrapin Station
+          - link "Explore ⟶" [ref=e273]:
+            - /url: /eras/hiatus
+        - generic [ref=e274] [cursor=pointer]:
+          - generic [ref=e275]: Arena Dead
+          - heading "Brent Years" [level=4] [ref=e276]
+          - generic [ref=e277]: 1980 – 1990
+          - generic [ref=e278]:
+            - text: Shows
+            - generic [ref=e279]: "795"
+          - generic [ref=e280]: Throwing Stones, Hell in a Bucket
+          - link "Explore ⟶" [ref=e281]:
+            - /url: /eras/brent
+        - generic [ref=e282] [cursor=pointer]:
+          - generic [ref=e283]: Vince & Bruce
+          - heading "Final Tours" [level=4] [ref=e284]
+          - generic [ref=e285]: 1991 – 1995
+          - generic [ref=e286]:
+            - text: Shows
+            - generic [ref=e287]: "345"
+          - generic [ref=e288]: Lazy River Road, Days Between
+          - link "Explore ⟶" [ref=e289]:
+            - /url: /eras/final
+      - generic [ref=e290]:
+        - heading "Focus · Primal Dead" [level=3] [ref=e291]
+        - generic [ref=e292]: Pigpen era · 729 shows
+        - generic [ref=e293]: 1965 – 1971
+      - generic [ref=e294]:
+        - generic [ref=e295]:
+          - generic [ref=e296]: Signature jam
+          - generic [ref=e297]: Lovelight — Carousel Ballroom '68
+          - generic [ref=e298]: 36:52
+          - link "▶ Play" [ref=e299] [cursor=pointer]:
+            - /url: /song/Turn On Your Lovelight
+        - generic [ref=e300]:
+          - generic [ref=e301]: Songs debuted in this era
+          - generic [ref=e302]:
+            - link "Dark Star" [ref=e303] [cursor=pointer]:
+              - /url: /song/Dark%20Star
+            - link "St. Stephen" [ref=e304] [cursor=pointer]:
+              - /url: /song/St.%20Stephen
+            - link "Viola Lee Blues" [ref=e305] [cursor=pointer]:
+              - /url: /song/Viola%20Lee%20Blues
+            - link "China Cat Sunflower" [ref=e306] [cursor=pointer]:
+              - /url: /song/China%20Cat%20Sunflower
+            - link "Alligator" [ref=e307] [cursor=pointer]:
+              - /url: /song/Alligator
+            - link "Cryptical Envelopment" [ref=e308] [cursor=pointer]:
+              - /url: /song/Cryptical%20Envelopment
+        - generic [ref=e309]:
+          - generic [ref=e310]: Avg. show length
+          - generic [ref=e311]: 2:05:00
+          - generic [ref=e312]: Early exploratory jams. Short sets, raw psychedelic energy.
+    - contentinfo [ref=e172]:
+      - generic [ref=e173]: © MMXXVI · Steal Your Stats Press · Made by hand
+      - generic [ref=e174]: ❦ If you get confused, listen to the music play ❦
+      - generic [ref=e175]: v.11.5 · cached locally · last sync 1h ago
+    - generic [ref=e176]:
+      - generic [ref=e177]:
+        - generic [ref=e181]:
+          - generic [ref=e182]: nothing in the deck
+          - generic [ref=e183]: cue a show to begin · play the featured tape
+        - generic [ref=e184]:
+          - generic [ref=e185]:
+            - button "Previous" [ref=e186] [cursor=pointer]: ◀◀
+            - button "Play" [ref=e187] [cursor=pointer]: ▶
+            - button "Next" [ref=e188] [cursor=pointer]: ▶▶
+          - generic [ref=e189]:
+            - generic [ref=e190]: 0:00
+            - generic [ref=e193]: 0:00
+        - generic [ref=e194]:
+          - generic [ref=e196]: VOL
+          - button "Queue 48" [ref=e216] [cursor=pointer]:
+            - text: Queue
+            - generic [ref=e202]: "48"
+      - generic [ref=e203]:
+        - generic [ref=e204]: cued · 48 tracks
+        - generic [ref=e205]: —
+  - button "Open Next.js Dev Tools" [ref=e222] [cursor=pointer]:
+    - img [ref=e223]
+  - alert [ref=e226]

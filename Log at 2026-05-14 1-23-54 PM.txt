@@ -1,0 +1,106 @@
+Current Feature Inventory
+
+  Pages & Routes
+
+  / — Homepage
+  Static placeholder. Shows a logo, a tagline, pill badges (Live Music, Statistics, Audio Archive, Show History), two empty cards labeled "Quick Stats" and "Recent Activity", and
+   sidebar nav links that are all dead (/search, /recent, /artists, /venues, /eras, /stats, /export). 
+
+  /song/[slug] — Song Detail Page
+  The only fully functional page. URL slug is the song title, URL-encoded.
+
+  /styleguide — Design system component reference page (internal dev tool).
+
+  ---
+  Song Detail Page — Feature Breakdown
+
+  Song Header
+  - Canonical song title
+  - Aliases displayed as pills (e.g., "Dark Star" → "Darkstar")
+
+  Performance Facts Card
+  - First Performance: date, venue, city, country, clickable link to setlist.fm show page
+  - Last Performance: same fields
+  - Total Performances count
+  - Empty state when no data found
+  - Loading skeleton while fetching
+  - Error state with retry button
+  - 24-hour SWR cache
+
+  Position Facts (collapsible sections)
+  - Opener: count + paginated list of shows where the song opened
+  - Closer: count + paginated list
+  - Encore: count + paginated list
+  - Each list item shows date, venue, city, country, link to setlist.fm
+  - Pagination via cursor — loads more on demand
+  - Each section independently collapsible, collapsed by default
+
+  Versions Section (collapsible)
+  - Extremes Card: highlights the longest and shortest known recorded version with duration, date, venue — includes a play button for each
+  - Versions Table: all tracked Archive.org recordings sorted by duration, with columns for date, venue, city, duration (formatted mm:ss), and a play button per row —
+  longest/shortest rows highlighted
+  - Collapsed by default
+
+  Audio Player Dock
+  - Track name, date, venue, city
+  - HTML5 audio element (hidden)
+  - Seek bar with filled-progress gradient
+  - Current time / total duration display
+  - Transport controls: Previous, Play/Pause, Next
+  - Volume slider
+  - "Play entire show" button (visible when a track is loaded) — replaces queue with full Archive show
+  - Keyboard shortcuts: Space (play/pause), ←/→ (prev/next), M (mute), F (fullscreen)
+  - aria-live region announces current track to screen readers
+  - Attribution: displays rights string and "View License" link when available
+  - Empty state: "No track selected" card when queue is empty
+  - Keyboard shortcuts hint row
+
+  Queue Panel
+  - Track count header: "Queue (N)"
+  - Scrollable list (max-h-64) of queued tracks
+  - Each item: track number, name, date/venue/city, remove button
+  - Active track highlighted with border + background
+  - Clear button — empties queue entirely
+  - "Clear & Play Entire Show" button — replaces queue with full show (only shown when a track is loaded)
+  - Empty state: "Queue is empty" card
+
+  Quick-Load Buttons
+  - "Play First Show Versions" — resolves Archive.org identifier for the first show date, fetches song-matched tracks, adds to queue, auto-selects if player is empty
+  - "Play Last Show Versions" — same for the last show date
+
+  Data Attribution Footer
+  - Links to setlist.fm and Archive.org
+  - "Cached for 24 hours" note
+
+  ---
+  API Routes
+
+  ┌──────────────────────────────┬────────┬──────────────────────────────────────────────────────────────────────────┐
+  │            Route             │ Method │                                 Purpose                                  │
+  ├──────────────────────────────┼────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ /api/song-facts              │ GET    │ First/last show, total performances, aliases                             │
+  ├──────────────────────────────┼────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ /api/position-facts          │ GET    │ Opener/closer/encore counts + paginated show lists                       │
+  ├──────────────────────────────┼────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ /api/position-facts/page     │ GET    │ Cursor-paginated position lists                                          │
+  ├──────────────────────────────┼────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ /api/versions                │ GET    │ Archive.org track durations per performance                              │
+  ├──────────────────────────────┼────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ /api/archive/resolve-show    │ POST   │ Fuzzy-match a show date+venue to an Archive.org identifier               │
+  ├──────────────────────────────┼────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ /api/archive/song-tracks     │ POST   │ Given an Archive.org identifier + song title, return matching MP3 tracks │
+  ├──────────────────────────────┼────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ /api/setlist/search-setlists │ GET    │ Direct setlist.fm setlist search (internal)                              │
+  ├──────────────────────────────┼────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ /api/setlist/search-songs    │ GET    │ Direct setlist.fm song search (internal)                                 │
+  ├──────────────────────────────┼────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ /api/rebuild                 │ GET    │ Rebuild song index from setlist.fm data                                  │
+  ├──────────────────────────────┼────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ /api/rebuild-song            │ GET    │ Rebuild a single song's index entry                                      │
+  └──────────────────────────────┴────────┴──────────────────────────────────────────────────────────────────────────┘
+
+This is a note for the bugs I'm finding so far:
+- Some songs are in your results already or in your setlist. The error is showing right after I add a song to the setlist. This error shouldn't show unless I've started a new search after adding a song to the playlist and then that song is still in the setlist. That error shouldn't show yet.
+- There should be some better loading states. There's stale data on the screen.
+- I'm getting this error on showing site stats data.
+  ---
