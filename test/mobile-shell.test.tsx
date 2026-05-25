@@ -26,7 +26,13 @@ const mockPlay = vi.fn()
 const mockPause = vi.fn()
 const mockNext = vi.fn()
 const mockPrevious = vi.fn()
+const mockSelectTrack = vi.fn()
+const mockAddToQueue = vi.fn()
+const mockRemoveFromQueue = vi.fn()
+const mockClearQueue = vi.fn()
+const mockPlayEntireShow = vi.fn()
 const mockEnqueueEntireShow = vi.fn().mockResolvedValue(undefined)
+const mockEnqueueShowTrack = vi.fn().mockResolvedValue(undefined)
 const mockPlayShowTrack = vi.fn().mockResolvedValue(undefined)
 
 const mockTrack = {
@@ -48,7 +54,13 @@ function makePlayer(overrides: Record<string, unknown> = {}) {
     pause: mockPause,
     next: mockNext,
     previous: mockPrevious,
+    selectTrack: mockSelectTrack,
+    addToQueue: mockAddToQueue,
+    removeFromQueue: mockRemoveFromQueue,
+    clearQueue: mockClearQueue,
+    playEntireShow: mockPlayEntireShow,
     enqueueEntireShow: mockEnqueueEntireShow,
+    enqueueShowTrack: mockEnqueueShowTrack,
     playShowTrack: mockPlayShowTrack,
     ...overrides,
   }

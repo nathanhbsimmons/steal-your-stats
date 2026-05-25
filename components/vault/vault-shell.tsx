@@ -45,7 +45,6 @@ function ShellInner({ children }: { children: React.ReactNode }) {
       </div>
 
       <Colophon />
-      <VaultPlayer />
     </div>
   )
 }
@@ -55,6 +54,10 @@ export function VaultShell({ children }: { children: React.ReactNode }) {
     <PlayerProvider>
       <ShellInner>{children}</ShellInner>
       <MobileShell />
+      {/* VaultPlayer lives outside .vault-page so its <audio> element is never
+          inside a display:none ancestor on mobile. The mobile shell (z-index 999)
+          visually covers the desktop player UI on small screens. */}
+      <VaultPlayer />
     </PlayerProvider>
   )
 }
