@@ -84,6 +84,30 @@ export function VaultPlayer() {
     if (audio) audio.volume = volume
   }, [volume])
 
+  // Media Session API — gives iOS/Android native controls proper metadata
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !currentTrack) return
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentTrack.name,
+      artist: 'Grateful Dead',
+      album: `${currentTrack.showDate ?? ''}${currentTrack.venue ? ` · ${currentTrack.venue}` : ''}`,
+    })
+  }, [currentTrack])
+
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+    navigator.mediaSession.setActionHandler('play', play)
+    navigator.mediaSession.setActionHandler('pause', pause)
+    navigator.mediaSession.setActionHandler('nexttrack', next)
+    navigator.mediaSession.setActionHandler('previoustrack', previous)
+    return () => {
+      navigator.mediaSession.setActionHandler('play', null)
+      navigator.mediaSession.setActionHandler('pause', null)
+      navigator.mediaSession.setActionHandler('nexttrack', null)
+      navigator.mediaSession.setActionHandler('previoustrack', null)
+    }
+  }, [play, pause, next, previous])
+
   useEffect(() => {
     const seekByHandler = (e: Event) => {
       const { seconds } = (e as CustomEvent<{ seconds: number }>).detail

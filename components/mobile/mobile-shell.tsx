@@ -163,16 +163,22 @@ function MobileChapter({ pathname, songTitle }: { pathname: string; songTitle?: 
 /* ------------------------------------------------------------- masthead */
 
 function MobileMast() {
-  const today = new Date()
-  const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
-  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
-  const dayStr = `${days[today.getDay()]} ${today.getDate()} ${months[today.getMonth()]} MMXXVI`
+  const [weather, setWeather] = useState<{ temp: number | null; label: string | null } | null>(null)
+
+  useEffect(() => {
+    fetch('/api/weather')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setWeather(d) })
+      .catch(() => {})
+  }, [])
+
+  const weatherStr = weather?.temp != null && weather?.label
+    ? `${weather.temp}°F · ${weather.label}`
+    : null
+
   return (
     <div className="mv-mast">
-      <div className="pub">
-        <span className="left">INDEXED {dayStr}</span>
-        <span className="right">CACHED · 24H</span>
-      </div>
+      {weatherStr && <div className="mv-mast-weather">{weatherStr}</div>}
       <h1>Steal<span className="amp">your</span>Stats</h1>
       <div className="sub">
         The <span className="bl">Dead</span> Archive · <em>by hand, through the deck</em>
@@ -251,10 +257,29 @@ function DeckScreen() {
     return () => window.removeEventListener('vault-time-update', handler)
   }, [])
 
-  const handleBarInteract = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+  const progressBarRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const bar = progressBarRef.current
+    if (!bar) return
+    const onTouch = (e: TouchEvent) => {
+      e.preventDefault()
+      const rect = bar.getBoundingClientRect()
+      const t = e.touches[0] ?? e.changedTouches[0]
+      if (!t) return
+      const fraction = Math.max(0, Math.min(1, (t.clientX - rect.left) / rect.width))
+      window.dispatchEvent(new CustomEvent('vault-seek-to-fraction', { detail: { fraction } }))
+    }
+    bar.addEventListener('touchstart', onTouch, { passive: false })
+    bar.addEventListener('touchmove', onTouch, { passive: false })
+    return () => {
+      bar.removeEventListener('touchstart', onTouch)
+      bar.removeEventListener('touchmove', onTouch)
+    }
+  }, [])
+
+  const handleBarClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
-    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX
-    const fraction = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
     window.dispatchEvent(new CustomEvent('vault-seek-to-fraction', { detail: { fraction } }))
   }, [])
 
@@ -321,9 +346,9 @@ function DeckScreen() {
         <div className="mv-progress">
           <span className="t">{formatDur(audioTime.currentTime)}</span>
           <div
+            ref={progressBarRef}
             className="mv-bar"
-            onClick={handleBarInteract}
-            onTouchStart={handleBarInteract}
+            onClick={handleBarClick}
             role="slider"
             aria-label="Seek"
             aria-valuenow={Math.round(audioTime.currentTime)}
@@ -357,7 +382,7 @@ function DeckScreen() {
       <div className="mv-status">
         <span className="lit">
           {isPlaying_ ? (
-            <><span className="dot" aria-hidden="true" />playing entire show · {totalTracks} tracks</>
+            <><span className="dot" aria-hidden="true" />{totalTracks === 1 ? 'playing · 1 track' : `playing entire show · ${totalTracks} tracks`}</>
           ) : totalTracks > 0 ? (
             `cued · ${totalTracks} tracks`
           ) : (
@@ -407,12 +432,8 @@ function DeckScreen() {
         </div>
       )}
 
-      {/* Operator's note */}
       {featured && (
         <div className="mv-setlist" style={{ paddingTop: 0 }}>
-          <div className="mv-note">
-            Believed by many — including the operator — to be among the finest tapes in the vault. Listen on the Maxwell, not the Sony.
-          </div>
           <div className="mv-divider"><span className="glyph">❦</span></div>
         </div>
       )}
@@ -771,6 +792,7 @@ function SearchScreen() {
   const [query, setQuery] = useState('')
   const [songs, setSongs] = useState<SongEntry[]>([])
   const [shows, setShows] = useState<{ date: string; venue: string; city: string; state?: string; songs: string[] }[]>([])
+  const [venues, setVenues] = useState<{ date: string; venue: string; city: string; state?: string; songs: string[] }[]>([])
   const [songsLoading, setSongsLoading] = useState(false)
   const dq = useDebounce(query, 280)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -778,7 +800,7 @@ function SearchScreen() {
   useEffect(() => { inputRef.current?.focus() }, [])
 
   useEffect(() => {
-    if (!dq) { setSongs([]); setShows([]); return }
+    if (!dq) { setSongs([]); setShows([]); setVenues([]); return }
     setSongsLoading(true)
     fetch(`/api/songs?q=${encodeURIComponent(dq)}`)
       .then(r => r.json())
@@ -794,6 +816,14 @@ function SearchScreen() {
       .then(d => setShows((d.shows ?? []).slice(0, 8)))
       .catch(() => setShows([]))
   }, [dq, songs])
+
+  useEffect(() => {
+    if (!dq) { setVenues([]); return }
+    fetch(`/api/shows/by-venue?name=${encodeURIComponent(dq)}`)
+      .then(r => r.json())
+      .then(d => setVenues((d.shows ?? []).slice(0, 8)))
+      .catch(() => setVenues([]))
+  }, [dq])
 
   return (
     <>
@@ -839,7 +869,7 @@ function SearchScreen() {
             ))
           )}
 
-          {/* Shows */}
+          {/* Shows featuring matched song */}
           {shows.length > 0 && (
             <>
               <div className="mv-sec">
@@ -848,6 +878,22 @@ function SearchScreen() {
               </div>
               {shows.map(show => (
                 <Link key={show.date} href={`/show/${show.date}`} className="mv-result-row" style={{ display: 'grid' }}>
+                  <span className="t">{show.venue}</span>
+                  <span className="s">{fmtDate(show.date)} · {show.city}{show.state ? `, ${show.state}` : ''}</span>
+                </Link>
+              ))}
+            </>
+          )}
+
+          {/* Venues */}
+          {venues.length > 0 && (
+            <>
+              <div className="mv-sec">
+                <span className="name">Shows at venue</span>
+                <span className="more">{venues.length}</span>
+              </div>
+              {venues.map(show => (
+                <Link key={`venue-${show.date}`} href={`/show/${show.date}`} className="mv-result-row" style={{ display: 'grid' }}>
                   <span className="t">{show.venue}</span>
                   <span className="s">{fmtDate(show.date)} · {show.city}{show.state ? `, ${show.state}` : ''}</span>
                 </Link>
