@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       return {
         id: uniqueId,
         name: track.name,
+        title: track.title || undefined,
         url: `https://archive.org/download/${itemId}/${track.name}`,
         duration: track.length ? parseArchiveDuration(track.length) : undefined,
         showDate: '', // Will be filled by caller

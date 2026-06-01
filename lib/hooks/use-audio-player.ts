@@ -381,22 +381,28 @@ export function formatArchiveTrackName(filename: string): string {
   return cleaned || filename
 }
 
+function isTuningTrack(filename: string, title?: string): boolean {
+  const lc = filename.toLowerCase()
+  const titleLc = (title || '').toLowerCase().trim()
+  return lc.includes('tuning') || titleLc === 'tuning' || titleLc.includes('tuning')
+}
+
 // Helper function to process tracks with format preferences and deduplication
 function processTracksForEnqueue(
-  tracks: Array<{ id: string; name: string; url: string; duration?: number }>,
+  tracks: Array<{ id: string; name: string; title?: string; url: string; duration?: number }>,
   preferredFormats: string[],
   archiveShow: { identifier: string; licenseurl?: string; rights?: string },
   showRef: ShowRef,
   songs?: string[]
 ): Track[] {
   // Filter to only MP3 files
-  const mp3Tracks = tracks.filter(track => 
+  const mp3Tracks = tracks.filter(track =>
     track.name.toLowerCase().endsWith('.mp3')
   )
   
   // Group tracks by logical track (remove format suffix)
-  const trackGroups = new Map<string, Array<{ id: string; name: string; url: string; duration?: number }>>()
-  
+  const trackGroups = new Map<string, Array<{ id: string; name: string; title?: string; url: string; duration?: number }>>()
+
   mp3Tracks.forEach(track => {
     const logicalName = track.name.replace(/\.mp3$/i, '')
     if (!trackGroups.has(logicalName)) {
@@ -430,13 +436,14 @@ function processTracksForEnqueue(
   
   // Select preferred format for each track
   const processedTracks: Track[] = []
-  
+  let setlistIdx = 0
+
   sortedGroups.forEach(([logicalName, trackVariants]) => {
     // Find the best format match
     let selectedTrack = trackVariants[0] // fallback
-    
+
     for (const format of preferredFormats) {
-      const match = trackVariants.find(t => 
+      const match = trackVariants.find(t =>
         t.name.toLowerCase().endsWith(`.${format.toLowerCase()}`)
       )
       if (match) {
@@ -444,15 +451,24 @@ function processTracksForEnqueue(
         break
       }
     }
-    
-    const trackIndex = processedTracks.length
-    const songName = songs && songs[trackIndex]
-      ? songs[trackIndex]
-      : formatArchiveTrackName(logicalName)
+
+    const trackTitle = trackVariants[0].title
+    const tuning = songs && isTuningTrack(logicalName, trackTitle)
+
+    let songName: string
+    if (tuning) {
+      // Don't consume a setlist index — label with the archive title or generic fallback
+      songName = trackTitle || 'Tuning'
+    } else if (songs && songs[setlistIdx]) {
+      songName = songs[setlistIdx++]
+    } else {
+      songName = formatArchiveTrackName(logicalName)
+      if (songs) setlistIdx++
+    }
 
     // Convert to Track format
     const track: Track = {
-      id: `${archiveShow.identifier}-${logicalName.replace(/[^a-zA-Z0-9]/g, '_')}-${trackIndex}`,
+      id: `${archiveShow.identifier}-${logicalName.replace(/[^a-zA-Z0-9]/g, '_')}-${processedTracks.length}`,
       name: songName,
       url: selectedTrack.url,
       duration: selectedTrack.duration,
