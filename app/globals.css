@@ -152,8 +152,8 @@ p { margin: 0; }
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 263px;
-  max-width: 263px;
+  width: 310px;
+  max-width: 310px;
   box-shadow: 3px 3px 0 var(--rule-soft);
   font-family: var(--mono);
   font-size: 12px;
@@ -282,7 +282,7 @@ p { margin: 0; }
   margin-right: 0;
 }
 /* inset padding for header rows in wide pages so content/buttons don't sit at the raw edge */
-.page-grid.wide .crumbs    { padding-left: 4px; padding-right: 4px; padding-top: 6px; }
+.page-grid.wide .crumbs    { padding: 4px 4px 0; }
 .page-grid.wide .page-head { padding-left: 28px; padding-right: 28px; }
 .page-grid.wide .song-hero { padding-left: 28px; padding-right: 28px; }
 
