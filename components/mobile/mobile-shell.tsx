@@ -35,17 +35,29 @@ function fmtDate(iso: string): string {
   return iso.replace(/-/g, '·')
 }
 
-function formatFullDate(iso: string): string {
+function parseDateParts(iso: string) {
   const [year, month, day] = iso.split('-').map(Number)
   const d = new Date(Date.UTC(year, month - 1, day))
-  const dayOfWeek = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getUTCDay()]
+  const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getUTCDay()]
   const monthName = ['January','February','March','April','May','June','July','August','September','October','November','December'][d.getUTCMonth()]
   const ord = (n: number) => {
     if (n >= 11 && n <= 13) return `${n}th`
     const r = n % 10
     return `${n}${r === 1 ? 'st' : r === 2 ? 'nd' : r === 3 ? 'rd' : 'th'}`
   }
-  return `${dayOfWeek}, ${monthName} ${ord(day)}, ${year}`
+  return { dayName, ord: ord(day), monthName, year: String(year) }
+}
+
+function ShowDate({ iso }: { iso: string }) {
+  const { dayName, ord, monthName, year } = parseDateParts(iso)
+  return (
+    <>
+      {dayName}, the {ord}{' '}
+      <em>of</em>{' '}
+      {monthName}{' '}
+      <span className="mv-date-year">{year}</span>
+    </>
+  )
 }
 
 function shortDate(iso: string): string {
@@ -268,6 +280,7 @@ function DeckScreen() {
   const [archiveDurations, setArchiveDurations] = useState<Map<number, number>>(new Map())
   // null = loading/unknown; Set = loaded (may be empty if no coverage)
   const [archiveCoveredIndices, setArchiveCoveredIndices] = useState<Set<number> | null>(null)
+  const [archiveIdentifier, setArchiveIdentifier] = useState<string | undefined>(undefined)
 
   const displayDate = currentTrack?.showDate ?? featured?.date ?? null
 
@@ -315,8 +328,10 @@ function DeckScreen() {
           }),
         })
         if (!resolveRes.ok || cancelled) { if (!cancelled) setArchiveCoveredIndices(new Set()); return }
-        const { identifier } = await resolveRes.json()
+        const resolveData = await resolveRes.json()
+        const { identifier } = resolveData
         if (!identifier || cancelled) { if (!cancelled) setArchiveCoveredIndices(new Set()); return }
+        if (!cancelled) setArchiveIdentifier(identifier)
 
         const tracksRes = await fetch('/api/archive/song-tracks', {
           method: 'POST',
@@ -382,8 +397,8 @@ function DeckScreen() {
     if (isPlaying) { pause(); return }
     if (currentTrack?.showDate === show.date) { play(); return }
     const songs = showDetail?.sets.flatMap(s => s.songs) ?? featured?.songs
-    try { await enqueueEntireShow(show, { clearExisting: true, songs }) } catch {}
-  }, [currentTrack, featured, showDetail, isPlaying, play, pause, enqueueEntireShow])
+    try { await enqueueEntireShow({ ...show, identifier: archiveIdentifier }, { clearExisting: true, songs }) } catch {}
+  }, [currentTrack, featured, showDetail, isPlaying, play, pause, enqueueEntireShow, archiveIdentifier])
 
   const handleTrackClick = useCallback(async (flatIdx: number) => {
     const show = currentTrack
@@ -420,7 +435,7 @@ function DeckScreen() {
             <div style={{ height: 80 }} />
           ) : displayShow ? (
             <>
-              {displayDate && <div className="mv-preplay-date">{formatFullDate(displayDate)}</div>}
+              {displayDate && <div className="mv-preplay-date"><ShowDate iso={displayDate} /></div>}
               {displayVenue && <div className="mv-preplay-venue">{displayVenue}</div>}
               {displayCity && <div className="mv-preplay-city">{displayCity}</div>}
               {venueTidbit && <div className="mv-preplay-tidbit">{venueTidbit}</div>}
@@ -506,7 +521,7 @@ function DeckScreen() {
               {isPlaying_ ? (
                 <><span className="dot" aria-hidden="true" />{totalTracks === 1 ? 'playing · 1 track' : `playing entire show · ${totalTracks} tracks`}</>
               ) : totalTracks > 0 ? (
-                `cued · ${totalTracks} tracks`
+                `cued · ${totalTracks} archive tracks`
               ) : (
                 'standby · no queue'
               )}
@@ -1039,6 +1054,8 @@ function SearchScreen() {
 
 /* =========================================================== SHOW DETAIL SCREEN */
 
+interface RecordingCandidate { identifier: string; title: string; recordingType: string; score: number }
+
 function ShowDetailScreen({ date }: { date: string }) {
   const { playShowTrack, currentTrack, enqueueEntireShow } = usePlayer()
   const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
@@ -1046,6 +1063,9 @@ function ShowDetailScreen({ date }: { date: string }) {
   const [archiveDurations, setArchiveDurations] = useState<Map<number, number>>(new Map())
   // null = loading/unknown; Set = loaded (may be empty)
   const [archiveCoveredIndices, setArchiveCoveredIndices] = useState<Set<number> | null>(null)
+  const [candidates, setCandidates] = useState<RecordingCandidate[]>([])
+  const [selectedIdentifier, setSelectedIdentifier] = useState<string | null>(null)
+  const [showRecordingPicker, setShowRecordingPicker] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -1056,12 +1076,12 @@ function ShowDetailScreen({ date }: { date: string }) {
       .finally(() => setLoading(false))
   }, [date])
 
-  // Fetch archive tracks — compute coverage and durations
+  // Step 1: Resolve identifier + candidates when show loads or date changes
   useEffect(() => {
     if (!showDetail) return
     let cancelled = false
-    setArchiveDurations(new Map())
-    setArchiveCoveredIndices(null)
+    setCandidates([])
+    setSelectedIdentifier(null)
     ;(async () => {
       try {
         const resolveRes = await fetch('/api/archive/resolve-show', {
@@ -1069,14 +1089,28 @@ function ShowDetailScreen({ date }: { date: string }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ date, totalSongs: showDetail.totalSongs }),
         })
-        if (!resolveRes.ok || cancelled) { if (!cancelled) setArchiveCoveredIndices(new Set()); return }
-        const { identifier } = await resolveRes.json()
-        if (!identifier || cancelled) { if (!cancelled) setArchiveCoveredIndices(new Set()); return }
+        if (!resolveRes.ok || cancelled) return
+        const data = await resolveRes.json()
+        if (cancelled) return
+        if (Array.isArray(data.candidates)) setCandidates(data.candidates)
+        if (data.identifier) setSelectedIdentifier(data.identifier)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [date, showDetail?.totalSongs])
 
+  // Step 2: Fetch tracks for the selected recording (re-runs on recording switch)
+  useEffect(() => {
+    if (!selectedIdentifier || !showDetail) return
+    let cancelled = false
+    setArchiveDurations(new Map())
+    setArchiveCoveredIndices(null)
+    ;(async () => {
+      try {
         const tracksRes = await fetch('/api/archive/song-tracks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ itemId: identifier, songTitle: '' }),
+          body: JSON.stringify({ itemId: selectedIdentifier, songTitle: '' }),
         })
         if (cancelled) return
         const { tracks } = tracksRes.ok ? await tracksRes.json() : { tracks: [] }
@@ -1091,7 +1125,7 @@ function ShowDetailScreen({ date }: { date: string }) {
       }
     })()
     return () => { cancelled = true }
-  }, [date, showDetail?.totalSongs])
+  }, [selectedIdentifier, showDetail?.totalSongs])
 
   const handleTrackClick = useCallback(async (flatIdx: number) => {
     if (!showDetail) return
@@ -1102,8 +1136,8 @@ function ShowDetailScreen({ date }: { date: string }) {
   const handlePlayAll = useCallback(async () => {
     if (!showDetail) return
     const songs = showDetail.sets.flatMap(s => s.songs)
-    try { await enqueueEntireShow({ date: showDetail.date, venue: showDetail.venue, city: showDetail.city }, { clearExisting: true, songs }) } catch {}
-  }, [showDetail, enqueueEntireShow])
+    try { await enqueueEntireShow({ date: showDetail.date, venue: showDetail.venue, city: showDetail.city, identifier: selectedIdentifier ?? undefined }, { clearExisting: true, songs }) } catch {}
+  }, [showDetail, selectedIdentifier, enqueueEntireShow])
 
   // Disclaimer for partial coverage
   const allSongs = showDetail?.sets.flatMap(s => s.songs) ?? []
@@ -1112,30 +1146,60 @@ function ShowDetailScreen({ date }: { date: string }) {
   return (
     <>
       <div className="mv-show-hero">
-        <div className="kicker">{formatFullDate(date)}</div>
+        <div className="mv-show-date-line"><ShowDate iso={date} /></div>
         {loading ? (
           <h2 style={{ fontSize: 22, color: 'var(--ink-3)' }}>Loading…</h2>
         ) : showDetail ? (
-          <>
-            <h2>{showDetail.venue}</h2>
-            <div className="byline">{showDetail.city}{showDetail.state ? `, ${showDetail.state}` : ''} · {showDetail.totalSongs} songs</div>
-          </>
+          <div className="mv-show-venue-row">
+            <div className="mv-show-venue-info">
+              <h2>{showDetail.venue}</h2>
+              <div className="byline">{showDetail.city}{showDetail.state ? `, ${showDetail.state}` : ''} · {showDetail.totalSongs} songs</div>
+            </div>
+            <button className="mv-play-show-btn" onClick={handlePlayAll}>▶ Play Show</button>
+          </div>
         ) : (
           <h2 style={{ fontSize: 22, color: 'var(--ink-3)' }}>Show not found.</h2>
         )}
-        {showDetail && (
-          <button className="mv-play-show-btn" style={{ marginTop: 14 }} onClick={handlePlayAll}>
-            ▶ Play Entire Show
-          </button>
-        )}
       </div>
+
+      {/* Recording picker — shown when multiple recordings exist for this date */}
+      {candidates.length > 1 && (
+        <div className="mv-rec-picker">
+          <button className="mv-rec-toggle" onClick={() => setShowRecordingPicker(p => !p)}>
+            <span className="mv-rec-label">Recording</span>
+            <span className="mv-rec-id">{selectedIdentifier ?? '…'}</span>
+            <span className="mv-rec-caret">{showRecordingPicker ? '▲' : '▼'}</span>
+          </button>
+          {showRecordingPicker && (
+            <div className="mv-rec-list">
+              {candidates.map(c => (
+                <div key={c.identifier} className="mv-rec-opt-row">
+                  {c.recordingType && <span className="mv-rec-type">{c.recordingType}</span>}
+                  <span className="mv-rec-opt-id">{c.identifier}</span>
+                  {c.identifier === selectedIdentifier ? (
+                    <span className="mv-rec-active">✓</span>
+                  ) : (
+                    <button
+                      className="mv-rec-switch"
+                      onClick={() => { setSelectedIdentifier(c.identifier); setShowRecordingPicker(false) }}
+                    >
+                      switch →
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {showDetail && (
         <div className="mv-setlist">
           {/* Audio coverage disclaimer */}
           {hasMissingAudio && (
             <div className="mv-archive-note">
-              Some songs from this show don&apos;t have available audio. Open the full setlist on desktop to browse available recordings.
+              Some songs from this show don&apos;t have available audio.
+              {candidates.length > 1 ? ' Try switching recordings above.' : ''}
             </div>
           )}
           {showDetail.sets.map((set, si) => {
