@@ -420,6 +420,30 @@
   font-size: 9px;
 }
 .mv-track.current .title { color: var(--rust-dark); font-style: italic; }
+.mv-track.unavailable {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+.mv-unavail {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rust);
+  text-align: right;
+}
+.mv-archive-note {
+  margin: 0 0 14px;
+  padding: 10px 14px 9px;
+  background: rgba(168, 57, 31, 0.06);
+  border-left: 2px solid var(--rust);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
 
 /* ---------------------------------------- OPERATOR'S NOTE */
 .mv-note {

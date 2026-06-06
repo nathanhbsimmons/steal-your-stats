@@ -56,6 +56,31 @@ function shortDate(iso: string): string {
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
 
+/* ---------------------------------------- archive coverage helpers */
+
+function computeArchiveMaps(
+  tracks: ArchiveTrack[],
+  allSongs: string[]
+): { covered: Set<number>; durations: Map<number, number> } {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const covered = new Set<number>()
+  const durations = new Map<number, number>()
+  for (const t of tracks) {
+    if (!t.title || !t.url) continue
+    const tn = norm(t.title)
+    if (!tn) continue
+    for (let i = 0; i < allSongs.length; i++) {
+      if (covered.has(i)) continue
+      const sn = norm(allSongs[i])
+      if (sn && (sn.includes(tn) || tn.includes(sn))) {
+        covered.add(i)
+        if (t.duration) durations.set(i, t.duration)
+      }
+    }
+  }
+  return { covered, durations }
+}
+
 /* -------------------------------------------------------------- era donut */
 
 const ERAS = [
@@ -241,6 +266,8 @@ function DeckScreen() {
   const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [archiveDurations, setArchiveDurations] = useState<Map<number, number>>(new Map())
+  // null = loading/unknown; Set = loaded (may be empty if no coverage)
+  const [archiveCoveredIndices, setArchiveCoveredIndices] = useState<Set<number> | null>(null)
 
   const displayDate = currentTrack?.showDate ?? featured?.date ?? null
 
@@ -269,11 +296,12 @@ function DeckScreen() {
       .catch(() => {})
   }, [displayDate])
 
-  // Fetch archive track durations
+  // Fetch archive tracks — compute coverage and durations
   useEffect(() => {
     if (!displayDate || !showDetail) return
     let cancelled = false
     setArchiveDurations(new Map())
+    setArchiveCoveredIndices(null)
     ;(async () => {
       try {
         const resolveRes = await fetch('/api/archive/resolve-show', {
@@ -286,9 +314,9 @@ function DeckScreen() {
             totalSongs: showDetail.totalSongs,
           }),
         })
-        if (!resolveRes.ok || cancelled) return
+        if (!resolveRes.ok || cancelled) { if (!cancelled) setArchiveCoveredIndices(new Set()); return }
         const { identifier } = await resolveRes.json()
-        if (!identifier || cancelled) return
+        if (!identifier || cancelled) { if (!cancelled) setArchiveCoveredIndices(new Set()); return }
 
         const tracksRes = await fetch('/api/archive/song-tracks', {
           method: 'POST',
@@ -298,21 +326,14 @@ function DeckScreen() {
         if (cancelled) return
         const { tracks } = tracksRes.ok ? await tracksRes.json() : { tracks: [] }
         const allSongs = showDetail.sets.flatMap(s => s.songs)
-        const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-        const durMap = new Map<number, number>()
-        for (const t of (tracks as ArchiveTrack[])) {
-          if (!t.title || !t.duration || !t.url) continue
-          const tn = norm(t.title)
-          if (!tn) continue
-          for (let i = 0; i < allSongs.length; i++) {
-            const sn = norm(allSongs[i])
-            if (sn && (sn.includes(tn) || tn.includes(sn)) && !durMap.has(i)) {
-              durMap.set(i, t.duration)
-            }
-          }
+        const { covered, durations } = computeArchiveMaps(tracks as ArchiveTrack[], allSongs)
+        if (!cancelled) {
+          setArchiveDurations(durations)
+          setArchiveCoveredIndices(covered)
         }
-        if (!cancelled) setArchiveDurations(durMap)
-      } catch {}
+      } catch {
+        if (!cancelled) setArchiveCoveredIndices(new Set())
+      }
     })()
     return () => { cancelled = true }
   }, [displayDate, showDetail?.totalSongs])
@@ -382,7 +403,13 @@ function DeckScreen() {
   const currentSongName = currentTrack?.name ?? null
   const totalTracks = queue.length
   const isPlaying_ = isPlaying && !!currentTrack
-  const playerActive = !!currentTrack || queue.length > 0
+  // Only show the player once a track is actually loaded — queue alone (from localStorage)
+  // doesn't count, so pre-play state shows on first visit / after page reload.
+  const playerActive = !!currentTrack
+
+  // Compute disclaimer for partial/no audio coverage
+  const allSongs = showDetail?.sets.flatMap(s => s.songs) ?? []
+  const hasMissingAudio = archiveCoveredIndices !== null && allSongs.some((_, i) => !archiveCoveredIndices.has(i))
 
   return (
     <>
@@ -496,6 +523,18 @@ function DeckScreen() {
       {/* Setlist */}
       {showDetail && showDetail.sets.length > 0 && (
         <div className="mv-setlist">
+          {/* Audio coverage disclaimer */}
+          {hasMissingAudio && (
+            <div className="mv-archive-note">
+              Some songs from this show don&apos;t have available audio.{' '}
+              {displayDate && (
+                <Link href={`/show/${displayDate}`} style={{ color: 'var(--rust)', textDecoration: 'underline' }}>
+                  Open setlist ↗
+                </Link>
+              )}{' '}
+              to browse available recordings.
+            </div>
+          )}
           {showDetail.sets.map((set, si) => {
             const isEncore = set.encore
             const roman = isEncore ? 'E.' : (ROMAN[si] ?? String(si + 1))
@@ -508,19 +547,25 @@ function DeckScreen() {
                 {set.songs.map((song, ti) => {
                   const flatIdx = showDetail.sets.slice(0, si).reduce((n, s) => n + s.songs.length, ti)
                   const isCurrent = currentSongName === song && currentTrack?.showDate === showDetail.date
+                  const archiveKnown = archiveCoveredIndices !== null
+                  const inArchive = !archiveKnown || archiveCoveredIndices.has(flatIdx)
                   const dur = archiveDurations.get(flatIdx)
                   return (
                     <div
                       key={`${si}-${ti}`}
-                      className={`mv-track${isCurrent ? ' current' : ''}`}
-                      onClick={() => handleTrackClick(flatIdx)}
-                      role="button"
-                      aria-label={`Play ${song}`}
+                      className={`mv-track${isCurrent ? ' current' : ''}${archiveKnown && !inArchive ? ' unavailable' : ''}`}
+                      onClick={inArchive ? () => handleTrackClick(flatIdx) : undefined}
+                      role={inArchive ? 'button' : undefined}
+                      aria-label={inArchive ? `Play ${song}` : undefined}
                     >
                       <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
                       <span className="title">{song}</span>
-                      <span className="dur">{dur ? formatDur(dur) : '—'}</span>
-                      <span className="pin">❡</span>
+                      {archiveKnown && !inArchive ? (
+                        <span className="mv-unavail">Audio Unavailable</span>
+                      ) : (
+                        <span className="dur">{dur ? formatDur(dur) : '—'}</span>
+                      )}
+                      <span className="pin" style={archiveKnown && !inArchive ? { opacity: 0 } : undefined}>❡</span>
                     </div>
                   )
                 })}
@@ -999,6 +1044,8 @@ function ShowDetailScreen({ date }: { date: string }) {
   const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [archiveDurations, setArchiveDurations] = useState<Map<number, number>>(new Map())
+  // null = loading/unknown; Set = loaded (may be empty)
+  const [archiveCoveredIndices, setArchiveCoveredIndices] = useState<Set<number> | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -1009,11 +1056,12 @@ function ShowDetailScreen({ date }: { date: string }) {
       .finally(() => setLoading(false))
   }, [date])
 
-  // Fetch archive track durations
+  // Fetch archive tracks — compute coverage and durations
   useEffect(() => {
     if (!showDetail) return
     let cancelled = false
     setArchiveDurations(new Map())
+    setArchiveCoveredIndices(null)
     ;(async () => {
       try {
         const resolveRes = await fetch('/api/archive/resolve-show', {
@@ -1021,9 +1069,9 @@ function ShowDetailScreen({ date }: { date: string }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ date, totalSongs: showDetail.totalSongs }),
         })
-        if (!resolveRes.ok || cancelled) return
+        if (!resolveRes.ok || cancelled) { if (!cancelled) setArchiveCoveredIndices(new Set()); return }
         const { identifier } = await resolveRes.json()
-        if (!identifier || cancelled) return
+        if (!identifier || cancelled) { if (!cancelled) setArchiveCoveredIndices(new Set()); return }
 
         const tracksRes = await fetch('/api/archive/song-tracks', {
           method: 'POST',
@@ -1033,21 +1081,14 @@ function ShowDetailScreen({ date }: { date: string }) {
         if (cancelled) return
         const { tracks } = tracksRes.ok ? await tracksRes.json() : { tracks: [] }
         const allSongs = showDetail.sets.flatMap(s => s.songs)
-        const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-        const durMap = new Map<number, number>()
-        for (const t of (tracks as ArchiveTrack[])) {
-          if (!t.title || !t.duration || !t.url) continue
-          const tn = norm(t.title)
-          if (!tn) continue
-          for (let i = 0; i < allSongs.length; i++) {
-            const sn = norm(allSongs[i])
-            if (sn && (sn.includes(tn) || tn.includes(sn)) && !durMap.has(i)) {
-              durMap.set(i, t.duration)
-            }
-          }
+        const { covered, durations } = computeArchiveMaps(tracks as ArchiveTrack[], allSongs)
+        if (!cancelled) {
+          setArchiveDurations(durations)
+          setArchiveCoveredIndices(covered)
         }
-        if (!cancelled) setArchiveDurations(durMap)
-      } catch {}
+      } catch {
+        if (!cancelled) setArchiveCoveredIndices(new Set())
+      }
     })()
     return () => { cancelled = true }
   }, [date, showDetail?.totalSongs])
@@ -1063,6 +1104,10 @@ function ShowDetailScreen({ date }: { date: string }) {
     const songs = showDetail.sets.flatMap(s => s.songs)
     try { await enqueueEntireShow({ date: showDetail.date, venue: showDetail.venue, city: showDetail.city }, { clearExisting: true, songs }) } catch {}
   }, [showDetail, enqueueEntireShow])
+
+  // Disclaimer for partial coverage
+  const allSongs = showDetail?.sets.flatMap(s => s.songs) ?? []
+  const hasMissingAudio = archiveCoveredIndices !== null && allSongs.some((_, i) => !archiveCoveredIndices.has(i))
 
   return (
     <>
@@ -1087,6 +1132,12 @@ function ShowDetailScreen({ date }: { date: string }) {
 
       {showDetail && (
         <div className="mv-setlist">
+          {/* Audio coverage disclaimer */}
+          {hasMissingAudio && (
+            <div className="mv-archive-note">
+              Some songs from this show don&apos;t have available audio. Open the full setlist on desktop to browse available recordings.
+            </div>
+          )}
           {showDetail.sets.map((set, si) => {
             const isEncore = set.encore
             const roman = isEncore ? 'E.' : (ROMAN[si] ?? String(si + 1))
@@ -1099,19 +1150,25 @@ function ShowDetailScreen({ date }: { date: string }) {
                 {set.songs.map((song, ti) => {
                   const flatIdx = showDetail.sets.slice(0, si).reduce((n, s) => n + s.songs.length, ti)
                   const isCurrent = currentTrack?.name === song && currentTrack?.showDate === date
+                  const archiveKnown = archiveCoveredIndices !== null
+                  const inArchive = !archiveKnown || archiveCoveredIndices.has(flatIdx)
                   const dur = archiveDurations.get(flatIdx)
                   return (
                     <div
                       key={`${si}-${ti}`}
-                      className={`mv-track${isCurrent ? ' current' : ''}`}
-                      onClick={() => handleTrackClick(flatIdx)}
-                      role="button"
-                      aria-label={`Play ${song}`}
+                      className={`mv-track${isCurrent ? ' current' : ''}${archiveKnown && !inArchive ? ' unavailable' : ''}`}
+                      onClick={inArchive ? () => handleTrackClick(flatIdx) : undefined}
+                      role={inArchive ? 'button' : undefined}
+                      aria-label={inArchive ? `Play ${song}` : undefined}
                     >
                       <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
                       <span className="title">{song}</span>
-                      <span className="dur">{dur ? formatDur(dur) : '—'}</span>
-                      <span className="pin">❡</span>
+                      {archiveKnown && !inArchive ? (
+                        <span className="mv-unavail">Audio Unavailable</span>
+                      ) : (
+                        <span className="dur">{dur ? formatDur(dur) : '—'}</span>
+                      )}
+                      <span className="pin" style={archiveKnown && !inArchive ? { opacity: 0 } : undefined}>❡</span>
                     </div>
                   )
                 })}
