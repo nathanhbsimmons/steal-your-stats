@@ -57,10 +57,6 @@ export function Chapters() {
           )}
         </button>
       ))}
-      <div className="spacer" />
-      <div className="meta">
-        PG. <span style={{ color: 'var(--rust)' }}>{PAGE_NUMS[activeId] ?? '0001'}</span> of 2333
-      </div>
     </nav>
   )
 }

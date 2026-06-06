@@ -496,14 +496,16 @@ export default function HomePage() {
         <div className="margin-note" style={{ marginTop: 8 }}>
           <span className="head">About this archive</span>
           Setlists from setlist.fm. Audio streamed from Archive.org from community-contributed
-          soundboard and audience tapes.{archiveIdentifier ? <> Playing: <strong>{archiveIdentifier}</strong></> : ''}
-          <br />
+          soundboard and audience tapes.{' '}
           {featured && (
             <Link href={`/show/${featured.date}`} style={{ color: 'var(--rust)' }}>
               Open full setlist ↗
             </Link>
           )}{' '}
           to browse all available recordings for this show and switch between them.
+          {archiveIdentifier && (
+            <><br />Playing: <strong>{archiveIdentifier}</strong></>
+          )}
         </div>
       </section>
 

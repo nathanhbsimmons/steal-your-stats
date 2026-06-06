@@ -199,6 +199,7 @@ p { margin: 0; }
 }
 .edition-strip .glyph { color: var(--rust); }
 .edition-strip .center-marks { display: flex; gap: 14px; }
+.edition-strip > div:not(.center-marks) { font-size: 8px; }
 
 /* ---------------------------------------- TAB-LIKE CHAPTER NAV */
 .chapters {
@@ -207,6 +208,7 @@ p { margin: 0; }
   border-bottom: 1px solid var(--ink);
   padding: 10px 0 0;
   margin: 0 0 22px;
+  justify-content: space-between;
 }
 .chapters button {
   background: transparent;
