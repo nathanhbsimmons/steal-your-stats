@@ -57,55 +57,48 @@ function SearchContent() {
   useEffect(() => { inputRef.current?.focus() }, [])
 
   useEffect(() => {
-    if (!dq) { setSongs([]); setSongTotal(0); return }
+    if (!dq) {
+      setSongs([]); setSongTotal(0)
+      setShows([]); setVenueShows([]); setVenueSongs([])
+      return
+    }
     setSongsLoading(true)
     fetch(`/api/songs?q=${encodeURIComponent(dq)}`)
       .then(r => r.json())
-      .then(d => { setSongs(d.songs ?? []); setSongTotal(d.total ?? 0) })
+      .then(d => {
+        const found: SongResult[] = d.songs ?? []
+        setSongs(found)
+        setSongTotal(d.total ?? 0)
+        if (found.length > 0) {
+          // Song mode: fetch shows featuring the top result
+          setVenueShows([]); setVenueSongs([])
+          setShowsLoading(true)
+          fetch(`/api/search/shows-with-songs?songs[]=${encodeURIComponent(found[0].displayTitle)}`)
+            .then(r => r.json())
+            .then(d2 => setShows((d2.shows ?? []).slice(0, 10)))
+            .catch(() => {})
+            .finally(() => setShowsLoading(false))
+        } else {
+          // Venue mode: no song matched, treat query as venue name
+          setShows([])
+          setVenueShowsLoading(true)
+          setVenueSongsLoading(true)
+          setVenueLabel(dq)
+          fetch(`/api/shows/by-venue?name=${encodeURIComponent(dq)}`)
+            .then(r => r.json())
+            .then(d2 => setVenueShows((d2.shows ?? []).slice(0, 12)))
+            .catch(() => setVenueShows([]))
+            .finally(() => setVenueShowsLoading(false))
+          fetch(`/api/venues/songs?venue=${encodeURIComponent(dq)}`)
+            .then(r => r.json())
+            .then(d2 => setVenueSongs(d2.songs ?? []))
+            .catch(() => setVenueSongs([]))
+            .finally(() => setVenueSongsLoading(false))
+        }
+      })
       .catch(() => {})
       .finally(() => setSongsLoading(false))
   }, [dq])
-
-  const fetchShows = useCallback((title: string) => {
-    setShowsLoading(true)
-    fetch(`/api/search/shows-with-songs?songs[]=${encodeURIComponent(title)}`)
-      .then(r => r.json())
-      .then(d => setShows((d.shows ?? []).slice(0, 10)))
-      .catch(() => {})
-      .finally(() => setShowsLoading(false))
-  }, [])
-
-  const fetchVenueShows = useCallback((name: string) => {
-    setVenueShowsLoading(true)
-    setVenueSongsLoading(true)
-    setVenueLabel(name)
-    fetch(`/api/shows/by-venue?name=${encodeURIComponent(name)}`)
-      .then(r => r.json())
-      .then(d => setVenueShows((d.shows ?? []).slice(0, 12)))
-      .catch(() => setVenueShows([]))
-      .finally(() => setVenueShowsLoading(false))
-    fetch(`/api/venues/songs?venue=${encodeURIComponent(name)}`)
-      .then(r => r.json())
-      .then(d => setVenueSongs(d.songs ?? []))
-      .catch(() => setVenueSongs([]))
-      .finally(() => setVenueSongsLoading(false))
-  }, [])
-
-  useEffect(() => {
-    if (songsLoading) return
-    if (songs.length > 0) {
-      fetchShows(songs[0].displayTitle)
-      setVenueShows([])
-      setVenueSongs([])
-    } else if (dq) {
-      setShows([])
-      fetchVenueShows(dq)
-    } else {
-      setShows([])
-      setVenueShows([])
-      setVenueSongs([])
-    }
-  }, [songs, songsLoading, dq, fetchShows, fetchVenueShows])
 
   const isVenueMode = venueShows.length > 0 || venueShowsLoading
   const leaderMax = venueSongs[0]?.count ?? 1
