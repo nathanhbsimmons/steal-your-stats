@@ -153,7 +153,7 @@ p { margin: 0; }
   align-items: center;
   gap: 8px;
   width: 100%;
-  max-width: none;
+  max-width: 210px;
   box-shadow: 3px 3px 0 var(--rule-soft);
   font-family: var(--mono);
   font-size: 12px;
@@ -208,7 +208,6 @@ p { margin: 0; }
   border-bottom: 1px solid var(--ink);
   padding: 10px 0 0;
   margin: 0 0 22px;
-  justify-content: space-between;
 }
 .chapters button {
   background: transparent;
@@ -224,9 +223,10 @@ p { margin: 0; }
   position: relative;
   display: flex;
   align-items: baseline;
+  justify-content: center;
   gap: 8px;
+  flex: 1;
 }
-.chapters button:first-child { padding-left: 0; }
 .chapters button:not(:first-child) { font-size: 14.4px; }
 .chapters button .num {
   font-family: var(--mono);
@@ -281,6 +281,10 @@ p { margin: 0; }
   padding-right: 0;
   margin-right: 0;
 }
+/* inset padding for header rows in wide pages so content/buttons don't sit at the raw edge */
+.page-grid.wide .crumbs   { padding-left: 28px; padding-right: 28px; }
+.page-grid.wide .page-head { padding-left: 28px; padding-right: 28px; }
+.page-grid.wide .song-hero { padding-left: 28px; padding-right: 28px; }
 
 /* column gutter labels */
 .gutter-label {
