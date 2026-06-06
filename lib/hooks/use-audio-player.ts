@@ -29,6 +29,7 @@ export interface ShowRef {
   date: string
   venue: string
   city: string
+  identifier?: string  // skip resolve-show when the identifier is already known
 }
 
 export interface EnqueueEntireShowOptions {
@@ -36,6 +37,7 @@ export interface EnqueueEntireShowOptions {
   clearExisting?: boolean
   songs?: string[]
   startFrom?: number
+  startFromArchiveIdx?: number  // direct archive position, bypasses name-matching
 }
 
 export interface UseAudioPlayerReturn {
@@ -209,19 +211,23 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     const { preferredFormats = ['mp3'], clearExisting = false } = options
     
     try {
-      // Resolve the Archive.org show
-      const resolveResponse = await fetch('/api/archive/resolve-show', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(showRef)
-      })
-      
-      if (!resolveResponse.ok) {
-        throw new Error(`Failed to resolve show: ${resolveResponse.status}`)
+      // When the caller already knows the identifier (e.g., show page selected a recording),
+      // skip the resolve-show round-trip and go straight to fetching tracks.
+      let archiveShow: { identifier: string; licenseurl?: string; rights?: string } & Record<string, unknown>
+      if (showRef.identifier) {
+        archiveShow = { identifier: showRef.identifier }
+      } else {
+        const resolveResponse = await fetch('/api/archive/resolve-show', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: showRef.date, venue: showRef.venue, city: showRef.city }),
+        })
+        if (!resolveResponse.ok) {
+          throw new Error(`Failed to resolve show: ${resolveResponse.status}`)
+        }
+        archiveShow = await resolveResponse.json()
       }
-      
-      const archiveShow = await resolveResponse.json()
-      
+
       // Get all tracks from the show
       const tracksResponse = await fetch('/api/archive/song-tracks', {
         method: 'POST',
@@ -231,20 +237,31 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
           songTitle: '' // Empty to get all tracks
         })
       })
-      
+
       if (!tracksResponse.ok) {
         throw new Error(`Failed to fetch tracks: ${tracksResponse.status}`)
       }
-      
+
       const { tracks } = await tracksResponse.json()
-      
+
       // Process and deduplicate tracks
       const processedTracks = processTracksForEnqueue(tracks, preferredFormats, archiveShow, showRef, options.songs)
       
       if (clearExisting) {
         setQueue(processedTracks)
         if (processedTracks.length > 0) {
-          const startIdx = Math.min(options.startFrom ?? 0, processedTracks.length - 1)
+          let startIdx: number
+          if (options.startFromArchiveIdx !== undefined) {
+            // User clicked a track in the archive section — use direct position.
+            startIdx = Math.min(options.startFromArchiveIdx, processedTracks.length - 1)
+          } else if (options.startFrom !== undefined) {
+            // User clicked a setlist.fm track — match by name so the right
+            // archive track plays even when recording order differs.
+            // Falls back to 0 when the song isn't in this archive item.
+            startIdx = findTrackByName(processedTracks, options.songs?.[options.startFrom])
+          } else {
+            startIdx = 0
+          }
           setCurrentTrack(processedTracks[startIdx])
           setIsPlaying(true)
         }
@@ -269,22 +286,30 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
   // Append a single track from a show to the end of the queue (duplicates allowed).
   const enqueueShowTrack = useCallback(async (showRef: ShowRef, trackIdx: number, songs?: string[]) => {
     try {
-      // If the show is already loaded in the queue, shortcut — clone that track with a new id
+      const targetSong = songs?.[trackIdx]
+
+      // If the show is already loaded in the queue, shortcut — find by name then clone
       const existingShowTracks = queueRef.current.filter(t => t.showDate === showRef.date)
-      if (existingShowTracks.length > trackIdx) {
-        const src = existingShowTracks[trackIdx]
+      if (existingShowTracks.length > 0) {
+        const resolvedIdx = findTrackByName(existingShowTracks, targetSong)
+        const src = existingShowTracks[resolvedIdx]
         setQueue(prev => [...prev, { ...src, id: `${src.id}-q${Date.now()}` }])
         return
       }
 
       // Otherwise fetch from Archive.org
-      const resolveResponse = await fetch('/api/archive/resolve-show', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(showRef),
-      })
-      if (!resolveResponse.ok) throw new Error(`resolve: ${resolveResponse.status}`)
-      const archiveShow = await resolveResponse.json()
+      let archiveShow: { identifier: string } & Record<string, unknown>
+      if (showRef.identifier) {
+        archiveShow = { identifier: showRef.identifier }
+      } else {
+        const resolveResponse = await fetch('/api/archive/resolve-show', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: showRef.date, venue: showRef.venue, city: showRef.city }),
+        })
+        if (!resolveResponse.ok) throw new Error(`resolve: ${resolveResponse.status}`)
+        archiveShow = await resolveResponse.json()
+      }
 
       const tracksResponse = await fetch('/api/archive/song-tracks', {
         method: 'POST',
@@ -295,7 +320,8 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
       const { tracks } = await tracksResponse.json()
 
       const processed = processTracksForEnqueue(tracks, ['mp3'], archiveShow, showRef, songs)
-      const track = processed[Math.min(trackIdx, processed.length - 1)]
+      const resolvedIdx = findTrackByName(processed, targetSong)
+      const track = processed[resolvedIdx]
       if (track) {
         setQueue(prev => [...prev, { ...track, id: `${track.id}-q${Date.now()}` }])
       }
@@ -308,13 +334,18 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
   // Play a single track from a show, replacing the current queue.
   const playShowTrack = useCallback(async (showRef: ShowRef, trackIdx: number, songs?: string[]) => {
     try {
-      const resolveResponse = await fetch('/api/archive/resolve-show', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(showRef),
-      })
-      if (!resolveResponse.ok) throw new Error(`resolve: ${resolveResponse.status}`)
-      const archiveShow = await resolveResponse.json()
+      let archiveShow: { identifier: string } & Record<string, unknown>
+      if (showRef.identifier) {
+        archiveShow = { identifier: showRef.identifier }
+      } else {
+        const resolveResponse = await fetch('/api/archive/resolve-show', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: showRef.date, venue: showRef.venue, city: showRef.city }),
+        })
+        if (!resolveResponse.ok) throw new Error(`resolve: ${resolveResponse.status}`)
+        archiveShow = await resolveResponse.json()
+      }
 
       const tracksResponse = await fetch('/api/archive/song-tracks', {
         method: 'POST',
@@ -325,7 +356,8 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
       const { tracks } = await tracksResponse.json()
 
       const processed = processTracksForEnqueue(tracks, ['mp3'], archiveShow, showRef, songs)
-      const track = processed[Math.min(trackIdx, processed.length - 1)]
+      const resolvedIdx = findTrackByName(processed, songs?.[trackIdx])
+      const track = processed[resolvedIdx]
       if (track) {
         const uniqueTrack = { ...track, id: `${track.id}-single${Date.now()}` }
         setQueue([uniqueTrack])
@@ -355,6 +387,20 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     enqueueShowTrack,
     playShowTrack,
   }
+}
+
+// Finds the best matching track index by song name rather than raw position.
+// Falls back to 0 (start of recording) when the song isn't in this archive item —
+// which is always better than playing a random wrong track.
+function findTrackByName(tracks: Track[], targetSong: string | undefined): number {
+  if (!targetSong || tracks.length === 0) return 0
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const targetNorm = norm(targetSong)
+  const idx = tracks.findIndex(t => {
+    const nameNorm = norm(t.name)
+    return nameNorm.includes(targetNorm) || targetNorm.includes(nameNorm)
+  })
+  return idx !== -1 ? idx : 0
 }
 
 // Converts raw Archive.org filenames (e.g. "gd1993-09-09d1t01") into readable labels
@@ -459,6 +505,11 @@ function processTracksForEnqueue(
     if (tuning) {
       // Don't consume a setlist index — label with the archive title or generic fallback
       songName = trackTitle || 'Tuning'
+    } else if (trackTitle && trackTitle.trim()) {
+      // Archive.org taper metadata is ground truth for what audio is actually playing.
+      // Only advance the setlist pointer so caller-side counts stay consistent.
+      songName = trackTitle
+      if (songs) setlistIdx++
     } else if (songs && songs[setlistIdx]) {
       songName = songs[setlistIdx++]
     } else {

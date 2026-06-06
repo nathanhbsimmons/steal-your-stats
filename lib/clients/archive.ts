@@ -1,5 +1,30 @@
 import { HttpClient } from '../http'
 
+export type RecordingType = 'sbd' | 'aud' | 'matrix' | 'unknown'
+
+export interface ArchiveShowCandidate {
+  identifier: string
+  title: string
+  recordingType: RecordingType
+  score: number
+  downloads?: number
+}
+
+export interface ArchiveShowMetadata {
+  title: string
+  creator: string
+  date: string
+  venue: string
+  city: string
+  state?: string
+  country?: string
+  licenseurl: string
+  rights: string
+  publicdate: string
+  description: string | null
+  mp3Count: number
+}
+
 export interface ArchiveShow {
   identifier: string
   title: string
@@ -54,8 +79,12 @@ export interface ArchiveClient {
   searchShows(creator: string, date?: string): Promise<ArchiveShow[]>
   listTracks(identifier: string): Promise<ArchiveTrack[]>
   resolveArchiveShow(params: { date: string; venue?: string; city?: string }): Promise<ArchiveShow | null>
+  listArchiveShowCandidates(params: { date: string; venue?: string; city?: string }): Promise<ArchiveShowCandidate[]>
   getSongTracks(itemId: string, normalizedTitle: string, aliases: string[]): Promise<ArchiveTrack[]>
   getAllTracks(itemId: string): Promise<ArchiveTrack[]>
+  getItemDescription(identifier: string): Promise<string | null>
+  getShowMetadata(identifier: string): Promise<ArchiveShowMetadata>
+  selectBestRecording(candidates: ArchiveShowCandidate[], totalSongs: number): Promise<{ identifier: string; mp3Count: number }>
 }
 
 export class ArchiveClientImpl implements ArchiveClient {
@@ -159,6 +188,56 @@ export class ArchiveClientImpl implements ArchiveClient {
     return null
   }
 
+  private detectRecordingType(identifier: string, title?: string): RecordingType {
+    const text = `${identifier} ${title ?? ''}`.toLowerCase()
+    if (/\b(mtx|matrix)\b/.test(text)) return 'matrix'
+    if (/\b(sbd|soundboard)\b/.test(text)) return 'sbd'
+    if (/\b(aud|audience)\b/.test(text)) return 'aud'
+    return 'unknown'
+  }
+
+  async listArchiveShowCandidates(params: { date: string; venue?: string; city?: string }): Promise<ArchiveShowCandidate[]> {
+    const { date, venue, city } = params
+    const [year, month, day] = date.split('-')
+    const shortYear = year.slice(2)
+
+    const queries = [
+      `identifier:gd${year}-${month}-${day}* AND collection:GratefulDead`,
+      `identifier:gd${shortYear}-${month}-${day}* AND collection:GratefulDead`,
+    ]
+
+    const seen = new Set<string>()
+    const candidates: ArchiveShowCandidate[] = []
+
+    for (const q of queries) {
+      try {
+        const searchParams = new URLSearchParams({
+          q, output: 'json', rows: '20',
+          fl: 'identifier,title,creator,date,venue,city,state,country,downloads',
+        })
+        const response = await this.http.get<{
+          response: { docs: Array<ArchiveShow & { downloads?: number }> }
+        }>(`/advancedsearch.php?${searchParams.toString()}`, { cache: false })
+
+        for (const show of response.data?.response?.docs ?? []) {
+          if (seen.has(show.identifier)) continue
+          seen.add(show.identifier)
+          candidates.push({
+            identifier: show.identifier,
+            title: show.title,
+            recordingType: this.detectRecordingType(show.identifier, show.title),
+            score: this.calculateMatchScore(show, { venue, city }),
+            downloads: show.downloads,
+          })
+        }
+      } catch {
+        continue
+      }
+    }
+
+    return candidates.sort((a, b) => b.score - a.score)
+  }
+
   async getSongTracks(itemId: string, normalizedTitle: string, aliases: string[]): Promise<ArchiveTrack[]> {
     const allTracks = await this.listTracks(itemId)
     
@@ -166,23 +245,33 @@ export class ArchiveClientImpl implements ArchiveClient {
       return []
     }
     
-    // Create a set of all possible titles to match against
-    const searchTitles = [normalizedTitle, ...aliases].map(title => title.toLowerCase())
-    
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+    // Create a set of all possible titles to match against (raw lowercase + normalized)
+    const searchTitlesRaw = [normalizedTitle, ...aliases].map(t => t.toLowerCase())
+    const searchTitlesNorm = searchTitlesRaw.map(norm).filter(n => n.length > 0)
+
     // Find tracks that match any of the song titles (check both filename and title metadata)
     const matchingTracks = allTracks.filter(track => {
-      const trackName = track.name.toLowerCase()
-      const trackTitle = (track.title || '').toLowerCase()
+      const trackNameRaw = track.name.toLowerCase()
+      const trackTitleRaw = (track.title || '').toLowerCase()
+      const trackNameNorm = norm(trackNameRaw)
+      const trackTitleNorm = norm(trackTitleRaw)
 
-      for (const searchTitle of searchTitles) {
-        if (trackName.includes(searchTitle) || trackTitle.includes(searchTitle)) {
-          return true
-        }
+      for (const raw of searchTitlesRaw) {
+        if (trackNameRaw.includes(raw) || raw.includes(trackNameRaw)) return true
+        if (trackTitleRaw && (trackTitleRaw.includes(raw) || raw.includes(trackTitleRaw))) return true
       }
 
-      // Fuzzy match on filename and title
-      for (const searchTitle of searchTitles) {
-        if (this.fuzzyMatch(trackName, searchTitle) || (trackTitle && this.fuzzyMatch(trackTitle, searchTitle))) {
+      // Normalized pass: handles "Love Light" vs "Lovelight", apostrophes, hyphens, etc.
+      for (const n of searchTitlesNorm) {
+        if (trackNameNorm.includes(n) || n.includes(trackNameNorm)) return true
+        if (trackTitleNorm && (trackTitleNorm.includes(n) || n.includes(trackTitleNorm))) return true
+      }
+
+      // Fuzzy match on filename and title (raw strings only — fuzzyMatch uses regex)
+      for (const searchTitle of searchTitlesRaw) {
+        if (this.fuzzyMatch(trackNameRaw, searchTitle) || (trackTitleRaw && this.fuzzyMatch(trackTitleRaw, searchTitle))) {
           return true
         }
       }
@@ -294,5 +383,91 @@ export class ArchiveClientImpl implements ArchiveClient {
       console.error('Error fetching all tracks:', error)
       return []
     }
+  }
+
+  // Fetches the taper-written description embedded in the Archive.org item metadata.
+  // The description typically contains a comma-separated setlist and recording notes.
+  async getItemDescription(identifier: string): Promise<string | null> {
+    try {
+      const response = await this.http.get<{
+        metadata?: { description?: string | string[] }
+      }>(`/metadata/${identifier}`)
+      const desc = response.data?.metadata?.description
+      if (!desc) return null
+      // Archive.org sometimes stores description as an array of lines
+      return Array.isArray(desc) ? desc.join('\n') : desc
+    } catch {
+      return null
+    }
+  }
+
+  // Fetches full item metadata including description, venue info, license, and MP3 count
+  // in a single /metadata call. Used by the resolve-show route after recording selection.
+  async getShowMetadata(identifier: string): Promise<ArchiveShowMetadata> {
+    const fallback: ArchiveShowMetadata = {
+      title: identifier, creator: '', date: '', venue: '', city: '',
+      licenseurl: '', rights: '', publicdate: '', description: null, mp3Count: 0,
+    }
+    try {
+      const response = await this.http.get<{
+        metadata?: {
+          title?: string | string[]
+          creator?: string | string[]
+          date?: string
+          venue?: string
+          city?: string
+          state?: string
+          country?: string
+          licenseurl?: string | string[]
+          rights?: string | string[]
+          publicdate?: string
+          description?: string | string[]
+        }
+        files?: Array<{ format?: string }>
+      }>(`/metadata/${identifier}`)
+      const m = response.data?.metadata ?? {}
+      const asStr = (v: string | string[] | undefined) => Array.isArray(v) ? v.join('\n') : v ?? ''
+      const rawDesc = m.description
+      const description = rawDesc ? (Array.isArray(rawDesc) ? rawDesc.join('\n') : rawDesc) : null
+      const mp3Count = (response.data?.files ?? [])
+        .filter(f => f.format && ['MP3', 'VBR MP3'].includes(f.format)).length
+      return {
+        title: asStr(m.title), creator: asStr(m.creator), date: m.date ?? '',
+        venue: m.venue ?? '', city: m.city ?? '', state: m.state, country: m.country,
+        licenseurl: asStr(m.licenseurl), rights: asStr(m.rights),
+        publicdate: m.publicdate ?? '', description, mp3Count,
+      }
+    } catch {
+      return fallback
+    }
+  }
+
+  // Picks the recording with best coverage of the setlist, using downloads as tiebreaker.
+  // Fetches track counts for the top 3 candidates in parallel; ranking:
+  //   1. Full coverage (mp3Count >= totalSongs) over partial
+  //   2. Higher downloads among ties
+  //   3. Higher mp3Count as last resort
+  async selectBestRecording(
+    candidates: ArchiveShowCandidate[],
+    totalSongs: number,
+  ): Promise<{ identifier: string; mp3Count: number }> {
+    if (candidates.length === 0) return { identifier: '', mp3Count: 0 }
+    const top = candidates.slice(0, Math.min(3, candidates.length))
+    const results = await Promise.all(top.map(async c => {
+      try {
+        const tracks = await this.listTracks(c.identifier)
+        return { identifier: c.identifier, mp3Count: tracks.length, downloads: c.downloads ?? 0 }
+      } catch {
+        return { identifier: c.identifier, mp3Count: 0, downloads: c.downloads ?? 0 }
+      }
+    }))
+    const sorted = [...results].sort((a, b) => {
+      const aFull = a.mp3Count >= totalSongs
+      const bFull = b.mp3Count >= totalSongs
+      if (aFull !== bFull) return aFull ? -1 : 1
+      if (b.downloads !== a.downloads) return b.downloads - a.downloads
+      return b.mp3Count - a.mp3Count
+    })
+    return { identifier: sorted[0].identifier, mp3Count: sorted[0].mp3Count }
   }
 }

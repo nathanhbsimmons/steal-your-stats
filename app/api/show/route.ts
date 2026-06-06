@@ -11,6 +11,7 @@ interface ShowDetail {
     name: string
     encore: boolean
     songs: string[]
+    segues: boolean[]
   }[]
   setlistUrl?: string
   totalSongs: number
@@ -57,11 +58,16 @@ export async function GET(request: NextRequest) {
   // Pick the first result (GD usually played one show per day)
   const setlist = setlists[0]
 
-  const sets = setlist.sets.set.map((set, i) => ({
-    name: set.name || (set.encore ? 'Encore' : `Set ${i + 1}`),
-    encore: !!set.encore,
-    songs: set.song.filter(s => s.name).map(s => s.name),
-  }))
+  const sets = setlist.sets.set.map((set, i) => {
+    const filteredSongs = set.song.filter(s => s.name)
+    return {
+      name: set.name || (set.encore ? 'Encore' : `Set ${i + 1}`),
+      encore: !!set.encore,
+      songs: filteredSongs.map(s => s.name),
+      // setlist.fm uses info ending with '>' to indicate a segue into the next song
+      segues: filteredSongs.map(s => !!s.info?.trim().endsWith('>')),
+    }
+  })
 
   const totalSongs = sets.reduce((sum, s) => sum + s.songs.length, 0)
 
