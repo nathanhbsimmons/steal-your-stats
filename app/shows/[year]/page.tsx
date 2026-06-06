@@ -86,7 +86,7 @@ export default function ShowsByYearPage() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="result-col">
             {shows.map(s => (
               <Link
                 key={s.id}
