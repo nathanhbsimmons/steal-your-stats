@@ -97,14 +97,13 @@ export class RealtimeSongFactsService {
     this.archiveClient = new ArchiveClientImpl()
   }
 
-  private loadFromDisk(): Setlist[] | null {
+  private loadFromDisk(): { setlists: Setlist[]; stale: boolean } | null {
     try {
       const raw = fs.readFileSync(DISK_CACHE_PATH, 'utf8')
       const { setlists, cachedAt } = JSON.parse(raw) as { setlists: Setlist[]; cachedAt: number }
-      if (Date.now() - cachedAt < DISK_CACHE_TTL) {
-        console.log(`[setlists] loaded ${setlists.length} setlists from disk cache`)
-        return setlists
-      }
+      const stale = Date.now() - cachedAt >= DISK_CACHE_TTL
+      console.log(`[setlists] loaded ${setlists.length} setlists from disk cache (${stale ? 'stale' : 'fresh'})`)
+      return { setlists, stale }
     } catch {}
     return null
   }
@@ -120,21 +119,44 @@ export class RealtimeSongFactsService {
   }
 
   // Returns all GD setlists, fetching from setlist.fm if needed.
-  // Checks disk cache first so data survives server restarts.
+  // Strategy: stale-while-revalidate.
+  //   • If in-memory cache is fresh → return immediately.
+  //   • If disk cache exists (even stale) → return it immediately, then kick off a
+  //     background refresh so the next request gets fresher data.
+  //   • If no cache at all → block while fetching (cold start, unavoidable).
   // Concurrent callers share the same in-flight promise so the API is only hit once.
   private async getAllGDSetlists(): Promise<Setlist[]> {
+    // 1. In-memory cache is fresh — fastest path.
     if (this.allSetlistsCache && Date.now() - this.allSetlistsCache.cachedAt < ALL_SETLISTS_TTL) {
       return this.allSetlistsCache.setlists
     }
 
-    // Try disk cache before hitting the network
+    // 2. Disk cache exists — serve it immediately regardless of age,
+    //    then revalidate in the background if stale.
     const fromDisk = this.loadFromDisk()
     if (fromDisk) {
-      this.allSetlistsCache = { setlists: fromDisk, cachedAt: Date.now() }
-      this.successorMap = this.buildSuccessorMap(fromDisk)
-      return fromDisk
+      this.allSetlistsCache = { setlists: fromDisk.setlists, cachedAt: Date.now() }
+      this.successorMap = this.buildSuccessorMap(fromDisk.setlists)
+
+      if (fromDisk.stale && !this.buildPromise) {
+        // Background refresh — never blocks the caller.
+        this.buildPromise = this.fetchAllPages().then(setlists => {
+          this.allSetlistsCache = { setlists, cachedAt: Date.now() }
+          this.successorMap = this.buildSuccessorMap(setlists)
+          this.saveToDisk(setlists)
+          this.buildPromise = null
+          return setlists
+        }).catch(err => {
+          console.warn('[setlists] background refresh failed:', err)
+          this.buildPromise = null
+          throw err
+        })
+      }
+
+      return fromDisk.setlists
     }
 
+    // 3. No cache at all — must block (cold start after a clean deploy).
     if (this.buildPromise) return this.buildPromise
 
     this.buildPromise = this.fetchAllPages().then(setlists => {

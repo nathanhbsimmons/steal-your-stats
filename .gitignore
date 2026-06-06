@@ -43,5 +43,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# disk cache (setlist API data)
-/.cache/
+# disk cache — commit gd-setlists.json so deploys start warm; ignore everything else
+/.cache/*
+!/.cache/gd-setlists.json
