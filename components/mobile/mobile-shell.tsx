@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 import { usePlayer } from '@/lib/contexts/player-context'
+import { getVenueTidbit } from '@/lib/venue-tidbits'
 
 /* ------------------------------------------------------------------ types */
 
@@ -20,6 +21,7 @@ interface VersionsFacts { tracks: VersionTrack[]; extremes?: { longest?: Version
 interface SummaryStats { totalShows?: number; uniqueSongs?: number; hoursArchived?: number }
 interface LeaderEntry { name: string; count: number; pct: number }
 interface GlobalStats { leaderboard: LeaderEntry[] }
+type ArchiveTrack = { title?: string; url?: string; duration?: number }
 
 /* ---------------------------------------------------------------- helpers */
 
@@ -31,6 +33,25 @@ function formatDur(sec?: number): string {
 
 function fmtDate(iso: string): string {
   return iso.replace(/-/g, '·')
+}
+
+function formatFullDate(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number)
+  const d = new Date(Date.UTC(year, month - 1, day))
+  const dayOfWeek = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getUTCDay()]
+  const monthName = ['January','February','March','April','May','June','July','August','September','October','November','December'][d.getUTCMonth()]
+  const ord = (n: number) => {
+    if (n >= 11 && n <= 13) return `${n}th`
+    const r = n % 10
+    return `${n}${r === 1 ? 'st' : r === 2 ? 'nd' : r === 3 ? 'rd' : 'th'}`
+  }
+  return `${dayOfWeek}, ${monthName} ${ord(day)}, ${year}`
+}
+
+function shortDate(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number)
+  const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month - 1]
+  return `${m} ${day}, ${year}`
 }
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
@@ -219,8 +240,8 @@ function DeckScreen() {
   const [featured, setFeatured] = useState<ShowOnThisDay | null>(null)
   const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [archiveDurations, setArchiveDurations] = useState<Map<number, number>>(new Map())
 
-  // Determine which show to display: currently playing show or on-this-day
   const displayDate = currentTrack?.showDate ?? featured?.date ?? null
 
   useEffect(() => {
@@ -247,6 +268,54 @@ function DeckScreen() {
       .then(data => { if (data) setShowDetail(data) })
       .catch(() => {})
   }, [displayDate])
+
+  // Fetch archive track durations
+  useEffect(() => {
+    if (!displayDate || !showDetail) return
+    let cancelled = false
+    setArchiveDurations(new Map())
+    ;(async () => {
+      try {
+        const resolveRes = await fetch('/api/archive/resolve-show', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date: displayDate,
+            venue: featured?.venue,
+            city: featured?.city,
+            totalSongs: showDetail.totalSongs,
+          }),
+        })
+        if (!resolveRes.ok || cancelled) return
+        const { identifier } = await resolveRes.json()
+        if (!identifier || cancelled) return
+
+        const tracksRes = await fetch('/api/archive/song-tracks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itemId: identifier, songTitle: '' }),
+        })
+        if (cancelled) return
+        const { tracks } = tracksRes.ok ? await tracksRes.json() : { tracks: [] }
+        const allSongs = showDetail.sets.flatMap(s => s.songs)
+        const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+        const durMap = new Map<number, number>()
+        for (const t of (tracks as ArchiveTrack[])) {
+          if (!t.title || !t.duration || !t.url) continue
+          const tn = norm(t.title)
+          if (!tn) continue
+          for (let i = 0; i < allSongs.length; i++) {
+            const sn = norm(allSongs[i])
+            if (sn && (sn.includes(tn) || tn.includes(sn)) && !durMap.has(i)) {
+              durMap.set(i, t.duration)
+            }
+          }
+        }
+        if (!cancelled) setArchiveDurations(durMap)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [displayDate, showDetail?.totalSongs])
 
   const [audioTime, setAudioTime] = useState({ currentTime: 0, duration: 0 })
   useEffect(() => {
@@ -285,7 +354,9 @@ function DeckScreen() {
   }, [])
 
   const handlePlay = useCallback(async () => {
-    const show = currentTrack ? { date: currentTrack.showDate!, venue: currentTrack.venue!, city: currentTrack.city! } : featured ? { date: featured.date, venue: featured.venue, city: featured.city } : null
+    const show = currentTrack
+      ? { date: currentTrack.showDate!, venue: currentTrack.venue!, city: currentTrack.city! }
+      : featured ? { date: featured.date, venue: featured.venue, city: featured.city } : null
     if (!show) return
     if (isPlaying) { pause(); return }
     if (currentTrack?.showDate === show.date) { play(); return }
@@ -294,7 +365,9 @@ function DeckScreen() {
   }, [currentTrack, featured, showDetail, isPlaying, play, pause, enqueueEntireShow])
 
   const handleTrackClick = useCallback(async (flatIdx: number) => {
-    const show = currentTrack ? { date: currentTrack.showDate!, venue: currentTrack.venue!, city: currentTrack.city! } : featured ? { date: featured.date, venue: featured.venue, city: featured.city } : null
+    const show = currentTrack
+      ? { date: currentTrack.showDate!, venue: currentTrack.venue!, city: currentTrack.city! }
+      : featured ? { date: featured.date, venue: featured.venue, city: featured.city } : null
     if (!show) return
     const songs = showDetail?.sets.flatMap(s => s.songs) ?? featured?.songs
     try { await playShowTrack(show, flatIdx, songs) } catch {}
@@ -303,99 +376,122 @@ function DeckScreen() {
   const displayShow = showDetail ?? featured
   const displayVenue = currentTrack?.venue ?? featured?.venue ?? ''
   const displayCity = currentTrack?.city ?? (featured ? `${featured.city}${featured.state ? `, ${featured.state}` : ''}` : '')
-  const displayYear = currentTrack?.showDate?.slice(0, 4) ?? (featured?.year ? String(featured.year) : '')
-  const subLine = [displayYear, displayVenue, displayCity].filter(Boolean).join(' · ')
+  const subLine = [displayDate ? shortDate(displayDate) : '', displayVenue, displayCity].filter(Boolean).join(' · ')
+  const venueTidbit = featured ? getVenueTidbit(featured.venue, featured.city) : null
 
   const currentSongName = currentTrack?.name ?? null
-
   const totalTracks = queue.length
   const isPlaying_ = isPlaying && !!currentTrack
+  const playerActive = !!currentTrack || queue.length > 0
 
   return (
     <>
-      {/* Reel hero */}
-      <div className="mv-deck-hero">
-        <div className={`mv-reel${!isPlaying_ ? ' paused' : ''}`} aria-label="Reel-to-reel player">
-          <div className="spokes" aria-hidden="true">
-            <span style={{ transform: 'translateX(-50%) rotate(0deg)' }} />
-            <span style={{ transform: 'translateX(-50%) rotate(120deg)' }} />
-            <span style={{ transform: 'translateX(-50%) rotate(240deg)' }} />
-          </div>
-          <div className="hub">A · 01</div>
-        </div>
-
-        {loading ? (
-          <div style={{ height: 60 }} />
-        ) : displayShow ? (
-          <>
-            <div className="mv-now-title">
-              {currentTrack?.name ?? (featured?.songs?.[0] ?? (displayShow as ShowDetail).sets?.[0]?.songs?.[0] ?? 'No track loaded')}
-            </div>
-            <div className="mv-now-sub">
-              {subLine}
-            </div>
-          </>
-        ) : (
-          <div className="mv-now-title" style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic' }}>
-            No show for today&apos;s date.
-          </div>
-        )}
-      </div>
-
-      {/* Transport */}
-      <div className="mv-transport">
-        <div className="mv-progress">
-          <span className="t">{formatDur(audioTime.currentTime)}</span>
-          <div
-            ref={progressBarRef}
-            className="mv-bar"
-            onClick={handleBarClick}
-            role="slider"
-            aria-label="Seek"
-            aria-valuenow={Math.round(audioTime.currentTime)}
-            aria-valuemin={0}
-            aria-valuemax={Math.round(audioTime.duration)}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="rule" />
-            <div className="ticks">
-              {Array.from({ length: 11 }).map((_, i) => <span key={i} />)}
-            </div>
-            <div className="fill" style={{ width: `${audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0}%` }} />
-            <div className="needle" style={{ left: `${audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0}%` }} />
-          </div>
-          <span className="t right">
-            {audioTime.duration > 0 ? formatDur(audioTime.duration) : currentTrack?.duration ? formatDur(currentTrack.duration) : '—'}
-          </span>
-        </div>
-        <div className="mv-ctrls">
-          <button className="mv-iconbtn ghost" onClick={previous} aria-label="Previous track">◀◀</button>
-          <button className="mv-iconbtn ghost" aria-label="Skip back 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: -10 } }))}>−10</button>
-          <button className="mv-iconbtn play" onClick={handlePlay} aria-label={isPlaying_ ? 'Pause' : 'Play'}>
-            {isPlaying_ ? '❚❚' : '▶'}
-          </button>
-          <button className="mv-iconbtn ghost" aria-label="Skip forward 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: 10 } }))}>+10</button>
-          <button className="mv-iconbtn ghost" onClick={next} aria-label="Next track">▶▶</button>
-        </div>
-      </div>
-
-      {/* Status row */}
-      <div className="mv-status">
-        <span className="lit">
-          {isPlaying_ ? (
-            <><span className="dot" aria-hidden="true" />{totalTracks === 1 ? 'playing · 1 track' : `playing entire show · ${totalTracks} tracks`}</>
-          ) : totalTracks > 0 ? (
-            `cued · ${totalTracks} tracks`
+      {!playerActive ? (
+        /* Pre-play state: show info + Play Show button */
+        <div className="mv-preplay">
+          {loading ? (
+            <div style={{ height: 80 }} />
+          ) : displayShow ? (
+            <>
+              {displayDate && <div className="mv-preplay-date">{formatFullDate(displayDate)}</div>}
+              {displayVenue && <div className="mv-preplay-venue">{displayVenue}</div>}
+              {displayCity && <div className="mv-preplay-city">{displayCity}</div>}
+              {venueTidbit && <div className="mv-preplay-tidbit">{venueTidbit}</div>}
+              {displayDate && (
+                <button className="mv-play-show-btn" onClick={handlePlay}>▶ Play Show</button>
+              )}
+            </>
           ) : (
-            'standby · no queue'
+            <div style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)' }}>
+              No show for today&apos;s date.
+            </div>
           )}
-        </span>
-        {currentTrack?.showDate && (
-          <Link href={`/show/${currentTrack.showDate}`} style={{ color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: 9.5, letterSpacing: '0.1em', textTransform: 'uppercase', textDecoration: 'none' }}>
-            open setlist ↗
-          </Link>
-        )}
-      </div>
+        </div>
+      ) : (
+        <>
+          {/* Reel hero */}
+          <div className="mv-deck-hero">
+            <div className={`mv-reel${!isPlaying_ ? ' paused' : ''}`} aria-label="Reel-to-reel player">
+              <div className="spokes" aria-hidden="true">
+                <span style={{ transform: 'translateX(-50%) rotate(0deg)' }} />
+                <span style={{ transform: 'translateX(-50%) rotate(120deg)' }} />
+                <span style={{ transform: 'translateX(-50%) rotate(240deg)' }} />
+              </div>
+              <div className="hub">A · 01</div>
+            </div>
+
+            {loading ? (
+              <div style={{ height: 60 }} />
+            ) : displayShow ? (
+              <>
+                <div className="mv-now-title">
+                  {currentTrack?.name ?? (featured?.songs?.[0] ?? (displayShow as ShowDetail).sets?.[0]?.songs?.[0] ?? 'No track loaded')}
+                </div>
+                <div className="mv-now-sub">{subLine}</div>
+              </>
+            ) : (
+              <div className="mv-now-title" style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic' }}>
+                No show for today&apos;s date.
+              </div>
+            )}
+          </div>
+
+          {/* Transport */}
+          <div className="mv-transport">
+            <div className="mv-progress">
+              <span className="t">{formatDur(audioTime.currentTime)}</span>
+              <div
+                ref={progressBarRef}
+                className="mv-bar"
+                onClick={handleBarClick}
+                role="slider"
+                aria-label="Seek"
+                aria-valuenow={Math.round(audioTime.currentTime)}
+                aria-valuemin={0}
+                aria-valuemax={Math.round(audioTime.duration)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="rule" />
+                <div className="ticks">
+                  {Array.from({ length: 11 }).map((_, i) => <span key={i} />)}
+                </div>
+                <div className="fill" style={{ width: `${audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0}%` }} />
+                <div className="needle" style={{ left: `${audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0}%` }} />
+              </div>
+              <span className="t right">
+                {audioTime.duration > 0 ? formatDur(audioTime.duration) : currentTrack?.duration ? formatDur(currentTrack.duration) : '—'}
+              </span>
+            </div>
+            <div className="mv-ctrls">
+              <button className="mv-iconbtn ghost" onClick={previous} aria-label="Previous track">◀◀</button>
+              <button className="mv-iconbtn ghost" aria-label="Skip back 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: -10 } }))}>−10</button>
+              <button className="mv-iconbtn play" onClick={handlePlay} aria-label={isPlaying_ ? 'Pause' : 'Play'}>
+                {isPlaying_ ? '❚❚' : '▶'}
+              </button>
+              <button className="mv-iconbtn ghost" aria-label="Skip forward 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: 10 } }))}>+10</button>
+              <button className="mv-iconbtn ghost" onClick={next} aria-label="Next track">▶▶</button>
+            </div>
+          </div>
+
+          {/* Status row */}
+          <div className="mv-status">
+            <span className="lit">
+              {isPlaying_ ? (
+                <><span className="dot" aria-hidden="true" />{totalTracks === 1 ? 'playing · 1 track' : `playing entire show · ${totalTracks} tracks`}</>
+              ) : totalTracks > 0 ? (
+                `cued · ${totalTracks} tracks`
+              ) : (
+                'standby · no queue'
+              )}
+            </span>
+            {currentTrack?.showDate && (
+              <Link href={`/show/${currentTrack.showDate}`} style={{ color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: 9.5, letterSpacing: '0.1em', textTransform: 'uppercase', textDecoration: 'none' }}>
+                open setlist ↗
+              </Link>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Setlist */}
       {showDetail && showDetail.sets.length > 0 && (
@@ -412,6 +508,7 @@ function DeckScreen() {
                 {set.songs.map((song, ti) => {
                   const flatIdx = showDetail.sets.slice(0, si).reduce((n, s) => n + s.songs.length, ti)
                   const isCurrent = currentSongName === song && currentTrack?.showDate === showDetail.date
+                  const dur = archiveDurations.get(flatIdx)
                   return (
                     <div
                       key={`${si}-${ti}`}
@@ -422,7 +519,7 @@ function DeckScreen() {
                     >
                       <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
                       <span className="title">{song}</span>
-                      <span className="dur">—</span>
+                      <span className="dur">{dur ? formatDur(dur) : '—'}</span>
                       <span className="pin">❡</span>
                     </div>
                   )
@@ -472,7 +569,6 @@ function SongsScreen() {
       .catch(() => {})
   }, [])
 
-  // Group by first letter when not searching
   const grouped = new Map<string, SongEntry[]>()
   for (const s of songs) {
     const letter = s.title.charAt(0).toUpperCase()
@@ -500,7 +596,6 @@ function SongsScreen() {
           Loading catalog…
         </div>
       ) : query ? (
-        // Search results - flat list
         songs.map(s => (
           <Link
             key={s.title}
@@ -514,7 +609,6 @@ function SongsScreen() {
           </Link>
         ))
       ) : (
-        // Alphabetical groups with sticky headers
         letters.map(letter => {
           const group = grouped.get(letter) ?? []
           const first = group[0]?.displayTitle ?? ''
@@ -576,7 +670,6 @@ function SongDetailScreen({ slug }: { slug: string }) {
 
   return (
     <>
-      {/* Hero */}
       <div className="mv-song-hero">
         <div className="kicker">CATALOG · {facts?.totalPerformances ? `${facts.totalPerformances} PERFORMANCES` : 'SONG DETAIL'}</div>
         <h2>{slug}</h2>
@@ -587,7 +680,6 @@ function SongDetailScreen({ slug }: { slug: string }) {
         </div>
       </div>
 
-      {/* KPI row */}
       {facts && (
         <div className="mv-kpi-row">
           <div className="mv-kpi">
@@ -609,7 +701,6 @@ function SongDetailScreen({ slug }: { slug: string }) {
         </div>
       )}
 
-      {/* Extremes */}
       {(shortest || longest) && (
         <div className="mv-extremes">
           <div className="mv-extreme">
@@ -625,7 +716,6 @@ function SongDetailScreen({ slug }: { slug: string }) {
         </div>
       )}
 
-      {/* Versions list */}
       {displayedVersions.length > 0 && (
         <>
           <div className="mv-sec">
@@ -688,7 +778,6 @@ function StatsScreen() {
 
   return (
     <>
-      {/* Big figure */}
       <div className="mv-bigfig">
         <div className="num">{totalShows.toLocaleString()}</div>
         <div className="lab">
@@ -696,7 +785,6 @@ function StatsScreen() {
         </div>
       </div>
 
-      {/* KPI quad */}
       <div className="mv-kpi-quad">
         <div className="cell">
           <div className="lab">Unique Songs</div>
@@ -720,7 +808,6 @@ function StatsScreen() {
         </div>
       </div>
 
-      {/* Most played ledger */}
       {leaderboard.length > 0 && (
         <>
           <div className="mv-sec">
@@ -745,7 +832,6 @@ function StatsScreen() {
         </>
       )}
 
-      {/* Era distribution */}
       <div className="mv-sec">
         <span className="name">Era distribution</span>
         <span className="more">5 eras ›</span>
@@ -852,7 +938,6 @@ function SearchScreen() {
 
       {query && (
         <div className="mv-results-section">
-          {/* Songs */}
           <div className="mv-sec" style={{ marginTop: 8 }}>
             <span className="name">Songs</span>
             <span className="more">{songs.length > 0 ? `${songs.length} found` : songsLoading ? '…' : 'none'}</span>
@@ -870,7 +955,6 @@ function SearchScreen() {
             ))
           )}
 
-          {/* Shows featuring matched song */}
           {shows.length > 0 && (
             <>
               <div className="mv-sec">
@@ -886,7 +970,6 @@ function SearchScreen() {
             </>
           )}
 
-          {/* Venues */}
           {venues.length > 0 && (
             <>
               <div className="mv-sec">
@@ -912,9 +995,10 @@ function SearchScreen() {
 /* =========================================================== SHOW DETAIL SCREEN */
 
 function ShowDetailScreen({ date }: { date: string }) {
-  const { playShowTrack, currentTrack } = usePlayer()
+  const { playShowTrack, currentTrack, enqueueEntireShow } = usePlayer()
   const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [archiveDurations, setArchiveDurations] = useState<Map<number, number>>(new Map())
 
   useEffect(() => {
     setLoading(true)
@@ -925,16 +1009,65 @@ function ShowDetailScreen({ date }: { date: string }) {
       .finally(() => setLoading(false))
   }, [date])
 
+  // Fetch archive track durations
+  useEffect(() => {
+    if (!showDetail) return
+    let cancelled = false
+    setArchiveDurations(new Map())
+    ;(async () => {
+      try {
+        const resolveRes = await fetch('/api/archive/resolve-show', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date, totalSongs: showDetail.totalSongs }),
+        })
+        if (!resolveRes.ok || cancelled) return
+        const { identifier } = await resolveRes.json()
+        if (!identifier || cancelled) return
+
+        const tracksRes = await fetch('/api/archive/song-tracks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itemId: identifier, songTitle: '' }),
+        })
+        if (cancelled) return
+        const { tracks } = tracksRes.ok ? await tracksRes.json() : { tracks: [] }
+        const allSongs = showDetail.sets.flatMap(s => s.songs)
+        const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+        const durMap = new Map<number, number>()
+        for (const t of (tracks as ArchiveTrack[])) {
+          if (!t.title || !t.duration || !t.url) continue
+          const tn = norm(t.title)
+          if (!tn) continue
+          for (let i = 0; i < allSongs.length; i++) {
+            const sn = norm(allSongs[i])
+            if (sn && (sn.includes(tn) || tn.includes(sn)) && !durMap.has(i)) {
+              durMap.set(i, t.duration)
+            }
+          }
+        }
+        if (!cancelled) setArchiveDurations(durMap)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [date, showDetail?.totalSongs])
+
   const handleTrackClick = useCallback(async (flatIdx: number) => {
     if (!showDetail) return
     const songs = showDetail.sets.flatMap(s => s.songs)
     try { await playShowTrack({ date: showDetail.date, venue: showDetail.venue, city: showDetail.city }, flatIdx, songs) } catch {}
   }, [showDetail, playShowTrack])
 
+  const handlePlayAll = useCallback(async () => {
+    if (!showDetail) return
+    const songs = showDetail.sets.flatMap(s => s.songs)
+    try { await enqueueEntireShow({ date: showDetail.date, venue: showDetail.venue, city: showDetail.city }, { clearExisting: true, songs }) } catch {}
+  }, [showDetail, enqueueEntireShow])
+
   return (
     <>
       <div className="mv-show-hero">
-        <div className="kicker">{date}</div>
+        <div className="kicker">{formatFullDate(date)}</div>
         {loading ? (
           <h2 style={{ fontSize: 22, color: 'var(--ink-3)' }}>Loading…</h2>
         ) : showDetail ? (
@@ -944,6 +1077,11 @@ function ShowDetailScreen({ date }: { date: string }) {
           </>
         ) : (
           <h2 style={{ fontSize: 22, color: 'var(--ink-3)' }}>Show not found.</h2>
+        )}
+        {showDetail && (
+          <button className="mv-play-show-btn" style={{ marginTop: 14 }} onClick={handlePlayAll}>
+            ▶ Play Entire Show
+          </button>
         )}
       </div>
 
@@ -961,6 +1099,7 @@ function ShowDetailScreen({ date }: { date: string }) {
                 {set.songs.map((song, ti) => {
                   const flatIdx = showDetail.sets.slice(0, si).reduce((n, s) => n + s.songs.length, ti)
                   const isCurrent = currentTrack?.name === song && currentTrack?.showDate === date
+                  const dur = archiveDurations.get(flatIdx)
                   return (
                     <div
                       key={`${si}-${ti}`}
@@ -971,7 +1110,7 @@ function ShowDetailScreen({ date }: { date: string }) {
                     >
                       <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
                       <span className="title">{song}</span>
-                      <span className="dur">—</span>
+                      <span className="dur">{dur ? formatDur(dur) : '—'}</span>
                       <span className="pin">❡</span>
                     </div>
                   )
