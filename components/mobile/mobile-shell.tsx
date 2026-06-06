@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 import { usePlayer } from '@/lib/contexts/player-context'
 
 /* ------------------------------------------------------------------ types */
@@ -120,7 +121,7 @@ function chapterMeta(pathname: string, songTitle?: string): { left: React.ReactN
   }
   if (pathname.startsWith('/songs')) return {
     left: <><span className="num">II.</span> SONGS · CATALOG</>,
-    right: '442',
+    right: String(CANONICAL_SONG_COUNT),
   }
   if (pathname.startsWith('/stats')) return {
     left: <><span className="num">III.</span> STATS · ALMANAC</>,
@@ -845,7 +846,7 @@ function SearchScreen() {
 
       {!query && (
         <div style={{ padding: '40px 18px', color: 'var(--ink-3)', fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 16, lineHeight: 1.5 }}>
-          Start typing to search 2,333 shows and 442 songs.
+          Start typing to search 2,333 shows and {CANONICAL_SONG_COUNT} songs.
         </div>
       )}
 

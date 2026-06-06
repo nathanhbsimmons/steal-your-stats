@@ -48,7 +48,7 @@ export default function SongsPage() {
           <div className="lede">
             {query
               ? `${total} result${total !== 1 ? 's' : ''} for "${query}".`
-              : '442 unique titles in the catalog. Filter to narrow.'
+              : `${total} unique titles in the catalog. Filter to narrow.`
             }
           </div>
         </div>

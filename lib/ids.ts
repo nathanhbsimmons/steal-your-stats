@@ -9,6 +9,8 @@ interface CanonicalSong {
 
 const songs: CanonicalSong[] = canonicalData.songs
 
+export const CANONICAL_SONG_COUNT = songs.length
+
 /**
  * Strip playback/notation suffixes and normalize whitespace.
  * Keeps internal punctuation (apostrophes, periods) for step-1 matching.

@@ -1,11 +1,12 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
+import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 
 const CHAPTERS = [
   { id: 'home',    num: 'I',    label: 'Home',         href: '/',        badge: null },
   { id: 'search',  num: 'II',   label: 'Search',       href: '/search',  badge: '⌘K' },
-  { id: 'songs',   num: 'III',  label: 'Songs',        href: '/songs',   badge: '442' },
+  { id: 'songs',   num: 'III',  label: 'Songs',        href: '/songs',   badge: String(CANONICAL_SONG_COUNT) },
   { id: 'recent',  num: 'IV',   label: 'Recent',       href: '/recent',  badge: null },
   { id: 'members', num: 'V',    label: 'Band Members', href: '/artists', badge: null },
   { id: 'venues',  num: 'VI',   label: 'Venues',       href: '/venues',  badge: null },

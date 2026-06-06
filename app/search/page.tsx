@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { usePlayer } from '@/lib/contexts/player-context'
+import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 
 interface SongResult {
   title: string
@@ -165,7 +166,7 @@ function SearchContent() {
 
       {!query && (
         <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 17 }}>
-          Start typing to search the archive — 2,333 shows, 442 songs.
+          Start typing to search the archive — 2,333 shows, {CANONICAL_SONG_COUNT} songs.
         </div>
       )}
 
