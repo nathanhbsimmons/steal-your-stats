@@ -282,8 +282,6 @@ p { margin: 0; }
   padding-top: 0;
   margin-right: 0;
 }
-/* collapse the chapters bottom-margin on wide pages so crumbs sit tight at the top */
-body:has(.page-grid.wide) .chapters { margin-bottom: 0; }
 /* inset padding for header rows in wide pages so content/buttons don't sit at the raw edge */
 .page-grid.wide .crumbs    { padding: 4px 4px 0; }
 .page-grid.wide .page-head { padding-left: 28px; padding-right: 28px; }
