@@ -125,14 +125,15 @@ export default function StatsPage() {
         <>
           <div className="barchart">
             {barData.map(d => (
-              <div
+              <Link
                 key={d.year}
+                href={`/shows/${d.year}`}
                 className={`bbar${d.count === barMax && d.count > 0 ? ' peak' : ''}`}
-                style={{ height: `${(d.count / barMax) * 100}%` }}
+                style={{ height: `${(d.count / barMax) * 100}%`, textDecoration: 'none', cursor: 'pointer', display: 'block' }}
                 title={`${d.year}: ${d.count} shows`}
               >
                 <span className="val">{d.count}</span>
-              </div>
+              </Link>
             ))}
           </div>
           <div className="barchart-axis">
