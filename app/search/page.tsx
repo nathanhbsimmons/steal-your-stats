@@ -57,6 +57,10 @@ function SearchContent() {
   useEffect(() => { inputRef.current?.focus() }, [])
 
   useEffect(() => {
+    setQuery(searchParams.get('q') ?? '')
+  }, [searchParams])
+
+  useEffect(() => {
     if (!dq) {
       setSongs([]); setSongTotal(0)
       setShows([]); setVenueShows([]); setVenueSongs([])
