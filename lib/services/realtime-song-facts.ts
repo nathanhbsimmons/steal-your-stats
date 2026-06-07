@@ -554,7 +554,7 @@ export class RealtimeSongFactsService {
   async getTopSongsByVenue(venueName: string, limit = 20): Promise<{ name: string; count: number }[]> {
     const allSetlists = await this.getAllGDSetlists()
     const lower = venueName.toLowerCase()
-    const matching = allSetlists.filter(s => s.venue.name.toLowerCase() === lower)
+    const matching = allSetlists.filter(s => s.venue.name.toLowerCase().includes(lower))
     const counts = new Map<string, number>()
     for (const setlist of matching) {
       for (const set of setlist.sets.set) {

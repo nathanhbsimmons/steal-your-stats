@@ -299,11 +299,11 @@ export default function SongPage() {
               {data.first?.venue}
               {data.first?.city ? ` · ${data.first.city}` : ''}
             </div>
-            {data.first?.url && (
-              <a href={data.first.url} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-block', marginTop: 8, fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--rust)' }}>
-                View setlist ↗
-              </a>
+            {data.first?.date && (
+              <Link href={`/show/${data.first.date}`}
+                style={{ display: 'inline-block', marginTop: 8, fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--rust)', textDecoration: 'none' }}>
+                Go to show →
+              </Link>
             )}
           </div>
           <div className="fcell">
@@ -313,11 +313,11 @@ export default function SongPage() {
               {data.last?.venue}
               {data.last?.city ? ` · ${data.last.city}` : ''}
             </div>
-            {data.last?.url && (
-              <a href={data.last.url} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-block', marginTop: 8, fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--rust)' }}>
-                View setlist ↗
-              </a>
+            {data.last?.date && (
+              <Link href={`/show/${data.last.date}`}
+                style={{ display: 'inline-block', marginTop: 8, fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--rust)', textDecoration: 'none' }}>
+                Go to show →
+              </Link>
             )}
           </div>
           <div className="fcell">

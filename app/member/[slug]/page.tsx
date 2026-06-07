@@ -370,7 +370,6 @@ export default function MemberPage() {
       {/* ── BIO ── */}
       <div className="section-head">
         <h3>Bio</h3>
-        <div className="descr">— compiled by the vault operator</div>
         <span className="meta">{member.core ? 'FOUNDING MEMBER' : 'GUEST CHAIR'}</span>
       </div>
       <p className="member-bio">{member.bio}</p>
