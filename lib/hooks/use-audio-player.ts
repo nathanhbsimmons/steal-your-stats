@@ -288,13 +288,23 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     try {
       const targetSong = songs?.[trackIdx]
 
-      // If the show is already loaded in the queue, shortcut — find by name then clone
+      // If the show is already loaded in the queue, try to find the track by name and clone it.
+      // Only use this shortcut when we find an actual match — never fall back to index 0,
+      // because the queue might only contain a single previously-played track from this show.
       const existingShowTracks = queueRef.current.filter(t => t.showDate === showRef.date)
-      if (existingShowTracks.length > 0) {
-        const resolvedIdx = findTrackByName(existingShowTracks, targetSong)
-        const src = existingShowTracks[resolvedIdx]
-        setQueue(prev => [...prev, { ...src, id: `${src.id}-q${Date.now()}` }])
-        return
+      if (existingShowTracks.length > 0 && targetSong) {
+        const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
+        const targetNorm = norm(targetSong)
+        const exactIdx = existingShowTracks.findIndex(t => {
+          const nameNorm = norm(t.name)
+          return nameNorm.includes(targetNorm) || targetNorm.includes(nameNorm)
+        })
+        if (exactIdx !== -1) {
+          const src = existingShowTracks[exactIdx]
+          setQueue(prev => [...prev, { ...src, id: `${src.id}-q${Date.now()}` }])
+          return
+        }
+        // No match found — fall through to fetch from Archive.org
       }
 
       // Otherwise fetch from Archive.org

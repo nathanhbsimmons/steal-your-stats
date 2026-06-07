@@ -60,7 +60,7 @@ export default function ShowPage() {
     { revalidateOnFocus: false, revalidateOnReconnect: false, dedupingInterval: 24 * 60 * 60 * 1000 }
   )
 
-  const { enqueueEntireShow, enqueueShowTrack, currentTrack, isPlaying } = usePlayer()
+  const { enqueueEntireShow, enqueueShowTrack, playShowTrack, pause, currentTrack, isPlaying } = usePlayer()
 
   const [queuedSet, setQueuedSet] = useState<Set<number>>(new Set())
   const [flashIdx, setFlashIdx] = useState<number | null>(null)
@@ -206,6 +206,18 @@ export default function ShowPage() {
     }
   }
 
+  const handlePlaySingleSong = useCallback(async (flatIdx: number) => {
+    if (!data) return
+    const songs = data.sets.flatMap(s => s.songs)
+    try {
+      await playShowTrack(
+        { date, venue: data.venue, city: data.city, identifier: archiveRecording?.identifier },
+        flatIdx,
+        songs,
+      )
+    } catch {}
+  }, [data, date, archiveRecording, playShowTrack])
+
   const handlePlayArchiveTrack = useCallback(async (archiveIdx: number) => {
     if (!data) return
     try {
@@ -254,7 +266,7 @@ export default function ShowPage() {
         songs,
       )
     } catch {}
-  }, [data, date, enqueueShowTrack])
+  }, [data, date, archiveRecording, enqueueShowTrack])
 
   const autoplayedRef = useRef(false)
   useEffect(() => {
@@ -390,7 +402,7 @@ export default function ShowPage() {
                       <div
                         key={ji}
                         className={`track${isCurrentSong && isPlaying ? ' playing' : ''}${pending ? ' pending' : ''}`}
-                        onClick={inArchive ? () => handlePlayShow(songFlatIdx) : undefined}
+                        onClick={inArchive ? () => { if (isCurrentSong && isPlaying) { pause() } else { void handlePlaySingleSong(songFlatIdx) } } : undefined}
                         style={!inArchive && !pending ? { cursor: 'default', opacity: 0.4 } : undefined}
                       >
                         <span className="num">{String(ji + 1).padStart(2, '0')}</span>
