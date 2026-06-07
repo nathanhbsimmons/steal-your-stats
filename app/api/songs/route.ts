@@ -17,7 +17,12 @@ export async function GET(request: NextRequest) {
   const withHints = await Promise.all(songs.map(async s => {
     const hints = getSongHints(s.title)
     try {
-      hints.topSuccessors = await realtimeSongFactsService.getSongPairings(s.title, 3)
+      const [succ, pred] = await Promise.all([
+        realtimeSongFactsService.getSongPairings(s.title, 3),
+        realtimeSongFactsService.getSongPredecessors(s.title, 3),
+      ])
+      hints.topSuccessors = succ
+      hints.topPredecessors = pred
     } catch {
       // setlist cache not ready — static hints still shown
     }

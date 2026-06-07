@@ -20,17 +20,19 @@ interface GlobalStats {
 interface PositionEntry { label: string; count: number; pct: string }
 
 const DARK_STAR_DEFAULT: PositionEntry[] = [
-  { label: 'Mid-set', count: 210, pct: '90%' },
   { label: 'Opener',  count: 14,  pct: '6%' },
+  { label: 'Mid-set', count: 210, pct: '90%' },
   { label: 'Closer',  count: 6,   pct: '3%' },
   { label: 'Encore',  count: 2,   pct: '1%' },
 ]
 const DARK_STAR_TOTAL = 232
 
-const COLORS = ['var(--rust)', 'var(--forest)', 'var(--ledger-blue)', 'var(--ink)']
+// Order matches legend: Opener, Mid-set, Closer, Encore
+const COLORS = ['var(--forest)', 'var(--rust)', 'var(--ledger-blue)', 'var(--ink)']
 
 function DonutChart({ positions, songLabel }: { positions: PositionEntry[]; songLabel: string }) {
-  const cx = 70, cy = 70, r = 56
+  const cx = 140, cy = 140, r = 112
+  const innerR = 56
   const total = positions.reduce((n, p) => n + p.count, 0)
 
   const paths = useMemo(() => {
@@ -40,25 +42,45 @@ function DonutChart({ positions, songLabel }: { positions: PositionEntry[]; song
       const start = (acc / total) * Math.PI * 2 - Math.PI / 2
       acc += p.count
       const end = (acc / total) * Math.PI * 2 - Math.PI / 2
-      const large = (end - start) > Math.PI ? 1 : 0
-      const x1 = cx + r * Math.cos(start)
-      const y1 = cy + r * Math.sin(start)
-      const x2 = cx + r * Math.cos(end)
-      const y2 = cy + r * Math.sin(end)
-      return { ...p, d: `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`, color: COLORS[i] }
+      let d: string
+      if (p.count === total) {
+        // Full circle — SVG arcs can't connect identical start/end points, use two semicircles
+        d = `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx} ${cy + r} A ${r} ${r} 0 1 1 ${cx} ${cy - r} Z`
+      } else {
+        const large = (end - start) > Math.PI ? 1 : 0
+        const x1 = cx + r * Math.cos(start)
+        const y1 = cy + r * Math.sin(start)
+        const x2 = cx + r * Math.cos(end)
+        const y2 = cy + r * Math.sin(end)
+        d = `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`
+      }
+      return { ...p, d, color: COLORS[i] }
     })
   }, [positions, total])
 
-  const label = songLabel.toUpperCase().slice(0, 14)
+  // Wrap label into lines of ~11 chars (fits inside innerR=56 circle at 12px mono)
+  const labelWords = songLabel.toUpperCase().split(' ')
+  const labelLines: string[] = []
+  let cur = ''
+  for (const word of labelWords) {
+    if (!cur) { cur = word }
+    else if (cur.length + 1 + word.length <= 11) { cur += ' ' + word }
+    else { labelLines.push(cur); cur = word }
+  }
+  if (cur) labelLines.push(cur)
+  const lineH = 14
+  const labelStartY = cy + 14 - ((labelLines.length - 1) * lineH) / 2
 
   return (
-    <svg width="140" height="140" viewBox="0 0 140 140" style={{ flexShrink: 0 }}>
+    <svg width="280" height="280" viewBox="0 0 280 280" style={{ flexShrink: 0, display: 'block', margin: '0 auto' }}>
       {paths.map((p, i) => (
-        <path key={i} d={p.d} fill={p.color} stroke="var(--paper)" strokeWidth="2" />
+        <path key={i} d={p.d} fill={p.color} stroke="var(--paper)" strokeWidth="3" />
       ))}
-      <circle cx={cx} cy={cy} r="28" fill="var(--paper)" stroke="var(--ink)" strokeWidth="1" />
-      <text x={cx} y={cy - 4} textAnchor="middle" fontFamily="var(--serif-display)" fontSize="20" fill="var(--ink)">{total}</text>
-      <text x={cx} y={cy + 10} textAnchor="middle" fontFamily="var(--mono)" fontSize="6.5" letterSpacing="0.08em" fill="var(--ink-3)">{label}</text>
+      <circle cx={cx} cy={cy} r={innerR} fill="var(--paper)" stroke="var(--ink)" strokeWidth="1.5" />
+      <text x={cx} y={cy - 8} textAnchor="middle" fontFamily="var(--serif-display)" fontSize="38" fill="var(--ink)">{total}</text>
+      {labelLines.map((line, i) => (
+        <text key={i} x={cx} y={labelStartY + i * lineH} textAnchor="middle" fontFamily="var(--mono)" fontSize="12" letterSpacing="0.08em" fill="var(--ink-3)">{line}</text>
+      ))}
     </svg>
   )
 }
@@ -125,8 +147,8 @@ export default function StatsPage() {
       const safe = total > 0 ? total : 1
 
       setPositionData([
-        { label: 'Mid-set', count: midset, pct: `${Math.round((midset / safe) * 100)}%` },
         { label: 'Opener',  count: opener, pct: `${Math.round((opener / safe) * 100)}%` },
+        { label: 'Mid-set', count: midset, pct: `${Math.round((midset / safe) * 100)}%` },
         { label: 'Closer',  count: closer, pct: `${Math.round((closer / safe) * 100)}%` },
         { label: 'Encore',  count: encore, pct: `${Math.round((encore / safe) * 100)}%` },
       ])
@@ -252,74 +274,78 @@ export default function StatsPage() {
             <span className="meta">N = {positionTotal}</span>
           </div>
 
-          {/* Song search combobox */}
-          <div style={{ position: 'relative', marginBottom: 14 }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              border: '1.5px solid var(--gray)', borderRadius: 8,
-              padding: '5px 10px', background: 'var(--paper)',
-            }}>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>⌕</span>
-              <input
-                ref={inputRef}
-                type="text"
-                value={songQuery}
-                onChange={e => handleQueryChange(e.target.value)}
-                onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
-                onKeyDown={handleKeyDown}
-                placeholder={positionSong}
-                style={{
-                  border: 'none', outline: 'none', background: 'transparent',
-                  fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink)',
-                  flex: 1, minWidth: 0,
-                }}
-              />
-              {positionLoading && (
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>…</span>
-              )}
+          <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+            <div style={{ paddingTop: 36 }}>
+              <DonutChart positions={positionData} songLabel={positionSong} />
             </div>
-
-            {showDropdown && suggestions.length > 0 && (
-              <div
-                ref={dropdownRef}
-                style={{
-                  position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0,
-                  background: 'var(--paper)', border: '2px solid var(--ink)',
-                  borderRadius: 8, zIndex: 50, overflow: 'hidden',
-                  boxShadow: '4px 4px 0 var(--ink)',
-                }}
-              >
-                {suggestions.map((s, i) => (
-                  <div
-                    key={s.title}
-                    onMouseDown={() => selectSong(s)}
-                    onMouseEnter={() => setActiveIdx(i)}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {/* Search bar — 250px, anchored to the top of the column */}
+              <div style={{ position: 'relative', width: 250 }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  border: '1.5px solid var(--gray)', borderRadius: 8,
+                  padding: '5px 10px', background: 'var(--paper)',
+                }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>⌕</span>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={songQuery}
+                    onChange={e => handleQueryChange(e.target.value)}
+                    onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
+                    onKeyDown={handleKeyDown}
+                    placeholder={positionSong}
                     style={{
-                      padding: '7px 12px',
-                      fontFamily: 'var(--serif-display)', fontSize: 14, color: 'var(--ink)',
-                      cursor: 'pointer',
-                      background: i === activeIdx ? 'var(--hi)' : 'transparent',
-                      borderBottom: i < suggestions.length - 1 ? '1px solid var(--rule-soft)' : 'none',
+                      border: 'none', outline: 'none', background: 'transparent',
+                      fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink)',
+                      flex: 1, minWidth: 0,
+                    }}
+                  />
+                  {positionLoading && (
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>…</span>
+                  )}
+                </div>
+                {showDropdown && suggestions.length > 0 && (
+                  <div
+                    ref={dropdownRef}
+                    style={{
+                      position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0,
+                      background: 'var(--paper)', border: '2px solid var(--ink)',
+                      borderRadius: 8, zIndex: 50, overflow: 'hidden',
+                      boxShadow: '4px 4px 0 var(--ink)',
                     }}
                   >
-                    {s.displayTitle}
+                    {suggestions.map((s, i) => (
+                      <div
+                        key={s.title}
+                        onMouseDown={() => selectSong(s)}
+                        onMouseEnter={() => setActiveIdx(i)}
+                        style={{
+                          padding: '7px 12px',
+                          fontFamily: 'var(--serif-display)', fontSize: 14, color: 'var(--ink)',
+                          cursor: 'pointer',
+                          background: i === activeIdx ? 'var(--hi)' : 'transparent',
+                          borderBottom: i < suggestions.length - 1 ? '1px solid var(--rule-soft)' : 'none',
+                        }}
+                      >
+                        {s.displayTitle}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Legend — centered in remaining space below the search bar */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
+                {positionData.map((p, i) => (
+                  <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ width: 14, height: 14, flexShrink: 0, background: COLORS[i] }} />
+                    <span style={{ flex: 1, fontFamily: 'var(--serif-body)', fontSize: 15, color: 'var(--ink-2)' }}>{p.label}</span>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--ink)', fontWeight: 600 }}>{p.count}</span>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)' }}>· {p.pct}</span>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-            <DonutChart positions={positionData} songLabel={positionSong} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {positionData.map((p, i) => (
-                <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ width: 10, height: 10, flexShrink: 0, background: COLORS[i] }} />
-                  <span style={{ flex: 1, fontFamily: 'var(--serif-body)', fontSize: 13.5, color: 'var(--ink-2)' }}>{p.label}</span>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink)' }}>{p.count}</span>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>· {p.pct}</span>
-                </div>
-              ))}
             </div>
           </div>
         </div>

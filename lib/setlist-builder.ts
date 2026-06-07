@@ -38,6 +38,7 @@ export interface SongHints {
   }
   avgDurationSec?: number
   topSuccessors?: { name: string; count: number }[]
+  topPredecessors?: { name: string; count: number }[]
 }
 
 // ─── Average durations (seconds) ─────────────────────────────────────────────

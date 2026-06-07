@@ -94,12 +94,16 @@ interface DragSource { setKey: SetKey; idx: number }
 interface SongResultProps {
   displayTitle: string
   hints: SongHints
-  onAdd: () => void
+  onAdd: (predecessorName?: string, successorName?: string) => void
   isDuplicate: boolean
 }
 
 function SongResult({ displayTitle, hints, onAdd, isDuplicate }: SongResultProps) {
   const { pairing, positionHints, avgDurationSec } = hints
+  const [selectedPred, setSelectedPred] = useState<string | null>(null)
+  const [selectedSucc, setSelectedSucc] = useState<string | null>(null)
+
+  const addCount = 1 + (selectedPred ? 1 : 0) + (selectedSucc ? 1 : 0)
 
   return (
     <div style={{
@@ -124,27 +128,68 @@ function SongResult({ displayTitle, hints, onAdd, isDuplicate }: SongResultProps
         )}
         <button
           className="btn"
-          onClick={onAdd}
+          onClick={() => {
+            onAdd(selectedPred ?? undefined, selectedSucc ?? undefined)
+            setSelectedPred(null)
+            setSelectedSucc(null)
+          }}
           disabled={isDuplicate}
           style={{ padding: '4px 10px', fontSize: 11.5, gap: 4, opacity: isDuplicate ? 0.4 : 1 }}
         >
           <Icon d={ICONS.plus} size={11} />
-          {isDuplicate ? 'Added' : 'Add'}
+          {isDuplicate ? 'Added' : addCount > 1 ? `Add ${addCount}` : 'Add'}
         </button>
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        {/* Predecessor chips — green, selectable; placed before the searched song */}
+        {hints.topPredecessors && hints.topPredecessors.map(p => {
+          const active = selectedPred === p.name
+          return (
+            <span
+              key={p.name}
+              className="pill"
+              onClick={() => setSelectedPred(active ? null : p.name)}
+              style={{
+                fontSize: 10.5, padding: '2px 8px', cursor: 'pointer',
+                background: active ? 'rgba(30,80,50,0.18)' : 'rgba(30,80,50,0.07)',
+                borderColor: active ? 'rgba(30,80,50,0.55)' : 'rgba(30,80,50,0.28)',
+                color: active ? 'var(--forest)' : 'rgba(30,80,50,0.75)',
+                outline: active ? '1.5px solid var(--forest)' : 'none',
+                outlineOffset: 1,
+                fontWeight: active ? 600 : 400,
+              }}
+              title="Click to include before the searched song when adding"
+            >
+              {p.name} → <span style={{ opacity: 0.65 }}>({p.count}×)</span>
+            </span>
+          )
+        })}
+
+        {/* Successor chips — rust/amber, selectable; placed after the searched song */}
         {hints.topSuccessors && hints.topSuccessors.length > 0
-          ? hints.topSuccessors.map(s => (
-              <span key={s.name} className="pill" style={{
-                fontSize: 10.5, padding: '2px 8px',
-                background: 'rgba(240,176,74,0.10)',
-                borderColor: 'rgba(240,176,74,0.25)',
-                color: 'var(--accent)',
-              }}>
-                → {s.name} <span style={{ opacity: 0.6 }}>({s.count}×)</span>
-              </span>
-            ))
+          ? hints.topSuccessors.map(s => {
+              const active = selectedSucc === s.name
+              return (
+                <span
+                  key={s.name}
+                  className="pill"
+                  onClick={() => setSelectedSucc(active ? null : s.name)}
+                  style={{
+                    fontSize: 10.5, padding: '2px 8px', cursor: 'pointer',
+                    background: active ? 'rgba(180,80,30,0.18)' : 'rgba(240,176,74,0.10)',
+                    borderColor: active ? 'rgba(180,80,30,0.55)' : 'rgba(240,176,74,0.25)',
+                    color: active ? 'var(--rust)' : 'var(--accent)',
+                    outline: active ? '1.5px solid var(--rust)' : 'none',
+                    outlineOffset: 1,
+                    fontWeight: active ? 600 : 400,
+                  }}
+                  title="Click to include after the searched song when adding"
+                >
+                  → {s.name} <span style={{ opacity: 0.6 }}>({s.count}×)</span>
+                </span>
+              )
+            })
           : pairing && (
               <span className="pill" style={{
                 fontSize: 10.5, padding: '2px 8px',
@@ -418,9 +463,12 @@ export function SetlistBuilder() {
   ])
 
   // ── Setlist mutations ────────────────────────────────────────────────────────
-  const addSong = useCallback((song: SearchSong) => {
-    const entry = makeEntry(song.title)
-    setSetlist(prev => ({ ...prev, [activeSet]: [...prev[activeSet], entry] }))
+  const addSong = useCallback((song: SearchSong, predecessorTitle?: string, successorTitle?: string) => {
+    const pred = predecessorTitle ? { ...makeEntry(predecessorTitle), segueIntoNext: true } : null
+    const main = { ...makeEntry(song.title), segueIntoNext: !!successorTitle }
+    const succ = successorTitle ? makeEntry(successorTitle) : null
+    const entries = [pred, main, succ].filter(Boolean) as ReturnType<typeof makeEntry>[]
+    setSetlist(prev => ({ ...prev, [activeSet]: [...prev[activeSet], ...entries] }))
     setQuerySinceLastAdd(false)
   }, [activeSet])
 
@@ -571,7 +619,7 @@ export function SetlistBuilder() {
                 key={song.title}
                 displayTitle={song.displayTitle}
                 hints={song.hints}
-                onAdd={() => addSong(song)}
+                onAdd={(pred, succ) => addSong(song, pred, succ)}
                 isDuplicate={allTitles.has(song.title)}
               />
             ))}

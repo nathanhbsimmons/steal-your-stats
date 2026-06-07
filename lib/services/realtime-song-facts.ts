@@ -91,6 +91,7 @@ export class RealtimeSongFactsService {
   private versionsCache = new Map<string, VersionsCache>()
   private buildPromise: Promise<Setlist[]> | null = null
   private successorMap: Map<string, { name: string; count: number }[]> | null = null
+  private predecessorMap: Map<string, { name: string; count: number }[]> | null = null
 
   constructor() {
     this.setlistClient = new SetlistClientImpl()
@@ -137,12 +138,14 @@ export class RealtimeSongFactsService {
     if (fromDisk) {
       this.allSetlistsCache = { setlists: fromDisk.setlists, cachedAt: Date.now() }
       this.successorMap = this.buildSuccessorMap(fromDisk.setlists)
+      this.predecessorMap = this.buildPredecessorMap(fromDisk.setlists)
 
       if (fromDisk.stale && !this.buildPromise) {
         // Background refresh — never blocks the caller.
         this.buildPromise = this.fetchAllPages().then(setlists => {
           this.allSetlistsCache = { setlists, cachedAt: Date.now() }
           this.successorMap = this.buildSuccessorMap(setlists)
+          this.predecessorMap = this.buildPredecessorMap(setlists)
           this.saveToDisk(setlists)
           this.buildPromise = null
           return setlists
@@ -162,6 +165,7 @@ export class RealtimeSongFactsService {
     this.buildPromise = this.fetchAllPages().then(setlists => {
       this.allSetlistsCache = { setlists, cachedAt: Date.now() }
       this.successorMap = this.buildSuccessorMap(setlists)
+      this.predecessorMap = this.buildPredecessorMap(setlists)
       this.saveToDisk(setlists)
       this.buildPromise = null
       return setlists
@@ -235,6 +239,44 @@ export class RealtimeSongFactsService {
     const searchNames = this.buildSearchNames(songTitle)
     for (const name of searchNames) {
       const hits = this.successorMap.get(name)
+      if (hits) return hits.slice(0, limit)
+    }
+    return []
+  }
+
+  private buildPredecessorMap(setlists: Setlist[]): Map<string, { name: string; count: number }[]> {
+    const raw = new Map<string, Map<string, number>>()
+    for (const setlist of setlists) {
+      for (const set of setlist.sets.set) {
+        const songs = set.song
+        for (let i = 1; i < songs.length; i++) {
+          const curr = songs[i].name
+          const prev = songs[i - 1]?.name
+          if (!curr || !prev) continue
+          const currKey = resolveSong({ title: curr }).normalizedTitle.toLowerCase()
+          const prevLabel = toTitleCase(resolveSong({ title: prev }).normalizedTitle)
+          if (!raw.has(currKey)) raw.set(currKey, new Map())
+          const m = raw.get(currKey)!
+          m.set(prevLabel, (m.get(prevLabel) || 0) + 1)
+        }
+      }
+    }
+    const result = new Map<string, { name: string; count: number }[]>()
+    for (const [key, counts] of raw) {
+      result.set(key, [...counts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, count]) => ({ name, count })))
+    }
+    return result
+  }
+
+  async getSongPredecessors(songTitle: string, limit = 3): Promise<{ name: string; count: number }[]> {
+    await this.getAllGDSetlists()
+    if (!this.predecessorMap) return []
+    const searchNames = this.buildSearchNames(songTitle)
+    for (const name of searchNames) {
+      const hits = this.predecessorMap.get(name)
       if (hits) return hits.slice(0, limit)
     }
     return []
