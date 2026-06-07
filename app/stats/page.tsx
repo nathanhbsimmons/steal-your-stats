@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import Link from 'next/link'
 
 interface YearCount { year: number; count: number }
@@ -17,20 +17,26 @@ interface GlobalStats {
   leaderboard: LeaderEntry[]
 }
 
-const DARK_STAR_POSITIONS = [
+interface PositionEntry { label: string; count: number; pct: string }
+
+const DARK_STAR_DEFAULT: PositionEntry[] = [
   { label: 'Mid-set', count: 210, pct: '90%' },
   { label: 'Opener',  count: 14,  pct: '6%' },
   { label: 'Closer',  count: 6,   pct: '3%' },
   { label: 'Encore',  count: 2,   pct: '1%' },
 ]
+const DARK_STAR_TOTAL = 232
 
-function DonutChart({ total }: { total: number }) {
+const COLORS = ['var(--rust)', 'var(--forest)', 'var(--ledger-blue)', 'var(--ink)']
+
+function DonutChart({ positions, songLabel }: { positions: PositionEntry[]; songLabel: string }) {
   const cx = 70, cy = 70, r = 56
-  const COLORS = ['var(--rust)', 'var(--forest)', 'var(--ledger-blue)', 'var(--ink)']
+  const total = positions.reduce((n, p) => n + p.count, 0)
 
   const paths = useMemo(() => {
+    if (total === 0) return []
     let acc = 0
-    return DARK_STAR_POSITIONS.map((p, i) => {
+    return positions.map((p, i) => {
       const start = (acc / total) * Math.PI * 2 - Math.PI / 2
       acc += p.count
       const end = (acc / total) * Math.PI * 2 - Math.PI / 2
@@ -41,8 +47,9 @@ function DonutChart({ total }: { total: number }) {
       const y2 = cy + r * Math.sin(end)
       return { ...p, d: `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`, color: COLORS[i] }
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [total])
+  }, [positions, total])
+
+  const label = songLabel.toUpperCase().slice(0, 14)
 
   return (
     <svg width="140" height="140" viewBox="0 0 140 140" style={{ flexShrink: 0 }}>
@@ -51,14 +58,29 @@ function DonutChart({ total }: { total: number }) {
       ))}
       <circle cx={cx} cy={cy} r="28" fill="var(--paper)" stroke="var(--ink)" strokeWidth="1" />
       <text x={cx} y={cy - 4} textAnchor="middle" fontFamily="var(--serif-display)" fontSize="20" fill="var(--ink)">{total}</text>
-      <text x={cx} y={cy + 10} textAnchor="middle" fontFamily="var(--mono)" fontSize="7" letterSpacing="0.1em" fill="var(--ink-3)">DARK STAR</text>
+      <text x={cx} y={cy + 10} textAnchor="middle" fontFamily="var(--mono)" fontSize="6.5" letterSpacing="0.08em" fill="var(--ink-3)">{label}</text>
     </svg>
   )
 }
 
+interface SongSuggestion { title: string; displayTitle: string }
+
 export default function StatsPage() {
   const [stats, setStats] = useState<GlobalStats | null>(null)
   const [summary, setSummary] = useState<SummaryData | null>(null)
+
+  // Position breakdown state
+  const [positionSong, setPositionSong] = useState('Dark Star')
+  const [positionData, setPositionData] = useState<PositionEntry[]>(DARK_STAR_DEFAULT)
+  const [positionTotal, setPositionTotal] = useState(DARK_STAR_TOTAL)
+  const [positionLoading, setPositionLoading] = useState(false)
+  const [songQuery, setSongQuery] = useState('')
+  const [suggestions, setSuggestions] = useState<SongSuggestion[]>([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [activeIdx, setActiveIdx] = useState(-1)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     fetch('/api/stats')
@@ -71,14 +93,89 @@ export default function StatsPage() {
       .catch(() => {})
   }, [])
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        inputRef.current && !inputRef.current.contains(e.target as Node) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  const fetchPositionData = useCallback(async (songTitle: string) => {
+    setPositionLoading(true)
+    try {
+      const [posRes, factsRes] = await Promise.all([
+        fetch(`/api/position-facts?songTitle=${encodeURIComponent(songTitle)}`),
+        fetch(`/api/song-facts?songTitle=${encodeURIComponent(songTitle)}`),
+      ])
+      const pos = posRes.ok ? await posRes.json() : null
+      const facts = factsRes.ok ? await factsRes.json() : null
+
+      const opener = pos?.opener?.count ?? 0
+      const closer = pos?.closer?.count ?? 0
+      const encore = pos?.encore?.count ?? 0
+      const total = facts?.totalPerformances ?? (opener + closer + encore)
+      const midset = Math.max(0, total - opener - closer - encore)
+      const safe = total > 0 ? total : 1
+
+      setPositionData([
+        { label: 'Mid-set', count: midset, pct: `${Math.round((midset / safe) * 100)}%` },
+        { label: 'Opener',  count: opener, pct: `${Math.round((opener / safe) * 100)}%` },
+        { label: 'Closer',  count: closer, pct: `${Math.round((closer / safe) * 100)}%` },
+        { label: 'Encore',  count: encore, pct: `${Math.round((encore / safe) * 100)}%` },
+      ])
+      setPositionTotal(total)
+      setPositionSong(pos?.songTitle || songTitle)
+    } catch {
+      // keep existing data on error
+    } finally {
+      setPositionLoading(false)
+    }
+  }, [])
+
+  function handleQueryChange(q: string) {
+    setSongQuery(q)
+    setActiveIdx(-1)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (!q.trim()) { setSuggestions([]); setShowDropdown(false); return }
+    debounceRef.current = setTimeout(() => {
+      fetch(`/api/songs?q=${encodeURIComponent(q)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const found: SongSuggestion[] = (d?.songs ?? []).slice(0, 8)
+          setSuggestions(found)
+          setShowDropdown(found.length > 0)
+        })
+        .catch(() => {})
+    }, 180)
+  }
+
+  function selectSong(song: SongSuggestion) {
+    setSongQuery('')
+    setSuggestions([])
+    setShowDropdown(false)
+    void fetchPositionData(song.displayTitle)
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!showDropdown || suggestions.length === 0) return
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, suggestions.length - 1)) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)) }
+    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); selectSong(suggestions[activeIdx]) }
+    else if (e.key === 'Escape') { setShowDropdown(false) }
+  }
+
   const barData = stats?.showsPerYear ?? []
   const barMax = barData.length > 0 ? Math.max(...barData.map(d => d.count), 1) : 1
   const peakYear = barData.reduce((best, d) => d.count > best.count ? d : best, { year: 0, count: 0 })
-
   const leaderboard = stats?.leaderboard ?? []
   const leaderMax = leaderboard.length > 0 ? leaderboard[0].count : 1
-
-  const donutTotal = DARK_STAR_POSITIONS.reduce((n, p) => n + p.count, 0)
 
   return (
     <section className="col">
@@ -147,22 +244,77 @@ export default function StatsPage() {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 28, marginTop: 24 }}>
-        {/* Donut — Dark Star position breakdown */}
+        {/* Donut — position breakdown with song search */}
         <div>
           <div className="section-head" style={{ marginTop: 0 }}>
             <h3>Position breakdown</h3>
-            <div className="descr">Dark Star — where it landed</div>
-            <span className="meta">N = {donutTotal}</span>
+            <div className="descr">{positionLoading ? 'loading…' : `${positionSong} — where it landed`}</div>
+            <span className="meta">N = {positionTotal}</span>
           </div>
-          <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginTop: 8 }}>
-            <DonutChart total={donutTotal} />
+
+          {/* Song search combobox */}
+          <div style={{ position: 'relative', marginBottom: 14 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              border: '1.5px solid var(--gray)', borderRadius: 8,
+              padding: '5px 10px', background: 'var(--paper)',
+            }}>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>⌕</span>
+              <input
+                ref={inputRef}
+                type="text"
+                value={songQuery}
+                onChange={e => handleQueryChange(e.target.value)}
+                onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
+                onKeyDown={handleKeyDown}
+                placeholder={positionSong}
+                style={{
+                  border: 'none', outline: 'none', background: 'transparent',
+                  fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink)',
+                  flex: 1, minWidth: 0,
+                }}
+              />
+              {positionLoading && (
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>…</span>
+              )}
+            </div>
+
+            {showDropdown && suggestions.length > 0 && (
+              <div
+                ref={dropdownRef}
+                style={{
+                  position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0,
+                  background: 'var(--paper)', border: '2px solid var(--ink)',
+                  borderRadius: 8, zIndex: 50, overflow: 'hidden',
+                  boxShadow: '4px 4px 0 var(--ink)',
+                }}
+              >
+                {suggestions.map((s, i) => (
+                  <div
+                    key={s.title}
+                    onMouseDown={() => selectSong(s)}
+                    onMouseEnter={() => setActiveIdx(i)}
+                    style={{
+                      padding: '7px 12px',
+                      fontFamily: 'var(--serif-display)', fontSize: 14, color: 'var(--ink)',
+                      cursor: 'pointer',
+                      background: i === activeIdx ? 'var(--hi)' : 'transparent',
+                      borderBottom: i < suggestions.length - 1 ? '1px solid var(--rule-soft)' : 'none',
+                    }}
+                  >
+                    {s.displayTitle}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+            <DonutChart positions={positionData} songLabel={positionSong} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {DARK_STAR_POSITIONS.map((p, i) => (
+              {positionData.map((p, i) => (
                 <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{
-                    width: 10, height: 10, flexShrink: 0,
-                    background: ['var(--rust)', 'var(--forest)', 'var(--ledger-blue)', 'var(--ink)'][i],
-                  }} />
+                  <span style={{ width: 10, height: 10, flexShrink: 0, background: COLORS[i] }} />
                   <span style={{ flex: 1, fontFamily: 'var(--serif-body)', fontSize: 13.5, color: 'var(--ink-2)' }}>{p.label}</span>
                   <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink)' }}>{p.count}</span>
                   <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>· {p.pct}</span>
