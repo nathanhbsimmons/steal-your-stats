@@ -3,8 +3,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { TopBar } from '@/components/glass/topbar'
-import { ShowRow, GlassSkeleton } from '@/components/glass/primitives'
 
 const ERA_DEFS = [
   {
@@ -26,7 +24,6 @@ const ERA_DEFS = [
     tag: 'wall-of-sound',
     description: 'Peak improvisational power and the Wall of Sound PA system. New songwriting from Garcia/Hunter and Weir/Barlow, legendary European tours, and some of the longest Dark Stars ever played.',
     sigSongs: ['Dark Star', 'Playing in the Band', 'Eyes of the World', 'He\'s Gone'],
-    highlight: true,
   },
   {
     id: 'hiatus',
@@ -72,7 +69,6 @@ interface ShowRef {
 export default function EraDetailPage() {
   const params = useParams()
   const eraId = params['era-id'] as string
-
   const era = ERA_DEFS.find(e => e.id === eraId)
 
   const [shows, setShows] = useState<ShowRef[]>([])
@@ -88,10 +84,7 @@ export default function EraDetailPage() {
     fetch(`/api/shows?yearFrom=${era.startYear}&yearTo=${era.endYear}&page=${p}&perPage=30`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data) {
-          setShows(data.shows)
-          setTotal(data.total)
-        }
+        if (data) { setShows(data.shows); setTotal(data.total) }
       })
       .catch(() => {})
       .finally(() => setLoadingShows(false))
@@ -110,141 +103,164 @@ export default function EraDetailPage() {
 
   if (!era) {
     return (
-      <>
-        <TopBar eyebrow="Eras" title="Era not found." />
-        <div style={{ padding: '32px 28px' }}>
-          <Link href="/eras" className="btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            ← Back to Eras
-          </Link>
+      <section className="col">
+        <div className="crumbs">
+          <Link href="/">Home</Link>
+          <span className="sep">/</span>
+          <Link href="/eras">Eras</Link>
+          <span className="sep">/</span>
+          <span className="cur">Not found</span>
         </div>
-      </>
+        <div style={{ padding: '40px 0', fontFamily: 'var(--serif-body)', fontStyle: 'italic', color: 'var(--ink-3)' }}>
+          Era not found. <Link href="/eras" style={{ color: 'var(--rust)' }}>Back to Eras</Link>
+        </div>
+      </section>
     )
   }
 
   const totalPages = Math.ceil(total / 30)
+  const leaderMax = topSongs[0]?.count ?? 1
 
   return (
-    <>
-      <TopBar eyebrow="Eras" title={`${era.name} · ${era.years}`} />
+    <section className="col">
+      {/* Breadcrumbs */}
+      <div className="crumbs">
+        <Link href="/">Home</Link>
+        <span className="sep">/</span>
+        <Link href="/eras">Eras</Link>
+        <span className="sep">/</span>
+        <span className="cur">{era.name}</span>
+      </div>
 
-      <div className="scroll-hide" style={{ flex: 1, overflow: 'auto', padding: '0 28px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-
-        {/* Era header */}
-        <section className={`glass${era.highlight ? ' strong' : ''}`} style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <span className="t-eyebrow" style={{ color: era.highlight ? 'var(--accent)' : 'var(--fg-3)' }}>{era.tag}</span>
-            {total > 0 && <span className="t-mono" style={{ fontSize: 12, color: 'var(--fg-3)' }}>{total} shows</span>}
+      {/* Page head */}
+      <div className="page-head">
+        <div>
+          <div className="kicker">Eras · {era.tag}</div>
+          <h2>{era.name} · <span style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>{era.years}</span></h2>
+          <div className="lede" style={{ marginTop: 6 }}>{era.description}</div>
+        </div>
+        {total > 0 && (
+          <div className="toolbar">
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-3)' }}>{total} shows</span>
           </div>
-          <p style={{ fontSize: 14.5, color: 'var(--fg-2)', lineHeight: 1.6, maxWidth: 680 }}>{era.description}</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-            {era.sigSongs.map(s => (
-              <Link key={s} href={`/song/${encodeURIComponent(s)}`} className="pill" style={{ fontSize: 11.5, padding: '4px 10px', textDecoration: 'none' }}>
-                {s}
-              </Link>
-            ))}
+        )}
+      </div>
+
+      {/* Signature songs */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '0 0 18px' }}>
+        {era.sigSongs.map(s => (
+          <Link
+            key={s}
+            href={`/song/${encodeURIComponent(s)}`}
+            style={{
+              display: 'inline-block',
+              border: '2px solid var(--ink)',
+              borderRadius: 12,
+              padding: '5px 14px',
+              fontFamily: 'var(--serif-display)',
+              fontSize: 13,
+              color: 'var(--ink)',
+              textDecoration: 'none',
+              background: 'var(--paper)',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--hi)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'var(--paper)')}
+          >
+            {s}
+          </Link>
+        ))}
+      </div>
+
+      {/* Two-column content */}
+      <div className="results-cols" style={{ gridTemplateColumns: '3fr 2fr', alignItems: 'start' }}>
+
+        {/* Shows list */}
+        <div className="result-col">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <h4>Shows</h4>
+            {total > 0 && (
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.04em' }}>
+                {(page - 1) * 30 + 1}–{Math.min(page * 30, total)} of {total}
+              </span>
+            )}
           </div>
-        </section>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 18, alignItems: 'start' }}>
-
-          {/* Shows list */}
-          <section className="glass" style={{ padding: '16px 0', display: 'flex', flexDirection: 'column', gap: 0 }}>
-            <div style={{ padding: '0 16px 12px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <span className="t-eyebrow">Shows</span>
-              {total > 0 && (
-                <span className="t-mono" style={{ fontSize: 11, color: 'var(--fg-3)' }}>
-                  {(page - 1) * 30 + 1}–{Math.min(page * 30, total)} of {total}
-                </span>
-              )}
-            </div>
-            <div className="divider" style={{ margin: '0 0 4px' }} />
-
-            {loadingShows ? (
-              <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {Array.from({ length: 8 }).map((_, i) => <GlassSkeleton key={i} height={48} />)}
-              </div>
-            ) : shows.length === 0 ? (
-              <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--fg-3)' }}>
-                <span className="t-small">No shows found</span>
-              </div>
-            ) : (
-              shows.map(show => (
-                <Link key={show.id} href={`/show/${show.date}`} style={{ textDecoration: 'none' }}>
-                  <ShowRow
-                    date={show.date}
-                    venue={show.venue}
-                    city={show.city}
-                    country={show.state ? `${show.state} · ${show.country}` : show.country}
-                  />
-                </Link>
+          {loadingShows
+            ? Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="skeleton-vault" style={{ height: 44, marginBottom: 3 }} />
               ))
-            )}
-
-            {totalPages > 1 && (
-              <div style={{ padding: '12px 16px 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button
-                  className="btn"
-                  disabled={page <= 1}
-                  onClick={() => { const p = page - 1; setPage(p); fetchShows(p) }}
-                  style={{ padding: '6px 14px', fontSize: 12, opacity: page <= 1 ? 0.4 : 1 }}
-                >
-                  ← Prev
-                </button>
-                <span className="t-mono" style={{ fontSize: 11.5, color: 'var(--fg-3)', flex: 1, textAlign: 'center' }}>
-                  {page} / {totalPages}
-                </span>
-                <button
-                  className="btn"
-                  disabled={page >= totalPages}
-                  onClick={() => { const p = page + 1; setPage(p); fetchShows(p) }}
-                  style={{ padding: '6px 14px', fontSize: 12, opacity: page >= totalPages ? 0.4 : 1 }}
-                >
-                  Next →
-                </button>
-              </div>
-            )}
-          </section>
-
-          {/* Top songs sidebar */}
-          <section className="glass" style={{ padding: '16px 0', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '0 16px 12px' }}>
-              <span className="t-eyebrow">Most played</span>
-            </div>
-            <div className="divider" style={{ margin: '0 0 4px' }} />
-
-            {loadingSongs ? (
-              <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {Array.from({ length: 6 }).map((_, i) => <GlassSkeleton key={i} height={36} />)}
-              </div>
-            ) : (
-              topSongs.map((song, i) => {
-                const maxCount = topSongs[0]?.count ?? 1
-                const pct = Math.round((song.count / maxCount) * 100)
-                return (
+            : shows.length === 0
+              ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>No shows found.</div>
+              : shows.map(show => (
                   <Link
-                    key={song.name}
-                    href={`/song/${encodeURIComponent(song.name)}`}
-                    style={{ textDecoration: 'none', padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--glass-bg)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    key={show.id}
+                    href={`/show/${show.date}`}
+                    className="row"
+                    style={{ textDecoration: 'none' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 12.5, color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span className="t-mono" style={{ fontSize: 10.5, color: 'var(--fg-3)', width: 16 }}>{i + 1}</span>
-                        {song.name}
-                      </span>
-                      <span className="t-mono" style={{ fontSize: 11, color: 'var(--fg-3)' }}>{song.count}</span>
-                    </div>
-                    <div style={{ height: 3, borderRadius: 2, background: 'var(--glass-border)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${pct}%`, background: 'var(--accent)', borderRadius: 2, transition: 'width 0.4s ease' }} />
-                    </div>
+                    <span className="t">{show.venue}</span>
+                    <span className="s">{show.date} · {show.city}{show.state ? `, ${show.state}` : ''}</span>
                   </Link>
-                )
-              })
-            )}
-          </section>
+                ))
+          }
+
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 14 }}>
+              <button
+                className="btn"
+                disabled={page <= 1}
+                onClick={() => { const p = page - 1; setPage(p); fetchShows(p) }}
+                style={{ opacity: page <= 1 ? 0.4 : 1 }}
+              >
+                ← Prev
+              </button>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', flex: 1, textAlign: 'center' }}>
+                {page} / {totalPages}
+              </span>
+              <button
+                className="btn"
+                disabled={page >= totalPages}
+                onClick={() => { const p = page + 1; setPage(p); fetchShows(p) }}
+                style={{ opacity: page >= totalPages ? 0.4 : 1 }}
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Most-played songs sidebar */}
+        <div className="result-col">
+          <h4>Most played</h4>
+          {loadingSongs
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="skeleton-vault" style={{ height: 36, marginBottom: 4 }} />
+              ))
+            : (
+              <ul className="toptable">
+                {topSongs.map((song, i) => {
+                  const pct = Math.round((song.count / leaderMax) * 100)
+                  return (
+                    <li key={song.name}>
+                      <Link href={`/song/${encodeURIComponent(song.name)}`} style={{ textDecoration: 'none', display: 'block' }}>
+                        <div className="row1">
+                          <span className="rank">{i + 1}.</span>
+                          <span style={{ fontFamily: 'var(--serif-display)', fontSize: 16 }}>{song.name}</span>
+                          <span className="plays">{song.count}</span>
+                        </div>
+                        <div className="bar">
+                          <div className="fill" style={{ width: `${pct}%` }} />
+                        </div>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            )
+          }
         </div>
       </div>
-    </>
+    </section>
   )
 }
