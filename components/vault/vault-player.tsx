@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { usePlayer } from '@/lib/contexts/player-context'
 
 function formatTime(secs: number): string {
@@ -27,6 +29,7 @@ export function VaultPlayer() {
   const [showQueue, setShowQueue] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
   const barRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
   const volRef = useRef<HTMLDivElement>(null)
 
   // Load new src when track URL changes
@@ -127,6 +130,30 @@ export function VaultPlayer() {
     }
   }, [])
 
+  // Close queue on navigation
+  useEffect(() => { setShowQueue(false) }, [pathname])
+
+  // Close queue on click outside (exclude the player bar, queue drawer, play/add-queue buttons)
+  useEffect(() => {
+    if (!showQueue) return
+    const handleMouseDown = (e: MouseEvent) => {
+      let el = e.target as Element | null
+      while (el) {
+        if (
+          el.classList.contains('vault-queue') ||
+          el.classList.contains('vault-player') ||
+          el.classList.contains('tbl-play') ||
+          el.classList.contains('add-q') ||
+          el.getAttribute('data-queue-safe') === 'true'
+        ) return
+        el = el.parentElement
+      }
+      setShowQueue(false)
+    }
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => document.removeEventListener('mousedown', handleMouseDown)
+  }, [showQueue])
+
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0
 
   const onBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -165,9 +192,21 @@ export function VaultPlayer() {
               <div className="sub">
                 {currentTrack
                   ? <>{currentTrack.showDate} · {currentTrack.venue} · <span className="live">REEL TO REEL</span></>
-                  : <>cue a show to begin · <span style={{ color: 'var(--rust)' }}>play the featured tape</span></>
+                  : null
                 }
               </div>
+              {currentTrack && (
+                <Link
+                  href={`/show/${currentTrack.showDate}`}
+                  style={{
+                    fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.1em',
+                    textTransform: 'uppercase', color: 'var(--rust)', textDecoration: 'none',
+                    display: 'block', marginTop: 2,
+                  }}
+                >
+                  go to show ↗
+                </Link>
+              )}
             </div>
           </div>
 
@@ -224,7 +263,7 @@ export function VaultPlayer() {
               ? isPlaying
                 ? <><span className="lit"><span className="dot" />playing</span> · {queue.length} track{queue.length !== 1 ? 's' : ''} · {formatQueueTime(queue.slice(queueIndex + 1))} left</>
                 : <>cued · {queue.length} track{queue.length !== 1 ? 's' : ''}</>
-              : <>standby · no queue · click a setlist track to begin</>
+              : <>standby · no queue · click a setlist or show track to begin</>
             }
           </span>
           <span>
@@ -248,7 +287,7 @@ function VaultQueueDrawer({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="vault-queue">
-      <header>
+      <header onClick={onClose} style={{ cursor: 'pointer' }}>
         <div>
           <h4>Queue{' '}
             <span className="sub">{queue.length} TRACKS · {formatQueueTime(queue)}</span>

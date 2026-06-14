@@ -28,6 +28,7 @@ const mockNext = vi.fn()
 const mockPrevious = vi.fn()
 const mockSelectTrack = vi.fn()
 const mockAddToQueue = vi.fn()
+const mockPrependToQueue = vi.fn()
 const mockRemoveFromQueue = vi.fn()
 const mockClearQueue = vi.fn()
 const mockPlayEntireShow = vi.fn()
@@ -56,6 +57,7 @@ function makePlayer(overrides: Record<string, unknown> = {}) {
     previous: mockPrevious,
     selectTrack: mockSelectTrack,
     addToQueue: mockAddToQueue,
+    prependToQueue: mockPrependToQueue,
     removeFromQueue: mockRemoveFromQueue,
     clearQueue: mockClearQueue,
     playEntireShow: mockPlayEntireShow,
@@ -295,11 +297,13 @@ describe('MobileShell', () => {
 
   describe('DeckScreen', () => {
     it('renders the reel player element', () => {
+      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: true })
       render(<MobileShell />)
       expect(screen.getByLabelText('Reel-to-reel player')).toBeInTheDocument()
     })
 
     it('renders transport controls', () => {
+      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: true })
       render(<MobileShell />)
       expect(screen.getByLabelText('Previous track')).toBeInTheDocument()
       expect(screen.getByLabelText(/^(Play|Pause)$/)).toBeInTheDocument()
@@ -307,7 +311,8 @@ describe('MobileShell', () => {
     })
 
     it('shows "standby · no queue" when nothing is queued', () => {
-      setPlayer({ isPlaying: false, queue: [], currentTrack: null })
+      // currentTrack must be set to show the reel section; queue empty triggers standby
+      setPlayer({ isPlaying: false, queue: [], currentTrack: mockTrack })
       render(<MobileShell />)
       expect(screen.getByText(/standby · no queue/i)).toBeInTheDocument()
     })
@@ -316,7 +321,7 @@ describe('MobileShell', () => {
       const queue = [mockTrack, { ...mockTrack, id: 'track-2', name: 'Truckin' }]
       setPlayer({ isPlaying: false, queue, currentTrack: mockTrack })
       render(<MobileShell />)
-      expect(screen.getByText(/cued · 2 tracks/i)).toBeInTheDocument()
+      expect(screen.getByText(/cued · 2 archive tracks/i)).toBeInTheDocument()
     })
 
     // Bug fix: single track should NOT say "playing entire show"
@@ -340,6 +345,7 @@ describe('MobileShell', () => {
     })
 
     it('renders the seek slider', () => {
+      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
       const slider = screen.getByRole('slider', { name: 'Seek' })
       expect(slider).toBeInTheDocument()
@@ -349,6 +355,7 @@ describe('MobileShell', () => {
 
     // Bug fix: click on seek bar dispatches seek event
     it('dispatches vault-seek-to-fraction on click at the midpoint', () => {
+      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
       const bar = screen.getByRole('slider', { name: 'Seek' })
       const events: CustomEvent[] = []
@@ -363,6 +370,7 @@ describe('MobileShell', () => {
     })
 
     it('dispatches vault-seek-to-fraction: fraction clamps to 0..1', () => {
+      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
       const bar = screen.getByRole('slider', { name: 'Seek' })
       const events: CustomEvent[] = []
@@ -378,6 +386,7 @@ describe('MobileShell', () => {
     })
 
     it('dispatches vault-seek-by with -10 seconds when skip back is clicked', () => {
+      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
       const events: CustomEvent[] = []
       window.addEventListener('vault-seek-by', e => events.push(e as CustomEvent))
@@ -386,6 +395,7 @@ describe('MobileShell', () => {
     })
 
     it('dispatches vault-seek-by with +10 seconds when skip forward is clicked', () => {
+      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
       const events: CustomEvent[] = []
       window.addEventListener('vault-seek-by', e => events.push(e as CustomEvent))
@@ -426,6 +436,10 @@ describe('MobileShell', () => {
           date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', totalSongs: 1,
           sets: [{ name: 'Set I', encore: false, songs: ['Dark Star'] }],
         },
+        // Provide a matching archive track so "Dark Star" stays in-archive after coverage loads
+        '/api/archive/song-tracks': {
+          tracks: [{ name: 'gd77t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77/t01.mp3' }],
+        },
       })
       render(<MobileShell />)
       await waitFor(() => expect(screen.getByLabelText('Play Dark Star')).toBeInTheDocument())
@@ -434,6 +448,7 @@ describe('MobileShell', () => {
     })
 
     it('updates the current-time display from vault-time-update events', () => {
+      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: true })
       render(<MobileShell />)
       act(() => {
         window.dispatchEvent(new CustomEvent('vault-time-update', {
@@ -657,7 +672,8 @@ describe('MobileShell', () => {
 
     it('renders the show date as a header kicker', () => {
       render(<MobileShell />)
-      expect(screen.getByText('1977-05-08')).toBeInTheDocument()
+      // ShowDate formats "1977-05-08" as "Sunday, the 8th of May 1977"; year in its own span
+      expect(screen.getByText('1977')).toBeInTheDocument()
     })
 
     it('shows "Loading…" initially', () => {
@@ -842,6 +858,7 @@ describe('MobileShell', () => {
   describe('MobileShell routing', () => {
     it('renders DeckScreen (reel) on "/"', () => {
       setPathname('/')
+      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: true })
       render(<MobileShell />)
       expect(screen.getByLabelText('Reel-to-reel player')).toBeInTheDocument()
     })
@@ -867,7 +884,8 @@ describe('MobileShell', () => {
     it('renders ShowDetailScreen on "/show/1977-05-08"', () => {
       setPathname('/show/1977-05-08')
       render(<MobileShell />)
-      expect(screen.getByText('1977-05-08')).toBeInTheDocument()
+      // ShowDetailScreen shows "Loading…" initially before the API resolves
+      expect(screen.getByText('Loading…')).toBeInTheDocument()
     })
 
     it('renders SongDetailScreen on "/song/Dark Star"', () => {

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { Icon, ICONS } from './icons'
 import { Track } from '@/components/ui/audio-player-dock'
 
@@ -284,6 +285,14 @@ export function PlayerDock({
             <span className="t-small t-mono">
               {dateFormatted}{currentTrack.venue ? ` · ${currentTrack.venue}` : ''}
             </span>
+            {currentTrack.showDate && (
+              <Link
+                href={`/show/${currentTrack.showDate}`}
+                style={{ fontSize: 10, fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', color: 'var(--accent)', textDecoration: 'none', textTransform: 'uppercase' }}
+              >
+                Go to show ↗
+              </Link>
+            )}
           </div>
 
           {/* Transport */}

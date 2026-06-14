@@ -49,6 +49,15 @@ async function fetchSongTracks(itemId: string, songTitle: string) {
 
 function formatDate(iso: string) { return iso.replace(/-/g, ' · ') }
 
+function ordinal(n: number): string {
+  const s = String(n)
+  if (s.endsWith('11') || s.endsWith('12') || s.endsWith('13')) return s + 'th'
+  if (s.endsWith('1')) return s + 'st'
+  if (s.endsWith('2')) return s + 'nd'
+  if (s.endsWith('3')) return s + 'rd'
+  return s + 'th'
+}
+
 function formatDuration(sec?: number): string {
   if (!sec) return '—'
   const h = Math.floor(sec / 3600)
@@ -58,7 +67,7 @@ function formatDuration(sec?: number): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-type SortKey = 'duration-desc' | 'date' | 'venue'
+type SortKey = 'duration-desc' | 'date' | 'date-desc' | 'venue'
 
 export default function SongPage() {
   const params = useParams()
@@ -67,7 +76,7 @@ export default function SongPage() {
   const songTitle = decodeURIComponent(params.slug as string)
   const venueFilter = searchParams.get('venue')
 
-  const [sortKey, setSortKey] = useState<SortKey>('duration-desc')
+  const [sortKey, setSortKey] = useState<SortKey>('date')
   const [starred, setStarred] = useState(false)
   const [shareLabel, setShareLabel] = useState<'Share' | 'Copied!'>('Share')
   const [playError, setPlayError] = useState<string | null>(null)
@@ -76,6 +85,8 @@ export default function SongPage() {
   const [lastShowLoading, setLastShowLoading] = useState(false)
   const [showAllOpener, setShowAllOpener] = useState(false)
   const [showAllCloser, setShowAllCloser] = useState(false)
+  const [showAllSet1Closer, setShowAllSet1Closer] = useState(false)
+  const [showAllSet2Opener, setShowAllSet2Opener] = useState(false)
   const [showAllEncore, setShowAllEncore] = useState(false)
   const [showAllVersions, setShowAllVersions] = useState(false)
 
@@ -109,7 +120,7 @@ export default function SongPage() {
     } catch {}
   }
 
-  const { currentTrack, isPlaying, addToQueue, selectTrack } = usePlayer()
+  const { currentTrack, isPlaying, addToQueue, prependToQueue, selectTrack } = usePlayer()
 
   const swrOpts = {
     revalidateOnFocus: false,
@@ -121,6 +132,11 @@ export default function SongPage() {
   const { data, error, isLoading }               = useSWR(`song-facts-${songTitle}`,     () => fetchSongFacts(songTitle),     swrOpts)
   const { data: posData, isLoading: posLoading } = useSWR(`position-facts-${songTitle}`, () => fetchPositionFacts(songTitle), swrOpts)
   const { data: versData, isLoading: versLoading } = useSWR(`versions-${songTitle}`,     () => fetchVersions(songTitle),      swrOpts)
+  const { data: timelineData } = useSWR(
+    `song-timeline-${songTitle}`,
+    () => fetch(`/api/song-timeline?songTitle=${encodeURIComponent(songTitle)}`).then(r => r.ok ? r.json() : null),
+    swrOpts,
+  )
 
   const handlePlayTrack = async (vt: VersionTrack) => {
     if (vt.url) {
@@ -134,7 +150,7 @@ export default function SongPage() {
         city: vt.city,
         archiveItemId: vt.archiveItemId || '',
       }
-      addToQueue([track])
+      prependToQueue([track])
       selectTrack(track)
     } else {
       await handlePlayShowVersions({ date: vt.showDate, venue: vt.venue, city: vt.city })
@@ -172,7 +188,7 @@ export default function SongPage() {
         setPlayErrorDate(showRef.date)
         return
       }
-      addToQueue(formatted)
+      prependToQueue(formatted)
       selectTrack(formatted[0])
     } catch (err) {
       if (err instanceof Error && err.message === '404') {
@@ -184,18 +200,25 @@ export default function SongPage() {
     }
   }
 
+  // Map each show date to its 1-based performance number across all setlist.fm appearances
+  const performanceNumberByDate = new Map<string, number>(
+    (timelineData?.performances ?? []).map((p: { date: string }, i: number) => [p.date, i + 1])
+  )
+
   const sortedTracks = versData?.tracks ? [...versData.tracks]
     .filter(t => !venueFilter || t.venue.toLowerCase() === venueFilter.toLowerCase())
     .sort((a, b) => {
       if (sortKey === 'duration-desc') return (b.durationSec || 0) - (a.durationSec || 0)
       if (sortKey === 'date') return a.showDate.localeCompare(b.showDate)
-      return a.venue.localeCompare(b.venue)
+      if (sortKey === 'date-desc') return b.showDate.localeCompare(a.showDate)
+      return a.venue.localeCompare(b.venue) || a.showDate.localeCompare(b.showDate)
     }) : []
 
   const VERSIONS_PREVIEW = 8
   const displayTracks = (venueFilter || showAllVersions) ? sortedTracks : sortedTracks.slice(0, VERSIONS_PREVIEW)
 
-  const POS_PREVIEW = 6
+  const POS_PREVIEW = 5
+  const hasPosData = posData != null && [posData.opener, posData.closer, posData.set1Closer, posData.set2Opener, posData.encore].some(d => (d?.shows?.length ?? 0) > 0)
 
   return (
     <section className="col">
@@ -332,191 +355,216 @@ export default function SongPage() {
         </div>
       ) : null}
 
-      {/* Position Facts */}
-      {posLoading ? (
-        <div style={{ marginTop: 18 }}>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="skeleton-vault" style={{ height: 44, marginBottom: 4 }} />
-          ))}
-        </div>
-      ) : posData ? (
-        <>
-          {[
-            { key: 'opener' as const, title: 'Opened the show',  data: posData.opener,  open: showAllOpener, toggle: () => setShowAllOpener(v => !v) },
-            { key: 'closer' as const, title: 'Closed the show',  data: posData.closer,  open: showAllCloser, toggle: () => setShowAllCloser(v => !v) },
-            { key: 'encore' as const, title: 'Played as encore', data: posData.encore,  open: showAllEncore, toggle: () => setShowAllEncore(v => !v) },
-          ].map(({ key, title, data, open, toggle }) => {
-            const allShows = data?.shows ?? []
-            const shows = venueFilter
-              ? allShows.filter(s => s.venue.toLowerCase() === venueFilter.toLowerCase())
-              : allShows
-            const count = shows.length
-            if (!count) return null
-            return (
-              <div key={key}>
-                <div className="section-head" style={{ marginTop: 18 }}>
-                  <h3 style={{ fontSize: 22 }}>{title}</h3>
-                  <div className="descr">— {count} {count === 1 ? 'time' : 'times'}</div>
-                  <span className="meta" style={{ cursor: 'pointer' }} onClick={toggle}>
-                    {open ? 'collapse ↑' : 'show all ↓'}
-                  </span>
-                </div>
-                {(open ? shows : shows.slice(0, POS_PREVIEW)).map((s, i) => (
+      {/* Two-column layout: Versions (left 2/3) + Position facts (right 1/3) — collapse to 1 col when no position data */}
+      <div style={{ display: 'grid', gridTemplateColumns: hasPosData ? '2fr 1fr' : '1fr', gap: '0 40px', alignItems: 'start', marginTop: 8 }}>
+
+        {/* LEFT: Versions table */}
+        <div>
+          {versLoading ? (
+            <div style={{ marginTop: 22 }}>
+              <div className="skeleton-vault" style={{ height: 36, marginBottom: 4 }} />
+              <div className="skeleton-vault" style={{ height: 200 }} />
+            </div>
+          ) : versData?.tracks?.length ? (
+            <>
+              <div className="section-head">
+                <h3>Versions</h3>
+                <div className="descr">— Archive.org recordings</div>
+                <span className="meta">{sortedTracks.length} tracked</span>
+              </div>
+
+              {venueFilter && (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 10,
+                  background: 'var(--paper-3)', border: '1.5px solid var(--ink)',
+                  padding: '6px 12px', marginBottom: 14,
+                  fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+                }}>
+                  <span style={{ color: 'var(--ink-3)' }}>Venue</span>
+                  <span style={{ color: 'var(--ink)' }}>{venueFilter}</span>
                   <Link
-                    key={i}
-                    href={`/show/${s.date}`}
-                    style={{
-                      display: 'grid', gridTemplateColumns: '120px 1fr',
-                      gap: 12, padding: '7px 0', borderBottom: '1px dotted var(--rule-soft)',
-                      textDecoration: 'none', alignItems: 'baseline',
-                    }}
-                  >
-                    <span style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--ink-3)', letterSpacing: '0.04em' }}>{formatDate(s.date)}</span>
-                    <span style={{ fontFamily: 'var(--serif-body)', fontSize: 14.5, color: 'var(--ink)' }}>
-                      {s.venue}{s.city ? ` · ${s.city}` : ''}
-                    </span>
-                  </Link>
-                ))}
-                {shows.length > POS_PREVIEW && !open && (
+                    href={`/song/${encodeURIComponent(songTitle)}`}
+                    style={{ color: 'var(--rust)', textDecoration: 'none', marginLeft: 4 }}
+                    title="Clear venue filter"
+                  >×</Link>
+                </div>
+              )}
+
+              {/* Sort filters */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>Sort</span>
+                {([
+                  { key: 'date' as const,          label: sortKey === 'date' ? 'Date ↑' : sortKey === 'date-desc' ? 'Date ↓' : 'Date ↑' },
+                  { key: 'venue' as const,         label: 'Venue' },
+                  { key: 'duration-desc' as const, label: 'Duration ↓' },
+                ] as const).map(({ key, label }) => {
+                  const isDateBtn = key === 'date'
+                  const isActive = isDateBtn ? (sortKey === 'date' || sortKey === 'date-desc') : sortKey === key
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        if (isDateBtn) {
+                          setSortKey(sortKey === 'date' ? 'date-desc' : 'date')
+                        } else {
+                          setSortKey(key)
+                        }
+                      }}
+                      style={{
+                        background: isActive ? 'var(--ink)' : 'var(--paper)',
+                        border: '1px solid var(--ink)',
+                        color: isActive ? 'var(--paper)' : 'var(--ink)',
+                        fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.08em',
+                        padding: '4px 10px', cursor: 'pointer',
+                      }}
+                    >{label}</button>
+                  )
+                })}
+                <span style={{ flex: 1 }} />
+                {!venueFilter && sortedTracks.length > VERSIONS_PREVIEW && (
                   <button
-                    onClick={toggle}
+                    onClick={() => setShowAllVersions(v => !v)}
                     style={{
                       background: 'none', border: 0, cursor: 'pointer',
                       fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.1em',
-                      textTransform: 'uppercase', color: 'var(--rust)', marginTop: 6,
+                      textTransform: 'uppercase', color: 'var(--rust)', marginRight: 10,
                     }}
                   >
-                    Load {shows.length - POS_PREVIEW} more ↓
+                    {showAllVersions ? 'Show fewer ↑' : `Show all ${sortedTracks.length} ↓`}
                   </button>
                 )}
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)' }}>
+                  Showing {displayTracks.length}{!venueFilter && !showAllVersions && sortedTracks.length > VERSIONS_PREVIEW ? ` of ${sortedTracks.length}` : ''}
+                </span>
               </div>
-            )
-          })}
-        </>
-      ) : null}
 
-      {/* Versions table */}
-      {versLoading ? (
-        <div style={{ marginTop: 22 }}>
-          <div className="skeleton-vault" style={{ height: 36, marginBottom: 4 }} />
-          <div className="skeleton-vault" style={{ height: 200 }} />
-        </div>
-      ) : versData?.tracks?.length ? (
-        <>
-          <div className="section-head">
-            <h3>Versions</h3>
-            <div className="descr">— Archive.org recordings</div>
-            <span className="meta">{sortedTracks.length} tracked</span>
-          </div>
-
-          {venueFilter && (
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 10,
-              background: 'var(--paper-3)', border: '1.5px solid var(--ink)',
-              padding: '6px 12px', marginBottom: 14,
-              fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
-            }}>
-              <span style={{ color: 'var(--ink-3)' }}>Venue</span>
-              <span style={{ color: 'var(--ink)' }}>{venueFilter}</span>
-              <Link
-                href={`/song/${encodeURIComponent(songTitle)}`}
-                style={{ color: 'var(--rust)', textDecoration: 'none', marginLeft: 4 }}
-                title="Clear venue filter"
-              >
-                ×
-              </Link>
-            </div>
-          )}
-
-          {/* Sort filters */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>Sort</span>
-            {(['duration-desc', 'date', 'venue'] as SortKey[]).map((key, i) => (
-              <button
-                key={key}
-                onClick={() => setSortKey(key)}
-                style={{
-                  background: sortKey === key ? 'var(--ink)' : 'var(--paper)',
-                  border: '1px solid var(--ink)',
-                  color: sortKey === key ? 'var(--paper)' : 'var(--ink)',
-                  fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.08em',
-                  padding: '4px 10px', cursor: 'pointer',
-                }}
-              >
-                {['Duration ↓', 'Date', 'Venue'][i]}
-              </button>
-            ))}
-            <span style={{ flex: 1 }} />
-            {!venueFilter && sortedTracks.length > VERSIONS_PREVIEW && (
-              <button
-                onClick={() => setShowAllVersions(v => !v)}
-                style={{
-                  background: 'none', border: 0, cursor: 'pointer',
-                  fontFamily: 'var(--mono)', fontSize: 10.5, letterSpacing: '0.1em',
-                  textTransform: 'uppercase', color: 'var(--rust)', marginRight: 10,
-                }}
-              >
-                {showAllVersions ? 'Show fewer ↑' : `Show all ${sortedTracks.length} ↓`}
-              </button>
-            )}
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)' }}>
-              Showing {displayTracks.length}{!venueFilter && !showAllVersions && sortedTracks.length > VERSIONS_PREVIEW ? ` of ${sortedTracks.length}` : ''}
-            </span>
-          </div>
-
-          {/* Versions table */}
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Venue</th>
-                <th>City</th>
-                <th className="r">Duration</th>
-                <th style={{ width: 40 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayTracks.map((t, i) => {
-                const isLongest = versData.extremes?.longest?.archiveItemId === t.archiveItemId
-                const isShortest = versData.extremes?.shortest?.archiveItemId === t.archiveItemId
-                const isCurrentlyPlaying = currentTrack?.id?.includes(t.id || '')
-                return (
-                  <tr
-                    key={i}
-                    className={isLongest || isShortest ? 'hi' : ''}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => router.push(`/show/${t.showDate}`)}
-                  >
-                    <td className="num">{String(i + 1).padStart(2, '0')}</td>
-                    <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{formatDate(t.showDate)}</td>
-                    <td><span className="tbl-title">{t.venue}</span></td>
-                    <td style={{ fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink-3)' }}>{t.city}</td>
-                    <td className="r" style={{ color: isLongest ? 'var(--rust)' : undefined }}>
-                      {formatDuration(t.durationSec)}
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button
-                        className={`tbl-play${isCurrentlyPlaying && isPlaying ? ' playing' : ''}`}
-                        onClick={e => { e.stopPropagation(); handlePlayTrack(t) }}
-                      >
-                        {isCurrentlyPlaying && isPlaying ? '❚❚' : '▶'}
-                      </button>
-                    </td>
+              {/* Versions table — no # column, always show Nth */}
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    {performanceNumberByDate.size > 0 && <th style={{ color: 'var(--rust)' }}>Nth</th>}
+                    <th>Date</th>
+                    <th>Venue</th>
+                    <th>City</th>
+                    <th className="r">Duration</th>
+                    <th style={{ width: 40 }}></th>
                   </tr>
+                </thead>
+                <tbody>
+                  {displayTracks.map((t, i) => {
+                    const isLongest = versData.extremes?.longest?.archiveItemId === t.archiveItemId
+                    const isCurrentlyPlaying = currentTrack?.id?.includes(t.id || '')
+                    const nthPerformance = performanceNumberByDate.get(t.showDate)
+                    return (
+                      <tr
+                        key={i}
+                        className={isLongest ? 'hi' : ''}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => router.push(`/show/${t.showDate}`)}
+                      >
+                        {performanceNumberByDate.size > 0 && (
+                          <td style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--rust)', whiteSpace: 'nowrap' }}>
+                            {nthPerformance ? ordinal(nthPerformance) : '—'}
+                          </td>
+                        )}
+                        <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{formatDate(t.showDate)}</td>
+                        <td><span className="tbl-title">{t.venue}</span></td>
+                        <td style={{ fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink-3)' }}>{t.city}</td>
+                        <td className="r" style={{ color: isLongest ? 'var(--rust)' : undefined }}>
+                          {formatDuration(t.durationSec)}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            className={`tbl-play${isCurrentlyPlaying && isPlaying ? ' playing' : ''}`}
+                            onClick={e => { e.stopPropagation(); handlePlayTrack(t) }}
+                          >
+                            {isCurrentlyPlaying && isPlaying ? '❚❚' : '▶'}
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </>
+          ) : null}
+
+          {/* Attribution */}
+          <div className="margin-note" style={{ marginTop: 22 }}>
+            <span className="head">Provenance</span>
+            Performance data from <a href="https://www.setlist.fm" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rust)' }}>setlist.fm</a>.
+            Audio recordings via <a href="https://archive.org" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rust)' }}>Archive.org</a> — community-contributed tapes.
+          </div>
+        </div>
+
+        {/* RIGHT: Position facts sidebar — only rendered when there is at least one position entry */}
+        {hasPosData && <div style={{ borderLeft: '1px solid var(--rule)', paddingLeft: 28 }}>
+          {posLoading ? (
+            <div style={{ marginTop: 8 }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="skeleton-vault" style={{ height: 44, marginBottom: 4 }} />
+              ))}
+            </div>
+          ) : posData ? (
+            <>
+              {[
+                { key: 'opener' as const,     title: 'Opened show',   data: posData.opener,     open: showAllOpener,     toggle: () => setShowAllOpener(v => !v) },
+                { key: 'closer' as const,     title: 'Closed show',   data: posData.closer,     open: showAllCloser,     toggle: () => setShowAllCloser(v => !v) },
+                { key: 'set1Closer' as const, title: 'Closed Set I',  data: posData.set1Closer, open: showAllSet1Closer, toggle: () => setShowAllSet1Closer(v => !v) },
+                { key: 'set2Opener' as const, title: 'Opened Set II', data: posData.set2Opener, open: showAllSet2Opener, toggle: () => setShowAllSet2Opener(v => !v) },
+                { key: 'encore' as const,     title: 'Encore',        data: posData.encore,     open: showAllEncore,     toggle: () => setShowAllEncore(v => !v) },
+              ].map(({ key, title, data, open, toggle }) => {
+                const allShows = data?.shows ?? []
+                const shows = venueFilter
+                  ? allShows.filter(s => s.venue.toLowerCase() === venueFilter.toLowerCase())
+                  : allShows
+                const count = shows.length
+                if (!count) return null
+                const displayShows = open ? shows : shows.slice(0, POS_PREVIEW)
+                return (
+                  <div key={key} style={{ marginBottom: 22 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8, paddingBottom: 4, borderBottom: '1.5px solid var(--ink)' }}>
+                      <span style={{ fontFamily: 'var(--serif-display)', fontSize: 16, fontWeight: 700 }}>{title}</span>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.1em' }}>
+                        {count}×
+                      </span>
+                      {count > POS_PREVIEW && (
+                        <button
+                          onClick={toggle}
+                          style={{
+                            marginLeft: 'auto', background: 'none', border: 0, cursor: 'pointer',
+                            fontFamily: 'var(--mono)', fontSize: 9.5, letterSpacing: '0.1em',
+                            textTransform: 'uppercase', color: 'var(--rust)', display: 'flex',
+                            alignItems: 'center', gap: 4,
+                          }}
+                        >
+                          {open ? 'Collapse all ↑' : 'Show all ↓'}
+                        </button>
+                      )}
+                    </div>
+                    {displayShows.map((s, i) => (
+                      <Link
+                        key={i}
+                        href={`/show/${s.date}`}
+                        style={{
+                          display: 'block', padding: '5px 0',
+                          borderBottom: '1px dotted var(--rule-soft)',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.04em', display: 'block' }}>{formatDate(s.date)}</span>
+                        <span style={{ fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink)', lineHeight: 1.3 }}>
+                          {s.venue}{s.city ? ` · ${s.city}` : ''}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
                 )
               })}
-            </tbody>
-          </table>
+            </>
+          ) : null}
+        </div>}
 
-        </>
-      ) : null}
-
-      {/* Attribution */}
-      <div className="margin-note" style={{ marginTop: 22 }}>
-        <span className="head">Provenance</span>
-        Performance data from <a href="https://www.setlist.fm" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rust)' }}>setlist.fm</a>.
-        Audio recordings via <a href="https://archive.org" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rust)' }}>Archive.org</a> — community-contributed tapes.
       </div>
     </section>
   )

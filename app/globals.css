@@ -213,7 +213,7 @@ p { margin: 0; }
   background: transparent;
   border: 0;
   border-right: 1px solid var(--rule-soft);
-  padding: 8px 14px 10px;
+  padding: 8px 9px 10px;
   font-family: var(--serif-display);
   font-weight: 400;
   font-size: 18px;
@@ -222,18 +222,20 @@ p { margin: 0; }
   cursor: pointer;
   position: relative;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
+  white-space: nowrap;
 }
-.chapters button:not(:first-child) { font-size: 14.4px; }
+.chapters button:not(:first-child) { font-size: 13.5px; }
 .chapters button .num {
   font-family: var(--mono);
   font-size: 9.5px;
   color: var(--rust);
   letter-spacing: 0.1em;
 }
+.chapters button:first-child .num { font-size: 13px; }
 .chapters button:hover { color: var(--ink); background: var(--hi); }
 .chapters button.active { color: var(--ink); }
 .chapters button.active::after {

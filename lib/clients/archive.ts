@@ -279,11 +279,6 @@ export class ArchiveClientImpl implements ArchiveClient {
       return false
     })
     
-    // If no specific matches found, return all tracks (common for Archive.org shows with generic track names)
-    if (matchingTracks.length === 0) {
-      return allTracks
-    }
-    
     return matchingTracks
   }
 

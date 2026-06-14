@@ -88,6 +88,47 @@ describe('useAudioPlayer — edge cases', () => {
     expect(result.current.queue).toHaveLength(1)
   })
 
+  it('prependToQueue adds tracks at the front of an existing queue', () => {
+    const { result } = renderHook(() => useAudioPlayer())
+    const existing = makeTrack('1', 'Dark Star')
+    const newTrack = makeTrack('2', 'St. Stephen')
+
+    act(() => { result.current.addToQueue([existing]) })
+    act(() => { result.current.prependToQueue([newTrack]) })
+
+    expect(result.current.queue.map(t => t.id)).toEqual(['2', '1'])
+  })
+
+  it('prependToQueue deduplicates by id', () => {
+    const { result } = renderHook(() => useAudioPlayer())
+    const track = makeTrack('1', 'Dark Star')
+
+    act(() => { result.current.addToQueue([track]) })
+    act(() => { result.current.prependToQueue([track]) }) // same id — should not duplicate
+
+    expect(result.current.queue).toHaveLength(1)
+  })
+
+  it('prependToQueue preserves order of multiple prepended tracks', () => {
+    const { result } = renderHook(() => useAudioPlayer())
+    const existing = makeTrack('3', 'Deal')
+    const newTracks = [makeTrack('1', 'Dark Star'), makeTrack('2', 'St. Stephen')]
+
+    act(() => { result.current.addToQueue([existing]) })
+    act(() => { result.current.prependToQueue(newTracks) })
+
+    expect(result.current.queue.map(t => t.id)).toEqual(['1', '2', '3'])
+  })
+
+  it('prependToQueue into empty queue populates queue in order', () => {
+    const { result } = renderHook(() => useAudioPlayer())
+    const tracks = [makeTrack('1', 'Dark Star'), makeTrack('2', 'St. Stephen')]
+
+    act(() => { result.current.prependToQueue(tracks) })
+
+    expect(result.current.queue.map(t => t.id)).toEqual(['1', '2'])
+  })
+
   it('clearQueue resets currentTrack and isPlaying', () => {
     const { result } = renderHook(() => useAudioPlayer())
     const tracks = [makeTrack('1', 'Dark Star')]

@@ -39,6 +39,14 @@ export interface PositionFacts {
     count: number
     shows: ShowRef[]
   }
+  set1Closer: {
+    count: number
+    shows: ShowRef[]
+  }
+  set2Opener: {
+    count: number
+    shows: ShowRef[]
+  }
 }
 
 export interface PaginatedResult<T> {
@@ -110,18 +118,11 @@ export class FileSongIndexRepository implements SongIndexRepository {
     const encoreShows = this.positionMaps.encore.get(songId) || []
 
     return {
-      opener: {
-        count: song.openerCount,
-        shows: openerShows.slice(0, 10) // Return first 10 for initial display
-      },
-      closer: {
-        count: song.closerCount,
-        shows: closerShows.slice(0, 10) // Return first 10 for initial display
-      },
-      encore: {
-        count: song.encoreCount,
-        shows: encoreShows.slice(0, 10) // Return first 10 for initial display
-      }
+      opener: { count: song.openerCount, shows: openerShows.slice(0, 10) },
+      closer: { count: song.closerCount, shows: closerShows.slice(0, 10) },
+      encore: { count: song.encoreCount, shows: encoreShows.slice(0, 10) },
+      set1Closer: { count: 0, shows: [] },
+      set2Opener: { count: 0, shows: [] },
     }
   }
 

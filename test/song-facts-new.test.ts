@@ -130,6 +130,8 @@ describe('songFacts (new repository-based)', () => {
         opener: mockPositionFacts.opener,
         closer: mockPositionFacts.closer,
         encore: mockPositionFacts.encore,
+        set1Closer: { count: 0, shows: [] },
+        set2Opener: { count: 0, shows: [] },
         songTitle: 'Dark Star',
         aliases: ['Dark Star', 'darkstar']
       })
@@ -144,6 +146,8 @@ describe('songFacts (new repository-based)', () => {
         opener: { count: 0, shows: [] },
         closer: { count: 0, shows: [] },
         encore: { count: 0, shows: [] },
+        set1Closer: { count: 0, shows: [] },
+        set2Opener: { count: 0, shows: [] },
         songTitle: 'Unknown Song',
         aliases: []
       })
@@ -170,6 +174,8 @@ describe('songFacts (new repository-based)', () => {
         opener: { count: 0, shows: [] },
         closer: { count: 0, shows: [] },
         encore: { count: 0, shows: [] },
+        set1Closer: { count: 0, shows: [] },
+        set2Opener: { count: 0, shows: [] },
         songTitle: 'Dark Star',
         aliases: ['Dark Star']
       })
@@ -308,6 +314,8 @@ describe('songFacts (new repository-based)', () => {
         opener: { count: 0, shows: [] },
         closer: { count: 0, shows: [] },
         encore: { count: 0, shows: [] },
+        set1Closer: { count: 0, shows: [] },
+        set2Opener: { count: 0, shows: [] },
         songTitle: 'Dark Star',
         aliases: ['Dark Star']
       })

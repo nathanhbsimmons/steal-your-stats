@@ -33,6 +33,14 @@ export interface PositionFacts {
     count: number
     shows: ShowRef[]
   }
+  set1Closer: {
+    count: number
+    shows: ShowRef[]
+  }
+  set2Opener: {
+    count: number
+    shows: ShowRef[]
+  }
   songTitle: string
   aliases: string[]
 }
@@ -132,18 +140,22 @@ export async function getPositions(songId: string): Promise<PositionFacts> {
         opener: { count: 0, shows: [] },
         closer: { count: 0, shows: [] },
         encore: { count: 0, shows: [] },
+        set1Closer: { count: 0, shows: [] },
+        set2Opener: { count: 0, shows: [] },
         songTitle: songId,
         aliases: [],
       }
     }
 
     const positionFacts = await repository.getPositions(song.id)
-    
+
     if (!positionFacts) {
       return {
         opener: { count: 0, shows: [] },
         closer: { count: 0, shows: [] },
         encore: { count: 0, shows: [] },
+        set1Closer: { count: 0, shows: [] },
+        set2Opener: { count: 0, shows: [] },
         songTitle: song.title,
         aliases: song.aliases,
       }
@@ -153,6 +165,8 @@ export async function getPositions(songId: string): Promise<PositionFacts> {
       opener: positionFacts.opener,
       closer: positionFacts.closer,
       encore: positionFacts.encore,
+      set1Closer: positionFacts.set1Closer ?? { count: 0, shows: [] },
+      set2Opener: positionFacts.set2Opener ?? { count: 0, shows: [] },
       songTitle: song.title,
       aliases: song.aliases,
     }

@@ -50,6 +50,7 @@ export interface UseAudioPlayerReturn {
   previous: () => void
   selectTrack: (track: Track) => void
   addToQueue: (tracks: Track[]) => void
+  prependToQueue: (tracks: Track[]) => void
   removeFromQueue: (trackId: string) => void
   clearQueue: () => void
   playEntireShow: (tracks: Track[]) => void
@@ -165,10 +166,17 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
 
   const addToQueue = useCallback((tracks: Track[]) => {
     setQueue(prev => {
-      // Filter out tracks that already exist in the queue to prevent duplicates
       const existingIds = new Set(prev.map(track => track.id))
       const newTracks = tracks.filter(track => !existingIds.has(track.id))
       return [...prev, ...newTracks]
+    })
+  }, [])
+
+  const prependToQueue = useCallback((tracks: Track[]) => {
+    setQueue(prev => {
+      const existingIds = new Set(prev.map(track => track.id))
+      const newTracks = tracks.filter(track => !existingIds.has(track.id))
+      return [...newTracks, ...prev]
     })
   }, [])
 
@@ -370,7 +378,8 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
       const track = processed[resolvedIdx]
       if (track) {
         const uniqueTrack = { ...track, id: `${track.id}-single${Date.now()}` }
-        setQueue([uniqueTrack])
+        // Prepend to queue — don't clear existing tracks
+        setQueue(prev => [uniqueTrack, ...prev])
         setCurrentTrack(uniqueTrack)
         setIsPlaying(true)
       }
@@ -390,6 +399,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     previous,
     selectTrack,
     addToQueue,
+    prependToQueue,
     removeFromQueue,
     clearQueue,
     playEntireShow,

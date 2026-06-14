@@ -10,9 +10,10 @@ const CHAPTERS = [
   { id: 'recent',  num: 'IV',   label: 'Recent',       href: '/recent',  badge: null },
   { id: 'members', num: 'V',    label: 'Band Members', href: '/artists', badge: null },
   { id: 'venues',  num: 'VI',   label: 'Venues',       href: '/venues',  badge: null },
-  { id: 'eras',    num: 'VII',  label: 'Eras',         href: '/eras',    badge: null },
-  { id: 'stats',   num: 'VIII', label: 'Stats',        href: '/stats',   badge: null },
-  { id: 'export',  num: 'IX',   label: 'Export',       href: '/export',  badge: null },
+  { id: 'shows',   num: 'VII',  label: 'Shows',        href: '/shows',   badge: null },
+  { id: 'eras',    num: 'VIII', label: 'Eras',         href: '/eras',    badge: null },
+  { id: 'stats',   num: 'IX',   label: 'Stats',        href: '/stats',   badge: null },
+  { id: 'export',  num: 'X',    label: 'Export',       href: '/export',  badge: null },
 ]
 
 function getActiveId(pathname: string): string {
@@ -22,6 +23,7 @@ function getActiveId(pathname: string): string {
   if (pathname.startsWith('/recent')) return 'recent'
   if (pathname.startsWith('/artists')) return 'members'
   if (pathname.startsWith('/venues')) return 'venues'
+  if (pathname.startsWith('/shows')) return 'shows'
   if (pathname.startsWith('/eras')) return 'eras'
   if (pathname.startsWith('/stats')) return 'stats'
   if (pathname.startsWith('/export')) return 'export'

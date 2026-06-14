@@ -65,7 +65,7 @@ export default function HomePage() {
   const [kpi, setKpi] = useState<SummaryStats | null>(null)
   const [mostPlayed, setMostPlayed] = useState<MostPlayed[]>([])
   const [loading, setLoading] = useState(true)
-  const { enqueueEntireShow, enqueueShowTrack, playShowTrack } = usePlayer()
+  const { enqueueEntireShow, enqueueShowTrack, playShowTrack, prependToQueue, selectTrack } = usePlayer()
 
   // Fetch on-this-day shows
   useEffect(() => {
@@ -222,6 +222,66 @@ export default function HomePage() {
     return durations
   }, [archiveTracks, showDetail])
 
+  interface HomeSongItem { kind: 'song'; song: string; setIdx: number; ji: number; flatIdx: number }
+  interface HomeAncItem { kind: 'ancillary'; title: string; url: string; duration?: number; setIdx: number }
+  type HomeMergeItem = HomeSongItem | HomeAncItem
+
+  const mergedProgram = useMemo((): HomeMergeItem[] => {
+    if (!showDetail?.sets) return []
+    let fi = 0
+    const songItems: HomeSongItem[] = showDetail.sets.flatMap((set, si) =>
+      set.songs.map((song, ji) => ({ kind: 'song' as const, song, setIdx: si, ji, flatIdx: fi++ }))
+    )
+    if (!archiveLoaded || archiveTracks.length === 0) return songItems
+    const hasMetadata = archiveTracks.some(t => t.title?.trim())
+    if (!hasMetadata) return songItems
+    const norm = (s: string) => s.toLowerCase().replace(/\s*&\s*/g, 'and').replace(/[^a-z0-9]/g, '')
+    const titleCore = (t: string) => { const ci = t.indexOf(':'); return ci > 0 && ci < 12 ? t.slice(ci + 1).trim() : t }
+    const result: HomeMergeItem[] = []
+    let songCursor = 0
+    let currentSetIdx = 0
+    for (let ai = 0; ai < archiveTracks.length; ai++) {
+      const track = archiveTracks[ai]
+      if (!track.url) continue
+      if (!track.title?.trim()) {
+        result.push({ kind: 'ancillary', title: '', url: track.url, duration: track.duration, setIdx: currentSetIdx })
+        continue
+      }
+      const titleNorm = norm(titleCore(track.title))
+      let matchIdx = -1
+      for (let li = songCursor; li < Math.min(songCursor + 8, songItems.length); li++) {
+        const songNorm = norm(songItems[li].song)
+        if (titleNorm.includes(songNorm) || songNorm.includes(titleNorm)) { matchIdx = li; break }
+      }
+      if (matchIdx !== -1) {
+        for (let ski = songCursor; ski < matchIdx; ski++) { result.push(songItems[ski]); currentSetIdx = songItems[ski].setIdx }
+        result.push(songItems[matchIdx])
+        currentSetIdx = songItems[matchIdx].setIdx
+        songCursor = matchIdx + 1
+      } else {
+        result.push({ kind: 'ancillary', title: track.title, url: track.url, duration: track.duration, setIdx: currentSetIdx })
+      }
+    }
+    for (let ski = songCursor; ski < songItems.length; ski++) result.push(songItems[ski])
+    return result
+  }, [archiveLoaded, archiveTracks, showDetail])
+
+  const handlePlayAncillaryTrack = useCallback((url: string, title: string, duration?: number) => {
+    if (!featured) return
+    const track = {
+      id: `${archiveIdentifier || 'anc'}-${Date.now()}`,
+      name: title || 'Archive Track',
+      url,
+      duration,
+      showDate: featured.date,
+      venue: featured.venue,
+      city: featured.city,
+      archiveItemId: archiveIdentifier || '',
+    }
+    prependToQueue([track])
+    selectTrack(track)
+  }, [featured, archiveIdentifier, prependToQueue, selectTrack])
+
   const handlePlayShow = async (startFrom?: number) => {
     if (!featured) return
     setIsEnqueuing(true)
@@ -350,8 +410,8 @@ export default function HomePage() {
                   </div>
                 )}
                 <div className="actions">
-                  <button className="btn primary" onClick={() => handlePlayShow()} disabled={isEnqueuing} style={isEnqueuing ? { opacity: 0.7 } : undefined}>
-                    <span className="play-tri">{isEnqueuing ? '…' : '▶'}</span> {isEnqueuing ? 'Loading…' : 'Play entire show'}
+                  <button className="btn primary" onClick={() => handlePlayShow()} disabled={isEnqueuing || !archiveLoaded} style={(isEnqueuing || !archiveLoaded) ? { opacity: 0.7 } : undefined}>
+                    <span className="play-tri">{isEnqueuing ? '…' : '▶'}</span> {isEnqueuing ? 'Loading…' : !archiveLoaded ? 'Loading…' : 'Play entire show'}
                   </button>
                   <Link href={`/show/${featured.date}`} className="btn ghost">
                     Open setlist ↗
@@ -367,21 +427,23 @@ export default function HomePage() {
         </div>
 
         {/* Timeline strip */}
-        {showDetail && showDetail.sets.length > 0 && (
+        {(showDetail?.sets?.length ?? 0) > 0 && (
           <TimelineStrip
-            sets={showDetail.sets}
+            sets={showDetail!.sets}
             showDate={featured?.date ?? ''}
             onPlayFrom={handlePlayShow}
           />
         )}
 
         {/* Setlist from the show detail */}
-        {showDetail && showDetail.sets.length > 0 && (
+        {(showDetail?.sets?.length ?? 0) > 0 && (
           <div className="setlist">
-            {showDetail.sets.map((set, si) => {
+            {showDetail!.sets.map((set, si) => {
               const romanNumerals = ['I', 'II', 'III', 'IV', 'E.']
               const isEncore = set.encore
               const roman = isEncore ? 'E.' : romanNumerals[si] ?? String(si + 1)
+              const setItems = mergedProgram.filter(item => item.setIdx === si)
+              let songNum = 0
               return (
                 <div key={set.name} className={`set-block${si === 1 ? ' alt' : ''}`}>
                   <div className="set-head">
@@ -391,47 +453,70 @@ export default function HomePage() {
                     </h3>
                     <div className="duration">{set.songs.length} songs</div>
                   </div>
-                  {set.songs.map((song, ti) => {
-                    const globalNum = showDetail.sets.slice(0, si).reduce((n, s) => n + s.songs.length, ti)
-                    const pending = archiveCoveredIndices === null
-                    const inArchive = !pending && archiveCoveredIndices!.has(globalNum)
-                    const hasSegue = set.segues?.[ti] === true || archiveSegueIndices.has(globalNum)
-                    return (
-                      <div
-                        key={`${si}-${ti}`}
-                        className={`track${pending ? ' pending' : ''}`}
-                        onClick={inArchive ? () => handlePlaySingleSong(globalNum) : undefined}
-                        style={!inArchive && !pending ? { cursor: 'default', opacity: 0.4 } : undefined}
-                      >
-                        <span className="num">{String(globalNum + 1).padStart(2, '0')}</span>
-                        <span className="play-dot" style={!inArchive && !pending ? { visibility: 'hidden' } : undefined}>▶</span>
-                        <Link
-                          href={`/song/${encodeURIComponent(song)}`}
-                          className="title"
-                          onClick={e => e.stopPropagation()}
-                          style={{ textDecoration: 'none', display: 'block' }}
+                  {setItems.map((item, ii) => {
+                    if (item.kind === 'song') {
+                      songNum++
+                      const { song, ji, flatIdx: globalNum } = item
+                      const pending = archiveCoveredIndices === null
+                      const inArchive = !pending && archiveCoveredIndices!.has(globalNum)
+                      const hasSegue = set.segues?.[ji] === true || archiveSegueIndices.has(globalNum)
+                      return (
+                        <div
+                          key={`s${si}-${ji}`}
+                          className={`track${pending ? ' pending' : ''}`}
+                          onClick={inArchive ? () => handlePlaySingleSong(globalNum) : undefined}
+                          style={!inArchive && !pending ? { cursor: 'default', opacity: 0.4 } : undefined}
                         >
-                          {song}{hasSegue && <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--rust)', marginLeft: 8, fontWeight: 500 }}>→</span>}
-                        </Link>
-                        <Link
-                          href={`/song/${encodeURIComponent(song)}`}
-                          className="chev"
-                          onClick={e => e.stopPropagation()}
-                        >go to song ↗</Link>
-                        <span className="dur">
-                          {archiveDurations.has(globalNum) ? formatDuration(archiveDurations.get(globalNum)!) : ''}
-                        </span>
-                        {inArchive ? (
-                          <button
-                            className={`add-q${flashIdx === globalNum ? ' flash' : queuedSet.has(globalNum) ? ' queued' : ''}`}
-                            title="Add to queue"
-                            onClick={e => handleAddToQueue(e, globalNum)}
-                          >+</button>
-                        ) : (
+                          <span className="num">{String(songNum).padStart(2, '0')}</span>
+                          <span className="play-dot" style={!inArchive && !pending ? { visibility: 'hidden' } : undefined}>▶</span>
+                          <Link
+                            href={`/song/${encodeURIComponent(song)}`}
+                            className="title"
+                            onClick={e => e.stopPropagation()}
+                            style={{ textDecoration: 'none', display: 'block' }}
+                          >
+                            {song}{hasSegue && <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--rust)', marginLeft: 8, fontWeight: 500 }}>→</span>}
+                          </Link>
+                          <Link
+                            href={`/song/${encodeURIComponent(song)}`}
+                            className="chev"
+                            onClick={e => e.stopPropagation()}
+                          >go to song ↗</Link>
+                          <span className="dur">
+                            {archiveDurations.has(globalNum) ? formatDuration(archiveDurations.get(globalNum)!) : ''}
+                          </span>
+                          {inArchive ? (
+                            <button
+                              className={`add-q${flashIdx === globalNum ? ' flash' : queuedSet.has(globalNum) ? ' queued' : ''}`}
+                              title="Add to queue"
+                              onClick={e => handleAddToQueue(e, globalNum)}
+                            >+</button>
+                          ) : (
+                            <span style={{ width: 26, display: 'inline-block' }} />
+                          )}
+                        </div>
+                      )
+                    } else {
+                      const rawTitle = item.title?.replace(/>$/, '').trim() || ''
+                      const ci = rawTitle.indexOf(':')
+                      const stripped = ci > 0 && ci < 12 ? rawTitle.slice(ci + 1).trim() : rawTitle
+                      const displayName = stripped ? stripped.charAt(0).toUpperCase() + stripped.slice(1) : 'Archive Track'
+                      return (
+                        <div
+                          key={`a${si}-${ii}`}
+                          className="track"
+                          onClick={() => handlePlayAncillaryTrack(item.url, displayName, item.duration)}
+                          data-queue-safe="true"
+                        >
+                          <span className="num" style={{ opacity: 0.35, fontSize: 13 }}>·</span>
+                          <span className="play-dot">▶</span>
+                          <span className="title" style={{ fontStyle: 'italic', display: 'block' }}>{displayName}</span>
+                          <span className="chev" />
+                          <span className="dur">{item.duration ? formatDuration(item.duration) : ''}</span>
                           <span style={{ width: 26, display: 'inline-block' }} />
-                        )}
-                      </div>
-                    )
+                        </div>
+                      )
+                    }
                   })}
                 </div>
               )
@@ -573,8 +658,8 @@ export default function HomePage() {
               <span className="mono">{shows.length} SHOWS</span>
             </div>
             <ul className="alsolist">
-              {shows.slice(0, 6).map(show => (
-                <li key={show.date}>
+              {shows.slice(0, 6).map((show, i) => (
+                <li key={`${show.date}-${show.venue}-${i}`}>
                   <Link href={`/show/${show.date}`} style={{ display: 'contents' }}>
                     <span className="yr">{show.year}</span>
                     <span className="where">

@@ -16,7 +16,7 @@ const ERA_DEFS = [
     sigSongs: ['Viola Lee Blues', 'Lovelight', 'Dark Star', 'St. Stephen'],
   },
   {
-    id: 'europe',
+    id: 'europe72',
     name: "Europe '72",
     years: '1972 – 1974',
     startYear: 1972,
@@ -155,7 +155,7 @@ export default function EraDetailPage() {
             style={{
               display: 'inline-block',
               border: '2px solid var(--ink)',
-              borderRadius: 12,
+              borderRadius: 0,
               padding: '5px 14px',
               fontFamily: 'var(--serif-display)',
               fontSize: 13,

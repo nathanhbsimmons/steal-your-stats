@@ -38,6 +38,14 @@ export interface PositionFacts {
     count: number
     shows: ShowRef[]
   }
+  set1Closer: {
+    count: number
+    shows: ShowRef[]
+  }
+  set2Opener: {
+    count: number
+    shows: ShowRef[]
+  }
   songTitle: string
   aliases: string[]
 }
@@ -306,6 +314,15 @@ export class RealtimeSongFactsService {
     )
   }
 
+  async getAllPerformances(songTitle: string): Promise<{ performances: ShowRef[]; songTitle: string }> {
+    const resolution = resolveSong({ title: songTitle })
+    const searchNames = this.buildSearchNames(songTitle)
+    const allSetlists = await this.getAllGDSetlists()
+    const matching = allSetlists.filter(s => this.setlistContainsSong(s, searchNames))
+    const performances = matching.map(s => this.toShowRef(s)).sort((a, b) => a.date.localeCompare(b.date))
+    return { performances, songTitle: resolution.normalizedTitle }
+  }
+
   async getFirstLast(songTitle: string): Promise<FirstLastFacts> {
     const resolution = resolveSong({ title: songTitle })
     const searchNames = this.buildSearchNames(songTitle)
@@ -336,6 +353,8 @@ export class RealtimeSongFactsService {
     const openerShows: ShowRef[] = []
     const closerShows: ShowRef[] = []
     const encoreShows: ShowRef[] = []
+    const set1CloserShows: ShowRef[] = []
+    const set2OpenerShows: ShowRef[] = []
 
     for (const setlist of allSetlists) {
       const sets = setlist.sets?.set || []
@@ -366,12 +385,29 @@ export class RealtimeSongFactsService {
           closerShows.push(showRef)
         }
       }
+
+      // Set I closer: last song of the first regular set (only when there are 2+ regular sets)
+      if (regularSets.length >= 2 && regularSets[0].song.length > 0) {
+        const set1Last = regularSets[0].song[regularSets[0].song.length - 1]
+        if (searchNames.has(set1Last.name.toLowerCase())) {
+          set1CloserShows.push(showRef)
+        }
+      }
+
+      // Set II opener: first song of the second regular set
+      if (regularSets.length >= 2 && regularSets[1].song.length > 0) {
+        if (searchNames.has(regularSets[1].song[0].name.toLowerCase())) {
+          set2OpenerShows.push(showRef)
+        }
+      }
     }
 
     return {
       opener: { count: openerShows.length, shows: openerShows },
       closer: { count: closerShows.length, shows: closerShows },
       encore: { count: encoreShows.length, shows: encoreShows },
+      set1Closer: { count: set1CloserShows.length, shows: set1CloserShows },
+      set2Opener: { count: set2OpenerShows.length, shows: set2OpenerShows },
       songTitle: resolution.normalizedTitle,
       aliases: resolution.aliases,
     }

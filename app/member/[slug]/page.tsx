@@ -216,6 +216,51 @@ const MEMBERS: Record<string, MemberDef> = {
     debuts: ['Lazy River Road', 'Days Between', 'So Many Roads', 'Samba in the Rain', 'Easy Answers'],
     signatureSongs: ['Lazy River Road', 'Days Between', 'So Many Roads', 'Way to Go Home', 'Samba in the Rain'],
   },
+  'tom-constanten': {
+    name: 'Tom Constanten', slug: 'tom-constanten',
+    role: 'Keys · electronics · prepared piano',
+    yearsDisplay: '1968–1970', startYear: 1968, endYear: 1970,
+    shows: 73, core: false, born: 1944, mark: 'T',
+    photo: '',
+    eraId: 'primal',
+    bio: "Thomas Charles Constanten: concert pianist turned cosmic tinkerer. He and Phil Lesh were classmates under Luciano Berio in Oakland, and when the band needed a full-time keyboardist in late 1968 they called TC. His approach was nothing like Pigpen's blues-organ stomp: he brought tape-splice electronics, prepared piano (stuffing objects between the strings mid-song), and classical counterpoint into the mix. He left in early 1970, returning to his solo classical career and occasional Dead guest appearances. His playing can be heard all through Live/Dead and on much of Aoxomoxoa.",
+    signatureShows: [
+      { date: '1969-08-16', venue: 'Woodstock', city: 'Bethel, NY', note: 'the Woodstock set — TC on keys' },
+      { date: '1968-11-02', venue: 'Shrine Auditorium', city: 'Los Angeles, CA', note: "TC's first show with the band" },
+    ],
+    debuts: ['Dark Star', 'St. Stephen', 'The Eleven', 'Cosmic Charlie'],
+    signatureSongs: ['Dark Star', 'St. Stephen', 'The Eleven', 'China Cat Sunflower'],
+  },
+  'bruce-hornsby': {
+    name: 'Bruce Hornsby', slug: 'bruce-hornsby',
+    role: 'Piano · accordion · vocals',
+    yearsDisplay: '1988–1995', startYear: 1988, endYear: 1995,
+    shows: 100, core: false, born: 1954, mark: 'H',
+    photo: '',
+    eraId: 'final',
+    bio: "Bruce Randall Hornsby: pianist from Williamsburg, Virginia. Already famous for 'The Way It Is' when he first sat in with the Dead in 1988, he became the band's most frequent guest — and effectively a sixth member — in the years between Brent Mydland's death in July 1990 and Vince Welnick's hire later that year. He continued sitting in through 1995, playing piano and diatonic accordion, often during Space or when Vince stepped back. His style — dense, gospel-laced chords — pushed the band into territory neither organ nor synthesizer could reach. He played over 100 shows in total.",
+    signatureShows: [
+      { date: '1990-09-20', venue: 'Madison Square Garden', city: 'New York, NY', note: 'first full-run sit-in after Brent\'s death' },
+      { date: '1991-09-10', venue: 'Madison Square Garden', city: 'New York, NY', note: 'Hornsby + Vince double-keyboard night' },
+    ],
+    debuts: [],
+    signatureSongs: ['Terrapin Station', 'He\'s Gone', 'Truckin\'', 'Eyes of the World', 'Estimated Prophet'],
+  },
+  'branford-marsalis': {
+    name: 'Branford Marsalis', slug: 'branford-marsalis',
+    role: 'Soprano & tenor saxophone',
+    yearsDisplay: '1988–1994', startYear: 1988, endYear: 1994,
+    shows: 15, core: false, born: 1960, mark: 'M',
+    photo: '',
+    eraId: 'final',
+    bio: "Branford Marsalis: jazz saxophone titan from Breaux Bridge, Louisiana. He first sat in with the Dead at an outdoor show in 1988 and returned several times over the following years, most famously for a run at the Meadows Music Theatre in Hartford in 1990. His soprano saxophone slipped through the Dead's textures in a way that felt both jarring and inevitable — jazz time grafted onto Grateful Dead space. The tapes from those shows circulated widely. He appeared at enough shows to have a devoted following among Dead fans, and each appearance was anticipated the way a new lineup change used to be.",
+    signatureShows: [
+      { date: '1990-09-20', venue: 'Madison Square Garden', city: 'New York, NY', note: 'legendary saxophone sit-in' },
+      { date: '1988-09-16', venue: 'Madison Square Garden', city: 'New York, NY', note: "Branford's first Dead appearance" },
+    ],
+    debuts: [],
+    signatureSongs: ['Eyes of the World', 'Dark Star', 'Terrapin Station'],
+  },
 }
 
 export default function MemberPage() {
@@ -318,17 +363,21 @@ export default function MemberPage() {
       {/* ── HERO ── */}
       <div className="member-hero">
         <div className="portrait-lg">
-          <Image
-            src={member.photo}
-            alt={member.name}
-            fill
-            sizes="260px"
-            style={{ objectFit: 'cover', objectPosition: 'top center' }}
-            priority
-          />
+          {member.photo ? (
+            <Image
+              src={member.photo}
+              alt={member.name}
+              fill
+              sizes="260px"
+              style={{ objectFit: 'cover', objectPosition: 'top center' }}
+              priority
+            />
+          ) : (
+            <span className="mark">{member.mark}</span>
+          )}
         </div>
         <div className="title-block">
-          <div className="kicker">Band member · {member.core ? 'core' : 'passing through'}</div>
+          <div className="kicker">Band member · {member.core ? 'core' : member.slug === 'bruce-hornsby' || member.slug === 'branford-marsalis' ? 'special guest' : 'passing through'}</div>
           <h2>{member.name}</h2>
           <div className="role">{member.role}</div>
           <div className="facts">

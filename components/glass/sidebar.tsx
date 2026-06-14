@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { id: 'recent',  href: '/recent',  label: 'Recent',  icon: 'clock' as const },
   { id: 'artists', href: '/artists', label: 'Band Members', icon: 'mic' as const },
   { id: 'venues',  href: '/venues',  label: 'Venues',  icon: 'pin' as const },
+  { id: 'shows',   href: '/shows',   label: 'Shows',   icon: 'calendar' as const },
   { id: 'eras',    href: '/eras',    label: 'Eras',    icon: 'history' as const },
   { id: 'stats',   href: '/stats',   label: 'Stats',   icon: 'chart' as const },
   { id: 'export',  href: '/export',  label: 'Export',  icon: 'download' as const },
@@ -29,6 +30,7 @@ function getActiveId(pathname: string): string {
   if (pathname.startsWith('/search')) return 'search'
   if (pathname.startsWith('/recent')) return 'recent'
   if (pathname.startsWith('/artists')) return 'artists'
+  if (pathname.startsWith('/shows')) return 'shows'
   if (pathname.startsWith('/venues')) return 'venues'
   if (pathname.startsWith('/eras')) return 'eras'
   if (pathname.startsWith('/stats')) return 'stats'
