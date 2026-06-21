@@ -35,6 +35,7 @@ const mockPlayEntireShow = vi.fn()
 const mockEnqueueEntireShow = vi.fn().mockResolvedValue(undefined)
 const mockEnqueueShowTrack = vi.fn().mockResolvedValue(undefined)
 const mockPlayShowTrack = vi.fn().mockResolvedValue(undefined)
+const mockEnqueueSongVersions = vi.fn().mockResolvedValue(undefined)
 
 const mockTrack = {
   id: 'track-1',
@@ -64,6 +65,7 @@ function makePlayer(overrides: Record<string, unknown> = {}) {
     enqueueEntireShow: mockEnqueueEntireShow,
     enqueueShowTrack: mockEnqueueShowTrack,
     playShowTrack: mockPlayShowTrack,
+    enqueueSongVersions: mockEnqueueSongVersions,
     ...overrides,
   }
 }

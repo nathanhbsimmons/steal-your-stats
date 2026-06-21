@@ -40,6 +40,21 @@ export interface EnqueueEntireShowOptions {
   startFromArchiveIdx?: number  // direct archive position, bypasses name-matching
 }
 
+// A single performance of a song (one row in the song detail "Versions" list).
+export interface SongVersionRef {
+  showDate: string
+  venue: string
+  city: string
+  url?: string           // direct Archive.org URL when already known
+  archiveItemId?: string
+  durationSec?: number
+}
+
+export interface EnqueueSongVersionsOptions {
+  cap?: number                              // max versions to resolve (default 25)
+  mode?: 'replace' | 'append' | 'prepend'  // replace = play all; append = queue; prepend = play one now
+}
+
 export interface UseAudioPlayerReturn {
   currentTrack: Track | null
   isPlaying: boolean
@@ -57,6 +72,7 @@ export interface UseAudioPlayerReturn {
   enqueueEntireShow: (showRef: ShowRef, options?: EnqueueEntireShowOptions) => Promise<void>
   enqueueShowTrack: (showRef: ShowRef, trackIdx: number, songs?: string[]) => Promise<void>
   playShowTrack: (showRef: ShowRef, trackIdx: number, songs?: string[]) => Promise<void>
+  enqueueSongVersions: (songTitle: string, versions: SongVersionRef[], options?: EnqueueSongVersionsOptions) => Promise<void>
 }
 
 export function useAudioPlayer(): UseAudioPlayerReturn {
@@ -389,6 +405,107 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     }
   }, [])
 
+  // Resolve a single song version (one show) to a playable Track.
+  // Uses the direct URL when present, otherwise resolves the show on Archive.org
+  // and pulls the track(s) matching this specific song.
+  const resolveSongVersion = useCallback(async (songTitle: string, version: SongVersionRef): Promise<Track | null> => {
+    if (version.url) {
+      return {
+        id: `${version.archiveItemId || version.showDate}-${songTitle}`,
+        name: `${songTitle} (${version.showDate})`,
+        url: version.url,
+        duration: version.durationSec,
+        showDate: version.showDate,
+        venue: version.venue,
+        city: version.city,
+        archiveItemId: version.archiveItemId || '',
+      }
+    }
+
+    const resolveResponse = await fetch('/api/archive/resolve-show', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: version.showDate, venue: version.venue, city: version.city }),
+    })
+    if (!resolveResponse.ok) return null
+    const archiveShow = await resolveResponse.json()
+    if (!archiveShow?.identifier) return null
+
+    const tracksResponse = await fetch('/api/archive/song-tracks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId: archiveShow.identifier, songTitle }),
+    })
+    if (!tracksResponse.ok) return null
+    const { tracks } = await tracksResponse.json()
+    const first = (tracks as Array<{ id: string; name: string; url: string; duration?: number }>)?.[0]
+    if (!first) return null
+
+    return {
+      id: `${archiveShow.identifier}-${songTitle}-${version.showDate}`,
+      name: `${songTitle} (${version.showDate})`,
+      url: first.url,
+      duration: first.duration ?? version.durationSec,
+      showDate: version.showDate,
+      venue: version.venue,
+      city: version.city,
+      archiveItemId: archiveShow.identifier,
+      licenseUrl: archiveShow.licenseurl,
+      rights: archiveShow.rights,
+    }
+  }, [])
+
+  // Queue many versions of one song. Resolves progressively so playback can start
+  // before every version has been fetched from Archive.org.
+  const enqueueSongVersions = useCallback(async (
+    songTitle: string,
+    versions: SongVersionRef[],
+    options: EnqueueSongVersionsOptions = {},
+  ) => {
+    const { cap = 25, mode = 'append' } = options
+    const ordered = [...versions]
+      .sort((a, b) => a.showDate.localeCompare(b.showDate))
+      .slice(0, cap)
+    if (ordered.length === 0) return
+
+    if (mode === 'prepend') {
+      // Play a single version now without disturbing the rest of the queue.
+      const track = await resolveSongVersion(songTitle, ordered[0])
+      if (track) {
+        prependToQueue([track])
+        selectTrack(track)
+      }
+      return
+    }
+
+    let started = false
+    const wasEmpty = queueRef.current.length === 0
+    for (let i = 0; i < ordered.length; i++) {
+      let track: Track | null = null
+      try {
+        track = await resolveSongVersion(songTitle, ordered[i])
+      } catch {
+        track = null
+      }
+      if (!track) continue
+
+      if (mode === 'replace' && !started) {
+        // First successfully-resolved version replaces the queue and starts playing.
+        setQueue([track])
+        setCurrentTrack(track)
+        setIsPlaying(true)
+        started = true
+      } else {
+        addToQueue([track])
+        if (mode === 'append' && wasEmpty && !started) {
+          setCurrentTrack(track)
+          setIsPlaying(true)
+          started = true
+        }
+      }
+    }
+  }, [resolveSongVersion, prependToQueue, selectTrack, addToQueue])
+
   return {
     currentTrack,
     isPlaying,
@@ -406,6 +523,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     enqueueEntireShow,
     enqueueShowTrack,
     playShowTrack,
+    enqueueSongVersions,
   }
 }
 

@@ -16,7 +16,7 @@ interface ShowSet { name: string; encore: boolean; songs: string[] }
 interface ShowDetail { date: string; venue: string; city: string; state?: string; country: string; sets: ShowSet[]; totalSongs: number }
 interface SongEntry { title: string; displayTitle: string; aliases: string[] }
 interface SongFacts { totalPerformances: number; first: { date: string; venue: string; city: string } | null; last: { date: string; venue: string; city: string } | null }
-interface VersionTrack { id: string; showDate: string; venue: string; city: string; state?: string; country: string; durationSec?: number }
+interface VersionTrack { id: string; showDate: string; venue: string; city: string; state?: string; country: string; durationSec?: number; url?: string; archiveItemId?: string }
 interface VersionsFacts { tracks: VersionTrack[]; extremes?: { longest?: VersionTrack; shortest?: VersionTrack }; songTitle: string }
 interface SummaryStats { totalShows?: number; uniqueSongs?: number; hoursArchived?: number }
 interface LeaderEntry { name: string; count: number; pct: number }
@@ -28,6 +28,15 @@ type ArchiveTrack = { title?: string; url?: string; duration?: number }
 function formatDur(sec?: number): string {
   if (!sec) return '—'
   const m = Math.floor(sec / 60), s = Math.floor(sec % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+function formatQueueTime(tracks: Array<{ duration?: number }>): string {
+  const total = tracks.reduce((s, t) => s + (t.duration ?? 0), 0)
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = Math.floor(total % 60)
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
@@ -248,7 +257,7 @@ function MobileMast() {
 
 /* ------------------------------------------------------------- mini player */
 
-function MobileMini() {
+function MobileMini({ onOpen }: { onOpen: () => void }) {
   const { currentTrack, isPlaying, play, pause, next } = usePlayer()
   if (!currentTrack) return null
   const dateStr = currentTrack.showDate ?? ''
@@ -256,10 +265,12 @@ function MobileMini() {
   return (
     <div className={`mv-mini${!isPlaying ? ' paused' : ''}`} role="status" aria-live="polite">
       <div className="stamp" aria-hidden="true" />
-      <div className="meta">
-        <div className="title">{currentTrack.name}</div>
-        <div className="sub">{dateStr}{venueStr ? ` · ${venueStr}` : ''}</div>
-      </div>
+      <button className="mv-mini-open" onClick={onOpen} aria-label="Open player">
+        <div className="meta">
+          <div className="title">{currentTrack.name}</div>
+          <div className="sub">{dateStr}{venueStr ? ` · ${venueStr}` : ''}</div>
+        </div>
+      </button>
       <button className="next" onClick={next} aria-label="Skip to next track">▶▶</button>
       <button className="pp" onClick={isPlaying ? pause : play} aria-label={isPlaying ? 'Pause' : 'Play'}>
         {isPlaying ? '❚❚' : '▶'}
@@ -269,10 +280,192 @@ function MobileMini() {
   )
 }
 
+/* --------------------------------------------------- shared now-playing */
+
+// Reel hero + transport + status for the active track. Driven entirely by the
+// player context so it can be reused by the Deck and the full-screen player sheet.
+function MobileNowPlaying() {
+  const { currentTrack, isPlaying, queue, play, pause, next, previous } = usePlayer()
+
+  const [audioTime, setAudioTime] = useState({ currentTime: 0, duration: 0 })
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { currentTime, duration } = (e as CustomEvent<{ currentTime: number; duration: number }>).detail
+      setAudioTime({ currentTime, duration })
+    }
+    window.addEventListener('vault-time-update', handler)
+    return () => window.removeEventListener('vault-time-update', handler)
+  }, [])
+
+  const progressBarRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const bar = progressBarRef.current
+    if (!bar) return
+    const onTouch = (e: TouchEvent) => {
+      e.preventDefault()
+      const rect = bar.getBoundingClientRect()
+      const t = e.touches[0] ?? e.changedTouches[0]
+      if (!t) return
+      const fraction = Math.max(0, Math.min(1, (t.clientX - rect.left) / rect.width))
+      window.dispatchEvent(new CustomEvent('vault-seek-to-fraction', { detail: { fraction } }))
+    }
+    bar.addEventListener('touchstart', onTouch, { passive: false })
+    bar.addEventListener('touchmove', onTouch, { passive: false })
+    return () => {
+      bar.removeEventListener('touchstart', onTouch)
+      bar.removeEventListener('touchmove', onTouch)
+    }
+  }, [])
+
+  const handleBarClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    window.dispatchEvent(new CustomEvent('vault-seek-to-fraction', { detail: { fraction } }))
+  }, [])
+
+  if (!currentTrack) return null
+
+  const isPlaying_ = isPlaying && !!currentTrack
+  const subLine = [
+    currentTrack.showDate ? shortDate(currentTrack.showDate) : '',
+    currentTrack.venue,
+    currentTrack.city,
+  ].filter(Boolean).join(' · ')
+  const totalTracks = queue.length
+  const pct = audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0
+
+  return (
+    <>
+      <div className="mv-deck-hero">
+        <div className={`mv-reel${!isPlaying_ ? ' paused' : ''}`} aria-label="Reel-to-reel player">
+          <div className="spokes" aria-hidden="true">
+            <span style={{ transform: 'translateX(-50%) rotate(0deg)' }} />
+            <span style={{ transform: 'translateX(-50%) rotate(120deg)' }} />
+            <span style={{ transform: 'translateX(-50%) rotate(240deg)' }} />
+          </div>
+          <div className="hub">A · 01</div>
+        </div>
+        <div className="mv-now-title">{currentTrack.name}</div>
+        <div className="mv-now-sub">{subLine}</div>
+      </div>
+
+      <div className="mv-transport">
+        <div className="mv-progress">
+          <span className="t">{formatDur(audioTime.currentTime)}</span>
+          <div
+            ref={progressBarRef}
+            className="mv-bar"
+            onClick={handleBarClick}
+            role="slider"
+            aria-label="Seek"
+            aria-valuenow={Math.round(audioTime.currentTime)}
+            aria-valuemin={0}
+            aria-valuemax={Math.round(audioTime.duration)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="rule" />
+            <div className="ticks">
+              {Array.from({ length: 11 }).map((_, i) => <span key={i} />)}
+            </div>
+            <div className="fill" style={{ width: `${pct}%` }} />
+            <div className="needle" style={{ left: `${pct}%` }} />
+          </div>
+          <span className="t right">
+            {audioTime.duration > 0 ? formatDur(audioTime.duration) : currentTrack.duration ? formatDur(currentTrack.duration) : '—'}
+          </span>
+        </div>
+        <div className="mv-ctrls">
+          <button className="mv-iconbtn ghost" onClick={previous} aria-label="Previous track">◀◀</button>
+          <button className="mv-iconbtn ghost" aria-label="Skip back 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: -10 } }))}>−10</button>
+          <button className="mv-iconbtn play" onClick={isPlaying_ ? pause : play} aria-label={isPlaying_ ? 'Pause' : 'Play'}>
+            {isPlaying_ ? '❚❚' : '▶'}
+          </button>
+          <button className="mv-iconbtn ghost" aria-label="Skip forward 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: 10 } }))}>+10</button>
+          <button className="mv-iconbtn ghost" onClick={next} aria-label="Next track">▶▶</button>
+        </div>
+      </div>
+
+      <div className="mv-status">
+        <span className="lit">
+          {isPlaying_ ? (
+            <><span className="dot" aria-hidden="true" />{totalTracks === 1 ? 'playing · 1 track' : `playing entire show · ${totalTracks} tracks`}</>
+          ) : totalTracks > 0 ? (
+            `cued · ${totalTracks} archive tracks`
+          ) : (
+            'standby · no queue'
+          )}
+        </span>
+        {currentTrack.showDate && (
+          <Link href={`/show/${currentTrack.showDate}`} style={{ color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: 9.5, letterSpacing: '0.1em', textTransform: 'uppercase', textDecoration: 'none' }}>
+            open setlist ↗
+          </Link>
+        )}
+      </div>
+    </>
+  )
+}
+
+/* ------------------------------------------------ full-screen player sheet */
+
+function MobilePlayerSheet({ onClose }: { onClose: () => void }) {
+  const { queue, currentTrack, selectTrack, removeFromQueue, clearQueue } = usePlayer()
+  const currentIdx = currentTrack ? queue.findIndex(t => t.id === currentTrack.id) : -1
+
+  return (
+    <div className="mv-player-sheet" role="dialog" aria-label="Player" aria-modal="true">
+      <div className="head">
+        <button className="mv-sheet-close" onClick={onClose} aria-label="Close player">▾ Close</button>
+        <span className="lab">Now Playing</span>
+      </div>
+      <div className="mv-player-scroll">
+        <MobileNowPlaying />
+
+        <div className="mv-player-queue">
+          <div className="mv-queue-head">
+            <span className="name">Queue</span>
+            <span className="meta">{queue.length} {queue.length === 1 ? 'track' : 'tracks'} · {formatQueueTime(queue)}</span>
+          </div>
+          {queue.length === 0 ? (
+            <div className="mv-queue-empty">The deck is empty. Cue a track to begin.</div>
+          ) : (
+            queue.map((t, i) => (
+              <div
+                key={t.id + i}
+                className={`mv-qrow${i === currentIdx ? ' current' : ''}`}
+                onClick={() => selectTrack(t)}
+                role="button"
+                aria-label={`Play ${t.name}`}
+              >
+                <span className="mv-qnum">{String(i + 1).padStart(2, '0')}</span>
+                <span className="mv-qmeta">
+                  <span className="mv-qtitle">{t.name}</span>
+                  <span className="mv-qsub">{t.showDate}{t.venue ? ` · ${t.venue}` : ''}</span>
+                </span>
+                <span className="mv-qdur">{t.duration ? formatDur(t.duration) : '—'}</span>
+                <button
+                  className="mv-qx"
+                  onClick={e => { e.stopPropagation(); removeFromQueue(t.id) }}
+                  aria-label={`Remove ${t.name} from queue`}
+                >×</button>
+              </div>
+            ))
+          )}
+          {queue.length > 0 && (
+            <div className="mv-queue-foot">
+              <span>{queue.length} cued</span>
+              <button className="mv-qclear" onClick={() => clearQueue()}>Clear queue</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ============================================================ DECK SCREEN */
 
 function DeckScreen() {
-  const { currentTrack, isPlaying, queue, play, pause, next, previous, enqueueEntireShow, playShowTrack } = usePlayer()
+  const { currentTrack, isPlaying, play, pause, enqueueEntireShow, playShowTrack, enqueueShowTrack } = usePlayer()
 
   const [featured, setFeatured] = useState<ShowOnThisDay | null>(null)
   const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
@@ -353,42 +546,6 @@ function DeckScreen() {
     return () => { cancelled = true }
   }, [displayDate, showDetail?.totalSongs])
 
-  const [audioTime, setAudioTime] = useState({ currentTime: 0, duration: 0 })
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { currentTime, duration } = (e as CustomEvent<{ currentTime: number; duration: number }>).detail
-      setAudioTime({ currentTime, duration })
-    }
-    window.addEventListener('vault-time-update', handler)
-    return () => window.removeEventListener('vault-time-update', handler)
-  }, [])
-
-  const progressBarRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const bar = progressBarRef.current
-    if (!bar) return
-    const onTouch = (e: TouchEvent) => {
-      e.preventDefault()
-      const rect = bar.getBoundingClientRect()
-      const t = e.touches[0] ?? e.changedTouches[0]
-      if (!t) return
-      const fraction = Math.max(0, Math.min(1, (t.clientX - rect.left) / rect.width))
-      window.dispatchEvent(new CustomEvent('vault-seek-to-fraction', { detail: { fraction } }))
-    }
-    bar.addEventListener('touchstart', onTouch, { passive: false })
-    bar.addEventListener('touchmove', onTouch, { passive: false })
-    return () => {
-      bar.removeEventListener('touchstart', onTouch)
-      bar.removeEventListener('touchmove', onTouch)
-    }
-  }, [])
-
-  const handleBarClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    window.dispatchEvent(new CustomEvent('vault-seek-to-fraction', { detail: { fraction } }))
-  }, [])
-
   const handlePlay = useCallback(async () => {
     const show = currentTrack
       ? { date: currentTrack.showDate!, venue: currentTrack.venue!, city: currentTrack.city! }
@@ -409,15 +566,22 @@ function DeckScreen() {
     try { await playShowTrack(show, flatIdx, songs) } catch {}
   }, [currentTrack, featured, showDetail, playShowTrack])
 
+  // Append a setlist track to the queue without disturbing what's currently playing.
+  const handleAddTrack = useCallback(async (flatIdx: number) => {
+    const show = currentTrack
+      ? { date: currentTrack.showDate!, venue: currentTrack.venue!, city: currentTrack.city! }
+      : featured ? { date: featured.date, venue: featured.venue, city: featured.city } : null
+    if (!show) return
+    const songs = showDetail?.sets.flatMap(s => s.songs) ?? featured?.songs
+    try { await enqueueShowTrack(show, flatIdx, songs) } catch {}
+  }, [currentTrack, featured, showDetail, enqueueShowTrack])
+
   const displayShow = showDetail ?? featured
   const displayVenue = currentTrack?.venue ?? featured?.venue ?? ''
   const displayCity = currentTrack?.city ?? (featured ? `${featured.city}${featured.state ? `, ${featured.state}` : ''}` : '')
-  const subLine = [displayDate ? shortDate(displayDate) : '', displayVenue, displayCity].filter(Boolean).join(' · ')
   const venueTidbit = featured ? getVenueTidbit(featured.venue, featured.city) : null
 
   const currentSongName = currentTrack?.name ?? null
-  const totalTracks = queue.length
-  const isPlaying_ = isPlaying && !!currentTrack
   // Only show the player once a track is actually loaded — queue alone (from localStorage)
   // doesn't count, so pre-play state shows on first visit / after page reload.
   const playerActive = !!currentTrack
@@ -450,89 +614,7 @@ function DeckScreen() {
           )}
         </div>
       ) : (
-        <>
-          {/* Reel hero */}
-          <div className="mv-deck-hero">
-            <div className={`mv-reel${!isPlaying_ ? ' paused' : ''}`} aria-label="Reel-to-reel player">
-              <div className="spokes" aria-hidden="true">
-                <span style={{ transform: 'translateX(-50%) rotate(0deg)' }} />
-                <span style={{ transform: 'translateX(-50%) rotate(120deg)' }} />
-                <span style={{ transform: 'translateX(-50%) rotate(240deg)' }} />
-              </div>
-              <div className="hub">A · 01</div>
-            </div>
-
-            {loading ? (
-              <div style={{ height: 60 }} />
-            ) : displayShow ? (
-              <>
-                <div className="mv-now-title">
-                  {currentTrack?.name ?? (featured?.songs?.[0] ?? (displayShow as ShowDetail).sets?.[0]?.songs?.[0] ?? 'No track loaded')}
-                </div>
-                <div className="mv-now-sub">{subLine}</div>
-              </>
-            ) : (
-              <div className="mv-now-title" style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic' }}>
-                No show for today&apos;s date.
-              </div>
-            )}
-          </div>
-
-          {/* Transport */}
-          <div className="mv-transport">
-            <div className="mv-progress">
-              <span className="t">{formatDur(audioTime.currentTime)}</span>
-              <div
-                ref={progressBarRef}
-                className="mv-bar"
-                onClick={handleBarClick}
-                role="slider"
-                aria-label="Seek"
-                aria-valuenow={Math.round(audioTime.currentTime)}
-                aria-valuemin={0}
-                aria-valuemax={Math.round(audioTime.duration)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="rule" />
-                <div className="ticks">
-                  {Array.from({ length: 11 }).map((_, i) => <span key={i} />)}
-                </div>
-                <div className="fill" style={{ width: `${audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0}%` }} />
-                <div className="needle" style={{ left: `${audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0}%` }} />
-              </div>
-              <span className="t right">
-                {audioTime.duration > 0 ? formatDur(audioTime.duration) : currentTrack?.duration ? formatDur(currentTrack.duration) : '—'}
-              </span>
-            </div>
-            <div className="mv-ctrls">
-              <button className="mv-iconbtn ghost" onClick={previous} aria-label="Previous track">◀◀</button>
-              <button className="mv-iconbtn ghost" aria-label="Skip back 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: -10 } }))}>−10</button>
-              <button className="mv-iconbtn play" onClick={handlePlay} aria-label={isPlaying_ ? 'Pause' : 'Play'}>
-                {isPlaying_ ? '❚❚' : '▶'}
-              </button>
-              <button className="mv-iconbtn ghost" aria-label="Skip forward 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: 10 } }))}>+10</button>
-              <button className="mv-iconbtn ghost" onClick={next} aria-label="Next track">▶▶</button>
-            </div>
-          </div>
-
-          {/* Status row */}
-          <div className="mv-status">
-            <span className="lit">
-              {isPlaying_ ? (
-                <><span className="dot" aria-hidden="true" />{totalTracks === 1 ? 'playing · 1 track' : `playing entire show · ${totalTracks} tracks`}</>
-              ) : totalTracks > 0 ? (
-                `cued · ${totalTracks} archive tracks`
-              ) : (
-                'standby · no queue'
-              )}
-            </span>
-            {currentTrack?.showDate && (
-              <Link href={`/show/${currentTrack.showDate}`} style={{ color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: 9.5, letterSpacing: '0.1em', textTransform: 'uppercase', textDecoration: 'none' }}>
-                open setlist ↗
-              </Link>
-            )}
-          </div>
-        </>
+        <MobileNowPlaying />
       )}
 
       {/* Setlist */}
@@ -580,7 +662,15 @@ function DeckScreen() {
                       ) : (
                         <span className="dur">{dur ? formatDur(dur) : '—'}</span>
                       )}
-                      <span className="pin" style={archiveKnown && !inArchive ? { opacity: 0 } : undefined}>❡</span>
+                      {inArchive ? (
+                        <button
+                          className="mv-addq"
+                          onClick={e => { e.stopPropagation(); handleAddTrack(flatIdx) }}
+                          aria-label={`Add ${song} to queue`}
+                        >+</button>
+                      ) : (
+                        <span className="pin" style={{ opacity: 0 }}>❡</span>
+                      )}
                     </div>
                   )
                 })}
@@ -702,11 +792,14 @@ function SongsScreen() {
 
 /* ========================================================= SONG DETAIL SCREEN */
 
-function SongDetailScreen({ slug }: { slug: string }) {
+function SongDetailScreen({ slug, onOpenPlayer }: { slug: string; onOpenPlayer: () => void }) {
   const router = useRouter()
+  const { enqueueSongVersions } = usePlayer()
   const [facts, setFacts] = useState<SongFacts | null>(null)
   const [versions, setVersions] = useState<VersionsFacts | null>(null)
   const [loading, setLoading] = useState(true)
+  const [playAllBusy, setPlayAllBusy] = useState(false)
+  const [queueAllBusy, setQueueAllBusy] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -727,6 +820,26 @@ function SongDetailScreen({ slug }: { slug: string }) {
   const allVersions = versions?.tracks ?? []
   const VERSIONS_LIMIT = 12
   const displayedVersions = showAllVersions ? allVersions : allVersions.slice(0, VERSIONS_LIMIT)
+
+  const toRef = (v: VersionTrack) => ({
+    showDate: v.showDate, venue: v.venue, city: v.city,
+    url: v.url, archiveItemId: v.archiveItemId, durationSec: v.durationSec,
+  })
+
+  const handlePlayAll = async () => {
+    if (!allVersions.length || playAllBusy) return
+    setPlayAllBusy(true)
+    onOpenPlayer()
+    try { await enqueueSongVersions(slug, allVersions.map(toRef), { mode: 'replace' }) }
+    finally { setPlayAllBusy(false) }
+  }
+
+  const handleQueueAll = async () => {
+    if (!allVersions.length || queueAllBusy) return
+    setQueueAllBusy(true)
+    try { await enqueueSongVersions(slug, allVersions.map(toRef), { mode: 'append' }) }
+    finally { setQueueAllBusy(false) }
+  }
 
   return (
     <>
@@ -782,6 +895,14 @@ function SongDetailScreen({ slug }: { slug: string }) {
             <span className="name">Versions</span>
             <span className="more">{displayedVersions.length} / {allVersions.length} ›</span>
           </div>
+          <div className="mv-version-bar">
+            <button className="mv-play-all" onClick={handlePlayAll} disabled={playAllBusy}>
+              {playAllBusy ? 'Loading…' : '▶ Play all versions'}
+            </button>
+            <button className="mv-queue-all" onClick={handleQueueAll} disabled={queueAllBusy}>
+              {queueAllBusy ? 'Adding…' : '+ Queue all'}
+            </button>
+          </div>
           {displayedVersions.map(v => (
             <div
               key={v.id}
@@ -796,6 +917,18 @@ function SongDetailScreen({ slug }: { slug: string }) {
                 <span className="city">{v.city}{v.state ? `, ${v.state}` : ''}</span>
               </span>
               <span className="dur">{formatDur(v.durationSec)}</span>
+              <span className="mv-version-actions">
+                <button
+                  className="mv-vbtn"
+                  onClick={e => { e.stopPropagation(); enqueueSongVersions(slug, [toRef(v)], { mode: 'prepend' }); onOpenPlayer() }}
+                  aria-label={`Play ${slug} from ${v.showDate}`}
+                >▶</button>
+                <button
+                  className="mv-vbtn"
+                  onClick={e => { e.stopPropagation(); enqueueSongVersions(slug, [toRef(v)], { mode: 'append' }) }}
+                  aria-label={`Add ${slug} from ${v.showDate} to queue`}
+                >+</button>
+              </span>
             </div>
           ))}
           {!showAllVersions && allVersions.length > VERSIONS_LIMIT && (
@@ -1250,6 +1383,10 @@ function ShowDetailScreen({ date }: { date: string }) {
 
 export function MobileShell() {
   const pathname = usePathname()
+  const [playerOpen, setPlayerOpen] = useState(false)
+
+  // Close the full-screen player when the route changes.
+  useEffect(() => { setPlayerOpen(false) }, [pathname])
 
   const isHome = pathname === '/'
   const isSongs = pathname === '/songs'
@@ -1271,7 +1408,7 @@ export function MobileShell() {
         <MobileChapter pathname={pathname} songTitle={songSlug} />
         {isHome && <DeckScreen />}
         {isSongs && <SongsScreen />}
-        {isSongDetail && songSlug && <SongDetailScreen slug={songSlug} />}
+        {isSongDetail && songSlug && <SongDetailScreen slug={songSlug} onOpenPlayer={() => setPlayerOpen(true)} />}
         {isStats && <StatsScreen />}
         {isSearch && <SearchScreen />}
         {isShowDetail && showDate && <ShowDetailScreen date={showDate} />}
@@ -1281,8 +1418,9 @@ export function MobileShell() {
           </div>
         )}
       </div>
-      {!isNoMini && <MobileMini />}
+      {!isNoMini && <MobileMini onOpen={() => setPlayerOpen(true)} />}
       <MobileTabBar pathname={pathname} />
+      {playerOpen && <MobilePlayerSheet onClose={() => setPlayerOpen(false)} />}
     </div>
   )
 }
