@@ -97,14 +97,17 @@ const defaultFetch: Record<string, unknown> = {
     sets: [], totalSongs: 0,
   },
   '/api/songs': { songs: [] },
-  '/api/stats': { leaderboard: [] },
+  '/api/stats': { leaderboard: [], showsPerYear: [] },
   '/api/stats/summary': { totalShows: 2333, uniqueSongs: 442, hoursArchived: 6422 },
   '/api/song-facts': { totalPerformances: 0, first: null, last: null },
   '/api/versions': { tracks: [], songTitle: 'Dark Star' },
   '/api/search/shows-with-songs': { shows: [] },
   '/api/shows/by-venue': { shows: [] },
+  '/api/shows': { shows: [], total: 0 },
   '/api/archive/resolve-show': { identifier: 'gd77-05-08' },
   '/api/archive/song-tracks': { tracks: [] },
+  '/api/weather': { temp: null, label: null },
+  '/api/position-facts': { songTitle: 'Dark Star', opener: { count: 14 }, closer: { count: 6 }, encore: { count: 2 } },
 }
 
 /* ================================================================ tests */
@@ -124,16 +127,25 @@ describe('MobileShell', () => {
   /* ---------------------------------------------------------------- tab bar */
 
   describe('MobileTabBar', () => {
-    it('renders all four navigation tabs', () => {
+    it('renders all six navigation tabs', () => {
       render(<MobileShell />)
+      expect(screen.getByText('Home')).toBeInTheDocument()
       expect(screen.getByText('Deck')).toBeInTheDocument()
+      expect(screen.getByText('Shows')).toBeInTheDocument()
       expect(screen.getByText('Songs')).toBeInTheDocument()
       expect(screen.getByText('Stats')).toBeInTheDocument()
       expect(screen.getByText('Search')).toBeInTheDocument()
     })
 
-    it('marks the Deck tab active on "/"', () => {
+    it('marks the Home tab active on "/"', () => {
       render(<MobileShell />)
+      const btn = screen.getByText('Home').closest('button')!
+      expect(btn).toHaveClass('active')
+    })
+
+    it('marks Deck tab active after clicking it', () => {
+      render(<MobileShell />)
+      fireEvent.click(screen.getByText('Deck'))
       const btn = screen.getByText('Deck').closest('button')!
       expect(btn).toHaveClass('active')
     })
@@ -145,10 +157,10 @@ describe('MobileShell', () => {
       expect(btn).toHaveClass('active')
     })
 
-    it('marks Stats tab active on "/stats"', () => {
-      setPathname('/stats')
+    it('marks Shows tab active on "/shows"', () => {
+      setPathname('/shows')
       render(<MobileShell />)
-      const btn = screen.getByText('Stats').closest('button')!
+      const btn = screen.getByText('Shows').closest('button')!
       expect(btn).toHaveClass('active')
     })
 
@@ -159,10 +171,11 @@ describe('MobileShell', () => {
       expect(btn).toHaveClass('active')
     })
 
-    it('navigates to /songs when Songs tab is clicked', () => {
+    it('marks Stats tab active on "/stats"', () => {
+      setPathname('/stats')
       render(<MobileShell />)
-      fireEvent.click(screen.getByText('Songs'))
-      expect(mockPush).toHaveBeenCalledWith('/songs')
+      const btn = screen.getByText('Stats').closest('button')!
+      expect(btn).toHaveClass('active')
     })
 
     it('navigates to /stats when Stats tab is clicked', () => {
@@ -171,9 +184,33 @@ describe('MobileShell', () => {
       expect(mockPush).toHaveBeenCalledWith('/stats')
     })
 
-    it('shows roman numeral II for the Songs tab', () => {
+    it('shows roman numeral V for the Stats tab', () => {
+      render(<MobileShell />)
+      const btn = screen.getByText('Stats').closest('button')!
+      expect(btn.querySelector('.num')?.textContent).toBe('V')
+    })
+
+    it('navigates to /songs when Songs tab is clicked', () => {
+      render(<MobileShell />)
+      fireEvent.click(screen.getByText('Songs'))
+      expect(mockPush).toHaveBeenCalledWith('/songs')
+    })
+
+    it('navigates to /shows when Shows tab is clicked', () => {
+      render(<MobileShell />)
+      fireEvent.click(screen.getByText('Shows'))
+      expect(mockPush).toHaveBeenCalledWith('/shows')
+    })
+
+    it('shows roman numeral IV for the Songs tab', () => {
       render(<MobileShell />)
       const btn = screen.getByText('Songs').closest('button')!
+      expect(btn.querySelector('.num')?.textContent).toBe('IV')
+    })
+
+    it('shows roman numeral II for the Deck tab', () => {
+      render(<MobileShell />)
+      const btn = screen.getByText('Deck').closest('button')!
       expect(btn.querySelector('.num')?.textContent).toBe('II')
     })
 
@@ -183,14 +220,27 @@ describe('MobileShell', () => {
       const btn = screen.getByText('Songs').closest('button')!
       expect(btn).toHaveClass('active')
     })
+
+    it('marks shows/* routes as Shows tab active', () => {
+      setPathname('/shows/1977')
+      render(<MobileShell />)
+      const btn = screen.getByText('Shows').closest('button')!
+      expect(btn).toHaveClass('active')
+    })
   })
 
   /* ---------------------------------------------------------------- chapter strip */
 
   describe('MobileChapter', () => {
-    it('shows THE DECK chapter on "/"', () => {
+    it('shows HOME chapter on "/"', () => {
       render(<MobileShell />)
-      expect(screen.getByText(/THE DECK · NOW PLAYING/i)).toBeInTheDocument()
+      expect(screen.getByText(/HOME · ON THIS DAY/i)).toBeInTheDocument()
+    })
+
+    it('shows DECK chapter when deck tab is active', () => {
+      render(<MobileShell />)
+      fireEvent.click(screen.getByText('Deck'))
+      expect(screen.getByText(/DECK · NOW PLAYING/i)).toBeInTheDocument()
     })
 
     it('shows SONGS chapter on "/songs"', () => {
@@ -203,6 +253,12 @@ describe('MobileShell', () => {
       setPathname('/search')
       render(<MobileShell />)
       expect(screen.getByText(/SEARCH · CATALOG/i)).toBeInTheDocument()
+    })
+
+    it('shows STATS chapter on "/stats"', () => {
+      setPathname('/stats')
+      render(<MobileShell />)
+      expect(screen.getByText(/STATS · BY THE NUMBERS/i)).toBeInTheDocument()
     })
 
     it('shows back button on a song detail page', () => {
@@ -243,6 +299,22 @@ describe('MobileShell', () => {
       setPathname('/songs')
       render(<MobileShell />)
       expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
+    })
+
+    it('does not render the masthead when deck tab is active', () => {
+      render(<MobileShell />)
+      fireEvent.click(screen.getByText('Deck'))
+      expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
+    })
+
+    it('renders "Grateful Dead" in the masthead subtitle', () => {
+      render(<MobileShell />)
+      expect(screen.getByText(/Grateful Dead/i)).toBeInTheDocument()
+    })
+
+    it('renders "compiled by hand, played through the deck" in the masthead subtitle', () => {
+      render(<MobileShell />)
+      expect(screen.getByText(/compiled by hand, played through the deck/i)).toBeInTheDocument()
     })
   })
 
@@ -287,10 +359,18 @@ describe('MobileShell', () => {
       expect(mockPlay).toHaveBeenCalled()
     })
 
-    it('does not show mini player on the home route', () => {
+    it('shows mini player on the home route when a track is playing', () => {
       setPathname('/')
       setPlayer({ currentTrack: mockTrack, isPlaying: true })
       render(<MobileShell />)
+      expect(screen.getByRole('status')).toBeInTheDocument()
+    })
+
+    it('hides mini player when deck tab is active', () => {
+      setPathname('/')
+      setPlayer({ currentTrack: mockTrack, isPlaying: true })
+      render(<MobileShell />)
+      fireEvent.click(screen.getByText('Deck'))
       expect(screen.queryByRole('status')).not.toBeInTheDocument()
     })
   })
@@ -298,24 +378,31 @@ describe('MobileShell', () => {
   /* ---------------------------------------------------------------- deck screen */
 
   describe('DeckScreen', () => {
-    it('renders the reel player element', () => {
+    // Helper: activate deck tab
+    function activateDeck() {
+      fireEvent.click(screen.getByText('Deck'))
+    }
+
+    it('renders the reel player element when deck tab is active', () => {
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: true })
       render(<MobileShell />)
+      activateDeck()
       expect(screen.getByLabelText('Reel-to-reel player')).toBeInTheDocument()
     })
 
-    it('renders transport controls', () => {
+    it('renders transport controls when deck tab is active', () => {
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: true })
       render(<MobileShell />)
+      activateDeck()
       expect(screen.getByLabelText('Previous track')).toBeInTheDocument()
       expect(screen.getByLabelText(/^(Play|Pause)$/)).toBeInTheDocument()
       expect(screen.getByLabelText('Next track')).toBeInTheDocument()
     })
 
     it('shows "standby · no queue" when nothing is queued', () => {
-      // currentTrack must be set to show the reel section; queue empty triggers standby
       setPlayer({ isPlaying: false, queue: [], currentTrack: mockTrack })
       render(<MobileShell />)
+      activateDeck()
       expect(screen.getByText(/standby · no queue/i)).toBeInTheDocument()
     })
 
@@ -323,19 +410,21 @@ describe('MobileShell', () => {
       const queue = [mockTrack, { ...mockTrack, id: 'track-2', name: 'Truckin' }]
       setPlayer({ isPlaying: false, queue, currentTrack: mockTrack })
       render(<MobileShell />)
+      activateDeck()
       expect(screen.getByText(/cued · 2 archive tracks/i)).toBeInTheDocument()
     })
 
-    // Bug fix: single track should NOT say "playing entire show"
     it('shows "playing · 1 track" when a single track is in the queue', () => {
       setPlayer({ isPlaying: true, queue: [mockTrack], currentTrack: mockTrack })
       render(<MobileShell />)
+      activateDeck()
       expect(screen.getByText(/playing · 1 track/i)).toBeInTheDocument()
     })
 
     it('does not say "entire show" when only one track is playing', () => {
       setPlayer({ isPlaying: true, queue: [mockTrack], currentTrack: mockTrack })
       render(<MobileShell />)
+      activateDeck()
       expect(screen.queryByText(/entire show/i)).not.toBeInTheDocument()
     })
 
@@ -343,22 +432,24 @@ describe('MobileShell', () => {
       const queue = [mockTrack, { ...mockTrack, id: 'track-2', name: 'Truckin' }]
       setPlayer({ isPlaying: true, queue, currentTrack: mockTrack })
       render(<MobileShell />)
+      activateDeck()
       expect(screen.getByText(/playing entire show · 2 tracks/i)).toBeInTheDocument()
     })
 
     it('renders the seek slider', () => {
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
+      activateDeck()
       const slider = screen.getByRole('slider', { name: 'Seek' })
       expect(slider).toBeInTheDocument()
       expect(slider).toHaveAttribute('aria-valuenow')
       expect(slider).toHaveAttribute('aria-valuemin', '0')
     })
 
-    // Bug fix: click on seek bar dispatches seek event
     it('dispatches vault-seek-to-fraction on click at the midpoint', () => {
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
+      activateDeck()
       const bar = screen.getByRole('slider', { name: 'Seek' })
       const events: CustomEvent[] = []
       window.addEventListener('vault-seek-to-fraction', e => events.push(e as CustomEvent))
@@ -374,6 +465,7 @@ describe('MobileShell', () => {
     it('dispatches vault-seek-to-fraction: fraction clamps to 0..1', () => {
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
+      activateDeck()
       const bar = screen.getByRole('slider', { name: 'Seek' })
       const events: CustomEvent[] = []
       window.addEventListener('vault-seek-to-fraction', e => events.push(e as CustomEvent))
@@ -390,6 +482,7 @@ describe('MobileShell', () => {
     it('dispatches vault-seek-by with -10 seconds when skip back is clicked', () => {
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
+      activateDeck()
       const events: CustomEvent[] = []
       window.addEventListener('vault-seek-by', e => events.push(e as CustomEvent))
       fireEvent.click(screen.getByLabelText('Skip back 10 seconds'))
@@ -399,12 +492,65 @@ describe('MobileShell', () => {
     it('dispatches vault-seek-by with +10 seconds when skip forward is clicked', () => {
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
+      activateDeck()
       const events: CustomEvent[] = []
       window.addEventListener('vault-seek-by', e => events.push(e as CustomEvent))
       fireEvent.click(screen.getByLabelText('Skip forward 10 seconds'))
       expect(events[0].detail.seconds).toBe(10)
     })
 
+    it('shows "The deck is empty" when deck tab active but no current track', () => {
+      setPlayer({ currentTrack: null, queue: [], isPlaying: false })
+      render(<MobileShell />)
+      activateDeck()
+      expect(screen.getByText(/The deck is empty/i)).toBeInTheDocument()
+    })
+
+    it('shows the current track name when deck tab is active and track is playing', async () => {
+      setPlayer({ currentTrack: mockTrack, isPlaying: true, queue: [mockTrack] })
+      render(<MobileShell />)
+      activateDeck()
+      await waitFor(() => expect(screen.getAllByText('Dark Star').length).toBeGreaterThan(0))
+    })
+
+    it('updates the current-time display from vault-time-update events', () => {
+      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: true })
+      render(<MobileShell />)
+      activateDeck()
+      act(() => {
+        window.dispatchEvent(new CustomEvent('vault-time-update', {
+          detail: { currentTime: 90, duration: 300 },
+        }))
+      })
+      expect(screen.getByText('1:30')).toBeInTheDocument()
+    })
+
+    it('renders a close deck button when deck tab is active', () => {
+      render(<MobileShell />)
+      activateDeck()
+      expect(screen.getByRole('button', { name: 'Close deck' })).toBeInTheDocument()
+    })
+
+    it('deactivates the deck when close deck button is clicked', () => {
+      render(<MobileShell />)
+      activateDeck()
+      fireEvent.click(screen.getByRole('button', { name: 'Close deck' }))
+      const btn = screen.getByText('Deck').closest('button')!
+      expect(btn).not.toHaveClass('active')
+    })
+
+    it('closes the deck when Deck tab is clicked while already active', () => {
+      render(<MobileShell />)
+      activateDeck()
+      expect(screen.getByText('Deck').closest('button')).toHaveClass('active')
+      fireEvent.click(screen.getByText('Deck'))
+      expect(screen.getByText('Deck').closest('button')).not.toHaveClass('active')
+    })
+  })
+
+  /* ---------------------------------------------------------------- home screen */
+
+  describe('HomeScreen', () => {
     it('shows "No show for today\'s date" when on-this-day returns no shows', async () => {
       mockFetch({ ...defaultFetch, '/api/on-this-day': { shows: [] } })
       render(<MobileShell />)
@@ -438,7 +584,6 @@ describe('MobileShell', () => {
           date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', totalSongs: 1,
           sets: [{ name: 'Set I', encore: false, songs: ['Dark Star'] }],
         },
-        // Provide a matching archive track so "Dark Star" stays in-archive after coverage loads
         '/api/archive/song-tracks': {
           tracks: [{ name: 'gd77t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77/t01.mp3' }],
         },
@@ -449,21 +594,28 @@ describe('MobileShell', () => {
       await waitFor(() => expect(mockPlayShowTrack).toHaveBeenCalled())
     })
 
-    it('updates the current-time display from vault-time-update events', () => {
-      setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: true })
-      render(<MobileShell />)
-      act(() => {
-        window.dispatchEvent(new CustomEvent('vault-time-update', {
-          detail: { currentTime: 90, duration: 300 },
-        }))
+    it('renders "Also on this day" when multiple shows exist', async () => {
+      mockFetch({
+        ...defaultFetch,
+        '/api/on-this-day': {
+          shows: [
+            { date: '1977-05-08', year: 1977, venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', songs: ['Dark Star'] },
+            { date: '1982-05-08', year: 1982, venue: 'Greek Theatre', city: 'Berkeley', state: 'CA', country: 'US', songs: [] },
+          ],
+        },
       })
-      expect(screen.getByText('1:30')).toBeInTheDocument()
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.getByText(/Also on this day/i)).toBeInTheDocument())
+      expect(screen.getByText('Greek Theatre')).toBeInTheDocument()
     })
 
-    it('shows the current track name when a track is playing', async () => {
-      setPlayer({ currentTrack: mockTrack, isPlaying: true, queue: [mockTrack] })
+    it('does not render home content when deck tab is active', async () => {
+      mockFetch({ ...defaultFetch, '/api/on-this-day': { shows: [] } })
       render(<MobileShell />)
-      await waitFor(() => expect(screen.getAllByText('Dark Star').length).toBeGreaterThan(0))
+      await waitFor(() => expect(screen.queryByText(/Loading/)).not.toBeInTheDocument())
+      fireEvent.click(screen.getByText('Deck'))
+      // HomeScreen content should not be visible
+      expect(screen.queryByText(/No show for today/i)).not.toBeInTheDocument()
     })
   })
 
@@ -503,9 +655,7 @@ describe('MobileShell', () => {
       render(<MobileShell />)
       const input = screen.getByLabelText('Search songs')
       fireEvent.change(input, { target: { value: 'dark' } })
-      // Group headers should not appear in search mode
       await waitFor(() => {
-        // Song still appears
         expect(screen.getByText('Dark Star')).toBeInTheDocument()
       })
     })
@@ -520,6 +670,83 @@ describe('MobileShell', () => {
     })
   })
 
+  /* ---------------------------------------------------------------- shows screen */
+
+  describe('ShowsScreen', () => {
+    beforeEach(() => {
+      setPathname('/shows')
+      mockFetch({
+        ...defaultFetch,
+        '/api/stats': { leaderboard: [], showsPerYear: [{ year: 1977, count: 86 }] },
+      })
+    })
+
+    it('renders decade sections', async () => {
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.getByText('The Seventies')).toBeInTheDocument())
+      expect(screen.getByText('The Sixties')).toBeInTheDocument()
+      expect(screen.getByText('The Eighties')).toBeInTheDocument()
+      expect(screen.getByText('The Nineties')).toBeInTheDocument()
+    })
+
+    it('renders year cards in the decade grid', async () => {
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.getByText('1977')).toBeInTheDocument())
+    })
+
+    it('renders show count on year card', async () => {
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.getByText('86')).toBeInTheDocument())
+    })
+
+    it('navigates to the year page when a year card is clicked', async () => {
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.getByText('1977')).toBeInTheDocument())
+      fireEvent.click(screen.getByText('1977').closest('button')!)
+      expect(mockPush).toHaveBeenCalledWith('/shows/1977')
+    })
+  })
+
+  describe('ShowsByYearMobile', () => {
+    beforeEach(() => {
+      setPathname('/shows/1977')
+      mockFetch({
+        ...defaultFetch,
+        '/api/shows': {
+          shows: [
+            { id: 's1', date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US' },
+          ],
+          total: 1,
+        },
+      })
+    })
+
+    it('renders the year as a heading', async () => {
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.getAllByText('1977').length).toBeGreaterThan(0))
+    })
+
+    it('renders shows for the selected year', async () => {
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.getByText('Barton Hall')).toBeInTheDocument())
+    })
+
+    it('renders an add-to-queue button for each show row', async () => {
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.getByText('Barton Hall')).toBeInTheDocument())
+      expect(screen.getByLabelText(/add.*queue/i) || screen.getAllByRole('button').find(b => b.textContent === '+')).toBeTruthy()
+    })
+
+    it('calls enqueueEntireShow when the + button is clicked', async () => {
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.getByText('Barton Hall')).toBeInTheDocument())
+      fireEvent.click(screen.getByLabelText('Add Barton Hall show to queue'))
+      await waitFor(() => expect(mockEnqueueEntireShow).toHaveBeenCalledWith(
+        expect.objectContaining({ date: '1977-05-08' }),
+      ))
+    })
+  })
+
   /* ---------------------------------------------------------------- stats screen */
 
   describe('StatsScreen', () => {
@@ -528,35 +755,28 @@ describe('MobileShell', () => {
       mockFetch({
         ...defaultFetch,
         '/api/stats/summary': { totalShows: 2333, uniqueSongs: 442, hoursArchived: 6422 },
-        '/api/stats': { leaderboard: [{ name: 'Dark Star', count: 320, pct: 13.7 }] },
+        '/api/stats': { leaderboard: [], showsPerYear: [] },
       })
     })
 
-    it('renders the documented-shows big figure', async () => {
+    it('renders the total shows figure', async () => {
       render(<MobileShell />)
       await waitFor(() => expect(screen.getByText('2,333')).toBeInTheDocument())
     })
 
-    it('renders the unique-songs KPI', async () => {
+    it('renders the Unique Songs KPI', async () => {
       render(<MobileShell />)
-      await waitFor(() => expect(screen.getByText('442')).toBeInTheDocument())
+      await waitFor(() => expect(screen.getByText('Unique Songs')).toBeInTheDocument())
     })
 
-    it('renders the most-played leaderboard with top entries', async () => {
+    it('renders the position breakdown section with a search input', () => {
       render(<MobileShell />)
-      await waitFor(() => expect(screen.getByText('Dark Star')).toBeInTheDocument())
+      expect(screen.getByLabelText('Search songs for position breakdown')).toBeInTheDocument()
     })
 
-    it('renders the era distribution section header', () => {
+    it('defaults to showing Dark Star in the position breakdown label', () => {
       render(<MobileShell />)
-      // Use exact string to avoid matching the footer note that also mentions "Era distribution"
-      expect(screen.getByText('Era distribution')).toBeInTheDocument()
-    })
-
-    it('renders all five eras', () => {
-      render(<MobileShell />)
-      expect(screen.getByText('Pigpen')).toBeInTheDocument()
-      expect(screen.getByText('Brent Years')).toBeInTheDocument()
+      expect(screen.getByText('DARK STAR')).toBeInTheDocument()
     })
   })
 
@@ -572,8 +792,6 @@ describe('MobileShell', () => {
       vi.useRealTimers()
     })
 
-    // Fires the input change, runs the debounce timer, and waits for all
-    // resulting promises (fetch → setState → render) to complete.
     async function typeAndFlush(query: string) {
       fireEvent.change(screen.getByLabelText('Search the catalog'), { target: { value: query } })
       await act(async () => { await vi.runAllTimersAsync() })
@@ -595,14 +813,12 @@ describe('MobileShell', () => {
       expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/songs'))
     })
 
-    // Bug fix: venue search now actually calls the venues endpoint
     it('fetches venues when a query is typed', async () => {
       render(<MobileShell />)
       await typeAndFlush('Barton')
       expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/shows/by-venue'))
     })
 
-    // Bug fix: venue results render correctly
     it('renders "Shows at venue" section when venue API returns results', async () => {
       mockFetch({
         ...defaultFetch,
@@ -648,8 +864,7 @@ describe('MobileShell', () => {
       render(<MobileShell />)
       await typeAndFlush('dark')
       expect(screen.getByText('Dark Star')).toBeInTheDocument()
-      // "Songs" appears in both the tab bar and the results section header
-      expect(screen.getAllByText('Songs').length).toBeGreaterThanOrEqual(2)
+      expect(screen.getAllByText('Songs').length).toBeGreaterThanOrEqual(1)
     })
 
     it('shows a clear button when there is a query', () => {
@@ -674,7 +889,6 @@ describe('MobileShell', () => {
 
     it('renders the show date as a header kicker', () => {
       render(<MobileShell />)
-      // ShowDate formats "1977-05-08" as "Sunday, the 8th of May 1977"; year in its own span
       expect(screen.getByText('1977')).toBeInTheDocument()
     })
 
@@ -742,16 +956,49 @@ describe('MobileShell', () => {
     })
 
     it('renders "Show not found" when API returns no data', async () => {
-      mockFetch({
-        ...defaultFetch,
-        '/api/show': null,
-      })
-      // fetch returns ok:false → null data
       global.fetch = vi.fn(() =>
         Promise.resolve({ ok: false, json: () => Promise.resolve(null) })
       ) as unknown as typeof fetch
       render(<MobileShell />)
       await waitFor(() => expect(screen.getByText('Show not found.')).toBeInTheDocument())
+    })
+
+    it('renders a per-track add-to-queue button for archive tracks', async () => {
+      mockFetch({
+        ...defaultFetch,
+        '/api/show': {
+          date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', totalSongs: 1,
+          sets: [{ name: 'Set I', encore: false, songs: ['Dark Star'] }],
+        },
+        '/api/archive/resolve-show': { identifier: 'gd77-05-08.sbd' },
+        '/api/archive/song-tracks': {
+          tracks: [{ name: 'gd77t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77/t01.mp3' }],
+        },
+      })
+      render(<MobileShell />)
+      await waitFor(() =>
+        expect(screen.getByLabelText('Add Dark Star to queue')).toBeInTheDocument()
+      )
+    })
+
+    it('calls enqueueShowTrack when a per-track + button is clicked', async () => {
+      mockFetch({
+        ...defaultFetch,
+        '/api/show': {
+          date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', totalSongs: 1,
+          sets: [{ name: 'Set I', encore: false, songs: ['Dark Star'] }],
+        },
+        '/api/archive/resolve-show': { identifier: 'gd77-05-08.sbd' },
+        '/api/archive/song-tracks': {
+          tracks: [{ name: 'gd77t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77/t01.mp3' }],
+        },
+      })
+      render(<MobileShell />)
+      await waitFor(() =>
+        expect(screen.getByLabelText('Add Dark Star to queue')).toBeInTheDocument()
+      )
+      fireEvent.click(screen.getByLabelText('Add Dark Star to queue'))
+      await waitFor(() => expect(mockEnqueueShowTrack).toHaveBeenCalled())
     })
   })
 
@@ -858,10 +1105,20 @@ describe('MobileShell', () => {
   /* ---------------------------------------------------------------- routing */
 
   describe('MobileShell routing', () => {
-    it('renders DeckScreen (reel) on "/"', () => {
+    it('renders HomeScreen (song-of-day content) on "/"', async () => {
+      setPathname('/')
+      mockFetch({ ...defaultFetch, '/api/on-this-day': { shows: [] } })
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.queryByText(/Loading/)).not.toBeInTheDocument())
+      // HomeScreen renders, not DeckScreen - no reel player by default
+      expect(screen.queryByLabelText('Reel-to-reel player')).not.toBeInTheDocument()
+    })
+
+    it('renders DeckScreen (reel) when Deck tab is clicked', () => {
       setPathname('/')
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: true })
       render(<MobileShell />)
+      fireEvent.click(screen.getByText('Deck'))
       expect(screen.getByLabelText('Reel-to-reel player')).toBeInTheDocument()
     })
 
@@ -871,10 +1128,10 @@ describe('MobileShell', () => {
       expect(screen.getByLabelText('Search songs')).toBeInTheDocument()
     })
 
-    it('renders StatsScreen (documented-shows text) on "/stats"', () => {
-      setPathname('/stats')
+    it('renders ShowsScreen (decade grid) on "/shows"', async () => {
+      setPathname('/shows')
       render(<MobileShell />)
-      expect(screen.getByText(/documented shows/i)).toBeInTheDocument()
+      await waitFor(() => expect(screen.getByText('The Seventies')).toBeInTheDocument())
     })
 
     it('renders SearchScreen (catalog search) on "/search"', () => {
@@ -883,10 +1140,20 @@ describe('MobileShell', () => {
       expect(screen.getByLabelText('Search the catalog')).toBeInTheDocument()
     })
 
+    it('renders StatsScreen (stats page) on "/stats"', async () => {
+      setPathname('/stats')
+      mockFetch({
+        ...defaultFetch,
+        '/api/stats/summary': { totalShows: 2333, uniqueSongs: 442, hoursArchived: 6422 },
+        '/api/stats': { leaderboard: [], showsPerYear: [] },
+      })
+      render(<MobileShell />)
+      await waitFor(() => expect(screen.getByText('2,333')).toBeInTheDocument())
+    })
+
     it('renders ShowDetailScreen on "/show/1977-05-08"', () => {
       setPathname('/show/1977-05-08')
       render(<MobileShell />)
-      // ShowDetailScreen shows "Loading…" initially before the API resolves
       expect(screen.getByText('Loading…')).toBeInTheDocument()
     })
 
@@ -903,18 +1170,27 @@ describe('MobileShell', () => {
       expect(screen.getByRole('status')).toBeInTheDocument()
     })
 
-    it('hides the mini player on the home route', () => {
+    it('shows the mini player on home route when a track is playing', () => {
       setPathname('/')
       setPlayer({ currentTrack: mockTrack, isPlaying: true })
       render(<MobileShell />)
+      expect(screen.getByRole('status')).toBeInTheDocument()
+    })
+
+    it('hides the mini player when deck tab is active', () => {
+      setPathname('/')
+      setPlayer({ currentTrack: mockTrack, isPlaying: true })
+      render(<MobileShell />)
+      fireEvent.click(screen.getByText('Deck'))
       expect(screen.queryByRole('status')).not.toBeInTheDocument()
     })
 
     it('renders tab bar on every route', () => {
-      const routes = ['/', '/songs', '/stats', '/search', '/show/1977-05-08', '/song/Dark Star']
+      const routes = ['/', '/songs', '/shows', '/search', '/show/1977-05-08', '/song/Dark Star']
       for (const route of routes) {
         setPathname(route)
         const { unmount } = render(<MobileShell />)
+        expect(screen.getByText('Home')).toBeInTheDocument()
         expect(screen.getByText('Deck')).toBeInTheDocument()
         unmount()
       }

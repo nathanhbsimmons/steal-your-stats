@@ -614,6 +614,12 @@
   grid-template-columns: repeat(4, 1fr);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+.mv-tabs.mv-tabs-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+.mv-tabs.mv-tabs-6 {
+  grid-template-columns: repeat(6, 1fr);
+}
 .mv-tab {
   display: flex;
   flex-direction: column;
@@ -888,8 +894,8 @@
 
 .mv-version {
   display: grid;
-  grid-template-columns: 56px 1fr 48px auto;
-  gap: 10px;
+  grid-template-columns: 82px 1fr 44px auto;
+  gap: 10px 16px;
   align-items: baseline;
   padding: 9px 18px;
   border-bottom: 1px dotted var(--rule-soft);
@@ -1527,3 +1533,272 @@
   cursor: pointer;
 }
 .mv-qclear:active { background: var(--ink); color: var(--paper); }
+
+/* ---------------------------------------- 5/6-TAB FONT SCALING */
+.mv-tabs-5 .mv-tab .lab,
+.mv-tabs-6 .mv-tab .lab {
+  font-size: 11px;
+}
+.mv-tabs-5 .mv-tab .num,
+.mv-tabs-6 .mv-tab .num {
+  font-size: 7.5px;
+}
+.mv-tabs-6 .mv-tab .lab {
+  font-size: 10px;
+}
+
+/* ---------------------------------------- OPEN SETLIST BUTTON */
+.mv-open-setlist-btn {
+  display: inline-block;
+  padding: 13px 22px;
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.mv-open-setlist-btn:active { background: var(--ink); color: var(--paper); }
+
+/* ---------------------------------------- ALSO ON THIS DAY */
+.mv-also-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.mv-also-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 20px;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px dotted var(--rule-soft);
+  text-decoration: none;
+  cursor: pointer;
+}
+.mv-also-row .yr {
+  font-family: var(--serif-numerals);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--rust);
+  line-height: 1;
+}
+.mv-also-row .where {
+  font-family: var(--serif-body);
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.mv-also-row .where .city {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.mv-also-row .ext {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-4);
+  text-align: right;
+}
+
+/* ---------------------------------------- SHOWS DECADE GRID */
+.mv-shows-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 12px 18px 18px;
+}
+.mv-show-year-card {
+  aspect-ratio: 2 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px 14px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  gap: 0;
+}
+.mv-show-year-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(168, 57, 31, 0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.mv-show-year-card:active {
+  background: var(--ink);
+  color: var(--paper);
+}
+.mv-show-year-card .yr {
+  font-family: var(--serif-display);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  display: block;
+}
+.mv-show-year-card:active .yr { color: var(--paper); }
+.mv-show-year-card .cnt {
+  font-family: var(--serif-numerals);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--rust);
+  line-height: 1;
+  display: block;
+  margin-top: 6px;
+}
+.mv-show-year-card:active .cnt { color: var(--paper-2); }
+.mv-show-year-card .lbl {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: block;
+  margin-top: 2px;
+}
+.mv-show-year-card:active .lbl { color: var(--ink-4); }
+
+/* ---------------------------------------- YEAR CARD — COMPACT LAYOUT */
+.mv-show-year-card .yr {
+  font-size: 24px;
+}
+.mv-show-year-card .cnt {
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+/* ---------------------------------------- SHOWS YEAR LIST ROWS */
+.mv-show-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 28px 18px;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px dotted var(--rule-soft);
+  cursor: pointer;
+}
+.mv-show-row:active { background: var(--hi); }
+.mv-srow-date {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+.mv-srow-venue {
+  font-family: var(--serif-body);
+  font-size: 16px;
+  color: var(--ink);
+  line-height: 1.15;
+}
+.mv-srow-city {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 1px;
+}
+.mv-srow-arr {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink-4);
+  text-align: right;
+}
+
+/* ---------------------------------------- SHOW DATE — BIGGER/BOLDER */
+.mv-show-date-big {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.mv-show-date-big .mv-date-year {
+  font-family: var(--serif-display);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* ---------------------------------------- DECK CLOSE BUTTON */
+.mv-deck-topbar {
+  padding: 10px 18px 4px;
+  display: flex;
+  align-items: center;
+}
+.mv-deck-close {
+  background: none;
+  border: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.mv-deck-close:active { color: var(--ink); }
+
+/* ---------------------------------------- BACK TO TOP */
+.mv-back-to-top {
+  position: absolute;
+  right: 14px;
+  bottom: calc(116px + env(safe-area-inset-bottom, 0px) + 10px);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--ink);
+  cursor: pointer;
+  z-index: 4;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.mv-back-to-top:active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ---------------------------------------- POSITION BREAKDOWN BLOCK */
+.mv-pos-block {
+  padding: 12px 18px 18px;
+}
+
+/* ---------------------------------------- TOUCH TARGETS (new buttons) */
+.mv-deck-close, .mv-back-to-top, .mv-show-row .mv-addq {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}

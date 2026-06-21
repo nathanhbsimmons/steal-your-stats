@@ -65,17 +65,19 @@ describe('useAudioPlayer — edge cases', () => {
     expect(result.current.queue).toHaveLength(2)
   })
 
-  it('removeFromQueue for last track falls back to first', () => {
+  it('removeFromQueue for last track clears queue', () => {
     const { result } = renderHook(() => useAudioPlayer())
     const tracks = [makeTrack('1', 'Dark Star'), makeTrack('2', 'St. Stephen')]
 
     act(() => { result.current.playEntireShow(tracks) })
-    act(() => { result.current.next() }) // move to track 2
+    // next() pops track '1' from the queue and advances to '2'
+    act(() => { result.current.next() })
     expect(result.current.currentTrack?.id).toBe('2')
+    expect(result.current.queue).toHaveLength(1) // only '2' remains
 
     act(() => { result.current.removeFromQueue('2') })
-    // Removed current (last), queue now has only track 1
-    expect(result.current.queue).toHaveLength(1)
+    // Removed the only remaining track; queue is now empty
+    expect(result.current.queue).toHaveLength(0)
   })
 
   it('addToQueue deduplicates by id', () => {

@@ -84,7 +84,7 @@ export function Masthead({ search, setSearch }: MastheadProps) {
         </h1>
         <div className="sub">
           The{' '}
-          <span className="blackletter">Dead</span>{' '}
+          <span className="blackletter">Grateful Dead</span>{' '}
           Archive ·{' '}
           <i>compiled by hand, played through the deck</i>
         </div>

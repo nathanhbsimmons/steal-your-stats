@@ -138,23 +138,27 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
   }, [])
 
   const next = useCallback(() => {
-    if (queue.length === 0) {
+    const currentIndex = currentTrack ? queueRef.current.findIndex(track => track.id === currentTrack.id) : -1
+
+    if (currentIndex === -1) {
       setCurrentTrack(null)
       setIsPlaying(false)
       return
     }
 
-    const currentIndex = currentTrack ? queue.findIndex(track => track.id === currentTrack.id) : -1
-    const nextIndex = currentIndex + 1
+    // Remove the played track from the queue
+    const newQueue = queueRef.current.filter((_, i) => i !== currentIndex)
+    setQueue(newQueue)
 
-    if (nextIndex < queue.length) {
-      setCurrentTrack(queue[nextIndex])
+    // The next track occupies the same index in the trimmed queue
+    if (currentIndex < newQueue.length) {
+      setCurrentTrack(newQueue[currentIndex])
       setIsPlaying(true)
     } else {
       setCurrentTrack(null)
       setIsPlaying(false)
     }
-  }, [currentTrack, queue])
+  }, [currentTrack])
 
   const previous = useCallback(() => {
     if (queue.length === 0) {

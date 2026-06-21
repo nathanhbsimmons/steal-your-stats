@@ -294,7 +294,7 @@ export default function StatsPage() {
                     onChange={e => handleQueryChange(e.target.value)}
                     onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
                     onKeyDown={handleKeyDown}
-                    placeholder={positionSong}
+                    placeholder="Search…"
                     style={{
                       border: 'none', outline: 'none', background: 'transparent',
                       fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink)',
