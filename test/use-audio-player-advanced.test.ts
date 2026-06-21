@@ -65,17 +65,19 @@ describe('useAudioPlayer — edge cases', () => {
     expect(result.current.queue).toHaveLength(2)
   })
 
-  it('removeFromQueue for last track falls back to first', () => {
+  it('removeFromQueue for last track clears queue', () => {
     const { result } = renderHook(() => useAudioPlayer())
     const tracks = [makeTrack('1', 'Dark Star'), makeTrack('2', 'St. Stephen')]
 
     act(() => { result.current.playEntireShow(tracks) })
-    act(() => { result.current.next() }) // move to track 2
+    // next() pops track '1' from the queue and advances to '2'
+    act(() => { result.current.next() })
     expect(result.current.currentTrack?.id).toBe('2')
+    expect(result.current.queue).toHaveLength(1) // only '2' remains
 
     act(() => { result.current.removeFromQueue('2') })
-    // Removed current (last), queue now has only track 1
-    expect(result.current.queue).toHaveLength(1)
+    // Removed the only remaining track; queue is now empty
+    expect(result.current.queue).toHaveLength(0)
   })
 
   it('addToQueue deduplicates by id', () => {
@@ -195,5 +197,53 @@ describe('useAudioPlayer — edge cases', () => {
 
     expect(result.current.currentTrack).not.toBeNull()
     expect(result.current.isPlaying).toBe(true)
+  })
+
+  // Versions carrying a direct URL resolve without any network round-trip.
+  const makeVersion = (showDate: string) => ({
+    showDate,
+    venue: 'Venue',
+    city: 'City',
+    url: `https://archive.org/${showDate}.mp3`,
+    archiveItemId: `gd${showDate}`,
+    durationSec: 600,
+  })
+
+  it('enqueueSongVersions (replace) sorts chronologically, plays first, queues all', async () => {
+    const { result } = renderHook(() => useAudioPlayer())
+    const versions = [makeVersion('1989-07-07'), makeVersion('1977-05-08'), makeVersion('1972-08-27')]
+
+    await act(async () => {
+      await result.current.enqueueSongVersions('Sugaree', versions, { mode: 'replace' })
+    })
+
+    expect(result.current.queue.map(t => t.showDate)).toEqual(['1972-08-27', '1977-05-08', '1989-07-07'])
+    expect(result.current.currentTrack?.showDate).toBe('1972-08-27')
+    expect(result.current.isPlaying).toBe(true)
+  })
+
+  it('enqueueSongVersions respects the cap', async () => {
+    const { result } = renderHook(() => useAudioPlayer())
+    const versions = Array.from({ length: 40 }, (_, i) => makeVersion(`19${70 + i}-01-01`))
+
+    await act(async () => {
+      await result.current.enqueueSongVersions('Sugaree', versions, { mode: 'replace', cap: 25 })
+    })
+
+    expect(result.current.queue.length).toBe(25)
+  })
+
+  it('enqueueSongVersions (append) keeps the existing track playing', async () => {
+    const { result } = renderHook(() => useAudioPlayer())
+
+    act(() => { result.current.playEntireShow([makeTrack('existing', 'Playing Now')]) })
+    expect(result.current.currentTrack?.id).toBe('existing')
+
+    await act(async () => {
+      await result.current.enqueueSongVersions('Sugaree', [makeVersion('1977-05-08')], { mode: 'append' })
+    })
+
+    expect(result.current.currentTrack?.id).toBe('existing')
+    expect(result.current.queue.length).toBe(2)
   })
 })
