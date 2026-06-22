@@ -436,6 +436,11 @@
   font-size: 9px;
 }
 .mv-track.current .title { color: var(--rust-dark); font-style: italic; }
+.mv-track.pending {
+  opacity: 0.45;
+  pointer-events: none;
+  cursor: default;
+}
 .mv-track.unavailable {
   opacity: 0.5;
   cursor: default;
@@ -625,8 +630,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  padding: 3px 0 0;
+  gap: 0;
+  padding: 1px 0 0;
   cursor: pointer;
   border: none;
   background: transparent;
@@ -642,9 +647,10 @@
 }
 .mv-tab .lab {
   font-family: var(--serif-body);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--ink-2);
+  white-space: nowrap;
 }
 .mv-tab.active .num { color: var(--rust); }
 .mv-tab.active .lab { color: var(--ink); font-style: italic; }
@@ -1535,16 +1541,9 @@
 .mv-qclear:active { background: var(--ink); color: var(--paper); }
 
 /* ---------------------------------------- 5/6-TAB FONT SCALING */
-.mv-tabs-5 .mv-tab .lab,
-.mv-tabs-6 .mv-tab .lab {
-  font-size: 11px;
-}
 .mv-tabs-5 .mv-tab .num,
 .mv-tabs-6 .mv-tab .num {
   font-size: 7.5px;
-}
-.mv-tabs-6 .mv-tab .lab {
-  font-size: 10px;
 }
 
 /* ---------------------------------------- OPEN SETLIST BUTTON */

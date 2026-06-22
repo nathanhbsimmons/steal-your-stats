@@ -630,7 +630,14 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
             {venueTidbit && <div className="mv-preplay-tidbit">{venueTidbit}</div>}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
               {displayDate && (
-                <button className="mv-play-show-btn" onClick={handlePlay}>▶ Play Show</button>
+                <button
+                  className="mv-play-show-btn"
+                  onClick={handlePlay}
+                  disabled={archiveCoveredIndices === null}
+                  style={archiveCoveredIndices === null ? { opacity: 0.6, cursor: 'default' } : undefined}
+                >
+                  {archiveCoveredIndices === null ? 'Loading…' : '▶ Play Show'}
+                </button>
               )}
               {displayDate && (
                 <Link href={`/show/${displayDate}`} className="mv-open-setlist-btn">Open Setlist ↗</Link>
@@ -670,20 +677,20 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
                 {set.songs.map((song, ti) => {
                   const flatIdx = showDetail.sets.slice(0, si).reduce((n, s) => n + s.songs.length, ti)
                   const isCurrent = currentTrack?.name === song && currentTrack?.showDate === showDetail.date
-                  const archiveKnown = archiveCoveredIndices !== null
-                  const inArchive = !archiveKnown || archiveCoveredIndices.has(flatIdx)
+                  const archiveLoading = archiveCoveredIndices === null
+                  const inArchive = !archiveLoading && archiveCoveredIndices!.has(flatIdx)
                   const dur = archiveDurations.get(flatIdx)
                   return (
                     <div
                       key={`${si}-${ti}`}
-                      className={`mv-track${isCurrent ? ' current' : ''}${archiveKnown && !inArchive ? ' unavailable' : ''}`}
+                      className={`mv-track${isCurrent ? ' current' : ''}${archiveLoading ? ' pending' : !inArchive ? ' unavailable' : ''}`}
                       onClick={inArchive ? () => handleTrackClick(flatIdx) : undefined}
                       role={inArchive ? 'button' : undefined}
                       aria-label={inArchive ? `Play ${song}` : undefined}
                     >
                       <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
                       <span className="title">{song}</span>
-                      {archiveKnown && !inArchive ? (
+                      {!archiveLoading && !inArchive ? (
                         <span className="mv-unavail">Audio Unavailable</span>
                       ) : (
                         <span className="dur">{formatDur(dur)}</span>
@@ -1507,7 +1514,14 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
               <h2>{showDetail.venue}</h2>
               <div className="byline">{showDetail.city}{showDetail.state ? `, ${showDetail.state}` : ''} · {showDetail.totalSongs} songs</div>
             </div>
-            <button className="mv-play-show-btn" onClick={handlePlayAll}>▶ Play Show</button>
+            <button
+              className="mv-play-show-btn"
+              onClick={handlePlayAll}
+              disabled={archiveCoveredIndices === null}
+              style={archiveCoveredIndices === null ? { opacity: 0.6, cursor: 'default' } : undefined}
+            >
+              {archiveCoveredIndices === null ? 'Loading…' : '▶ Play Show'}
+            </button>
           </div>
         ) : (
           <h2 style={{ fontSize: 22, color: 'var(--ink-3)' }}>Show not found.</h2>
@@ -1564,21 +1578,21 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
                 {set.songs.map((song, ti) => {
                   const flatIdx = showDetail.sets.slice(0, si).reduce((n, s) => n + s.songs.length, ti)
                   const isCurrent = currentTrack?.name === song && currentTrack?.showDate === date
-                  const archiveKnown = archiveCoveredIndices !== null
-                  const inArchive = !archiveKnown || archiveCoveredIndices.has(flatIdx)
+                  const archiveLoading = archiveCoveredIndices === null
+                  const inArchive = !archiveLoading && archiveCoveredIndices!.has(flatIdx)
                   const dur = archiveDurations.get(flatIdx)
                   const songs = showDetail.sets.flatMap(s => s.songs)
                   return (
                     <div
                       key={`${si}-${ti}`}
-                      className={`mv-track${isCurrent ? ' current' : ''}${archiveKnown && !inArchive ? ' unavailable' : ''}`}
+                      className={`mv-track${isCurrent ? ' current' : ''}${archiveLoading ? ' pending' : !inArchive ? ' unavailable' : ''}`}
                       onClick={inArchive ? () => handleTrackClick(flatIdx) : undefined}
                       role={inArchive ? 'button' : undefined}
                       aria-label={inArchive ? `Play ${song}` : undefined}
                     >
                       <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
                       <span className="title">{song}</span>
-                      {archiveKnown && !inArchive ? (
+                      {!archiveLoading && !inArchive ? (
                         <span className="mv-unavail">Audio Unavailable</span>
                       ) : (
                         <span className="dur">{formatDur(dur)}</span>
