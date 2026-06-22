@@ -94,6 +94,7 @@ export function VaultPlayer() {
       title: currentTrack.name,
       artist: 'Grateful Dead',
       album: `${currentTrack.showDate ?? ''}${currentTrack.venue ? ` · ${currentTrack.venue}` : ''}`,
+      artwork: [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
     })
   }, [currentTrack])
 
