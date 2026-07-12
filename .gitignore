@@ -49,3 +49,6 @@ next-env.d.ts
 # disk cache — commit gd-setlists.json so deploys start warm; ignore everything else
 /.cache/*
 !/.cache/gd-setlists.json
+
+# claude code local settings (machine-specific, e.g. enabled MCP servers)
+.claude/settings.local.json

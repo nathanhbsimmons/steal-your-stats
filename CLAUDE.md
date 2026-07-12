@@ -92,3 +92,13 @@ SETLISTFM_API_KEY=your_key_here
 ## Path Alias
 
 `@/*` maps to project root (configured tsconfig.json)
+
+## Lessons Learned
+
+At the end of each session, update `~/.claude/projects/[project]/memory/learnings.md` with key learnings from this session using this format:
+
+- **[Date]** | [Context] | [Lesson]
+
+Examples:
+- **2026-07-12** | Async state updates | useState doesn't batch updates in event handlers, need useTransition for optimal performance
+- **2026-07-11** | Database queries | N+1 queries on user feed endpoint, add batch loader
