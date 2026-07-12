@@ -192,7 +192,7 @@ export function VaultPlayer() {
               </div>
               <div className="sub">
                 {currentTrack
-                  ? <>{currentTrack.showDate} · {currentTrack.venue} · <span className="live">REEL TO REEL</span></>
+                  ? <>{currentTrack.showDate} · {currentTrack.venue}</>
                   : null
                 }
               </div>

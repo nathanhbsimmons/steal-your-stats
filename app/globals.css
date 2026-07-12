@@ -917,7 +917,6 @@ p { margin: 0; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.vault-player .now .sub .live { color: var(--rust); }
 .vault-player .transport { display: grid; grid-template-rows: auto auto; gap: 6px; }
 .vault-player .transport .ctrls { display: flex; align-items: center; gap: 18px; justify-content: center; }
 .vault-player .iconbtn {
