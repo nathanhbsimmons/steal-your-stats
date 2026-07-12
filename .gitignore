@@ -4,6 +4,9 @@
 /node_modules
 /.pnp
 .pnp.*
+# pnpm 10+ auto-regenerates this locally for build-script approval; deploy
+# runs pnpm 9 which can't parse it (see package.json pnpm.onlyBuiltDependencies)
+/pnpm-workspace.yaml
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
