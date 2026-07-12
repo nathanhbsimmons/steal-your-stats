@@ -1,10 +1,9 @@
-'use client'
-
 import React from 'react'
-import useSWR from 'swr'
 import Link from 'next/link'
 import Image from 'next/image'
-import { fetcher, swrOpts } from '@/lib/swr-fetcher'
+import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
+
+export const revalidate = 86400
 
 interface YearCount { year: number; count: number }
 
@@ -87,9 +86,9 @@ function MemberCard({
   )
 }
 
-export default function ArtistsPage() {
-  const { data } = useSWR<{ showsPerYear: YearCount[] }>('/api/stats', fetcher, swrOpts)
-  const yearData = data?.showsPerYear ?? []
+export default async function ArtistsPage() {
+  const stats = await realtimeSongFactsService.getGlobalStats().catch(() => ({ showsPerYear: [] as YearCount[], leaderboard: [] }))
+  const yearData = stats.showsPerYear
 
   return (
     <section className="col">
