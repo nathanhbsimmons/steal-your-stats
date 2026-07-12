@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) working code this repo.
 
 ## Project Overview
 
-Steal Your Stats is a Grateful Dead statistics and audio player web application. It provides song lookup, performance statistics (first/last show, opener/closer/encore counts), version comparisons with durations, and in-browser playback of archived shows from Archive.org.
+Steal Your Stats — Grateful Dead stats + audio player web app. Song lookup, performance stats (first/last show, opener/closer/encore counts), version comparisons w/ durations, in-browser playback archived shows from Archive.org.
 
 ## Commands
 
@@ -19,7 +19,7 @@ pnpm test:run     # Single test run
 pnpm test:ui      # Vitest with UI dashboard
 ```
 
-Run a single test file:
+Run single test file:
 ```bash
 pnpm test test/utils.test.ts
 ```
@@ -29,9 +29,9 @@ pnpm test test/utils.test.ts
 ### Tech Stack
 - Next.js 15 (App Router) + React 19 + TypeScript
 - Tailwind CSS 4 + shadcn/ui components
-- SWR for data fetching
-- Vitest + Testing Library for tests
-- pnpm as package manager
+- SWR data fetching
+- Vitest + Testing Library tests
+- pnpm package manager
 
 ### Directory Structure
 
@@ -56,10 +56,10 @@ test/                   # Test files
 ### Data Flow
 
 1. **External APIs**: setlist.fm (performance data), Archive.org (audio files), MusicBrainz (artist IDs)
-2. **HttpClient** (`lib/http.ts`): Wraps fetch with retries, exponential backoff on 429, and in-memory caching
-3. **Song Resolution** (`lib/ids.ts`): Maps song title variations to canonical names (60+ aliases)
+2. **HttpClient** (`lib/http.ts`): Wraps fetch, retries, exponential backoff on 429, in-memory caching
+3. **Song Resolution** (`lib/ids.ts`): Maps song title variations → canonical names (60+ aliases)
 4. **API Routes**: Expose data via `/api/song-facts`, `/api/position-facts`, `/api/versions`, etc.
-5. **Audio Player** (`lib/hooks/use-audio-player.ts`): Queue management with localStorage persistence
+5. **Audio Player** (`lib/hooks/use-audio-player.ts`): Queue management, localStorage persistence
 
 ### Key Constants
 - Grateful Dead MusicBrainz ID: `6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6`
@@ -67,7 +67,7 @@ test/                   # Test files
 
 ## Design System
 
-Monochrome, retro aesthetic with high contrast:
+Monochrome, retro, high contrast:
 - **Colors**: ink (#111), paper (#f5f5f2), gray (#bfbfb7)
 - **Borders**: 2px solid everywhere
 - **Radii**: 12px (small), 24px (large)
@@ -76,11 +76,11 @@ Monochrome, retro aesthetic with high contrast:
 
 ## Development Workflow
 
-- Work one task at a time from `/AGENT/AGENT_TASKS.md`
+- One task at time from `/AGENT/AGENT_TASKS.md`
 - Branch naming: `feat/<slice-kebab>`
-- All tests, lint, and typecheck must pass before merging
-- State model for UI: idle → loading → empty → error → success
-- WCAG AA accessibility required (keyboard-first, visible focus rings, aria-live for async)
+- Tests, lint, typecheck must pass before merge
+- UI state model: idle → loading → empty → error → success
+- WCAG AA required (keyboard-first, visible focus rings, aria-live async)
 
 ## Environment Variables
 
@@ -91,4 +91,4 @@ SETLISTFM_API_KEY=your_key_here
 
 ## Path Alias
 
-`@/*` maps to the project root (configured in tsconfig.json)
+`@/*` maps to project root (configured tsconfig.json)
