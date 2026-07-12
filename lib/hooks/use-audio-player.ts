@@ -123,14 +123,35 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     }
   }, [])
 
-  // Save queue to localStorage whenever it changes
+  // Save queue to localStorage whenever it changes, debounced to collapse bursts
+  // (e.g. enqueueing many song versions in a loop) into a single write.
+  const writeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
-    try {
-      localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue))
-    } catch (error) {
-      console.error('Failed to save queue to localStorage:', error)
+    if (writeTimeoutRef.current) clearTimeout(writeTimeoutRef.current)
+    writeTimeoutRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue))
+      } catch (error) {
+        console.error('Failed to save queue to localStorage:', error)
+      }
+    }, 300)
+    return () => {
+      if (writeTimeoutRef.current) clearTimeout(writeTimeoutRef.current)
     }
   }, [queue])
+
+  // Flush a pending debounced write on unmount so navigating away mid-burst
+  // doesn't drop the latest queue state.
+  useEffect(() => {
+    return () => {
+      if (writeTimeoutRef.current) {
+        clearTimeout(writeTimeoutRef.current)
+        try {
+          localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queueRef.current))
+        } catch {}
+      }
+    }
+  }, [])
 
   const play = useCallback(() => {
     if (currentTrack) {
