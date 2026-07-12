@@ -1,5 +1,8 @@
 import { HttpClient } from '../http'
 
+// A resolved show's identity on Archive.org is effectively immutable — safe to cache long.
+const SHOW_RESOLUTION_TTL_MS = 24 * 60 * 60 * 1000
+
 export type RecordingType = 'sbd' | 'aud' | 'matrix' | 'unknown'
 
 export interface ArchiveShowCandidate {
@@ -164,25 +167,28 @@ export class ArchiveClientImpl implements ArchiveClient {
       `collection:GratefulDead AND date:[${date}T00:00:00Z TO ${date}T23:59:59Z]`,
     ]
 
-    for (const q of queries) {
+    const results = await Promise.all(queries.map(async q => {
       try {
         const searchParams = new URLSearchParams({ q, output: 'json', rows: '20', fl: 'identifier,title,creator,date,venue,city,state,country,licenseurl,rights,publicdate' })
         const response = await this.http.get<{
           response: { docs: ArchiveShow[]; numFound: number }
-        }>(`/advancedsearch.php?${searchParams.toString()}`, { cache: false })
+        }>(`/advancedsearch.php?${searchParams.toString()}`, { cacheTtl: SHOW_RESOLUTION_TTL_MS })
 
-        const shows = response.data?.response?.docs || []
-        if (shows.length === 0) continue
-        if (shows.length === 1) return shows[0]
-
-        const scored = shows
-          .map(show => ({ show, score: this.calculateMatchScore(show, { venue, city }) }))
-          .sort((a, b) => b.score - a.score)
-
-        return scored[0].show
+        return response.data?.response?.docs || []
       } catch {
-        continue
+        return [] as ArchiveShow[]
       }
+    }))
+
+    for (const shows of results) {
+      if (shows.length === 0) continue
+      if (shows.length === 1) return shows[0]
+
+      const scored = shows
+        .map(show => ({ show, score: this.calculateMatchScore(show, { venue, city }) }))
+        .sort((a, b) => b.score - a.score)
+
+      return scored[0].show
     }
 
     return null
@@ -209,7 +215,7 @@ export class ArchiveClientImpl implements ArchiveClient {
     const seen = new Set<string>()
     const candidates: ArchiveShowCandidate[] = []
 
-    for (const q of queries) {
+    const results = await Promise.all(queries.map(async q => {
       try {
         const searchParams = new URLSearchParams({
           q, output: 'json', rows: '20',
@@ -217,21 +223,25 @@ export class ArchiveClientImpl implements ArchiveClient {
         })
         const response = await this.http.get<{
           response: { docs: Array<ArchiveShow & { downloads?: number }> }
-        }>(`/advancedsearch.php?${searchParams.toString()}`, { cache: false })
+        }>(`/advancedsearch.php?${searchParams.toString()}`, { cacheTtl: SHOW_RESOLUTION_TTL_MS })
 
-        for (const show of response.data?.response?.docs ?? []) {
-          if (seen.has(show.identifier)) continue
-          seen.add(show.identifier)
-          candidates.push({
-            identifier: show.identifier,
-            title: show.title,
-            recordingType: this.detectRecordingType(show.identifier, show.title),
-            score: this.calculateMatchScore(show, { venue, city }),
-            downloads: show.downloads,
-          })
-        }
+        return response.data?.response?.docs ?? []
       } catch {
-        continue
+        return [] as Array<ArchiveShow & { downloads?: number }>
+      }
+    }))
+
+    for (const shows of results) {
+      for (const show of shows) {
+        if (seen.has(show.identifier)) continue
+        seen.add(show.identifier)
+        candidates.push({
+          identifier: show.identifier,
+          title: show.title,
+          recordingType: this.detectRecordingType(show.identifier, show.title),
+          score: this.calculateMatchScore(show, { venue, city }),
+          downloads: show.downloads,
+        })
       }
     }
 
