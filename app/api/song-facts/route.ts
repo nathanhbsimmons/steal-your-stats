@@ -12,7 +12,9 @@ export async function GET(request: NextRequest) {
 
     console.log(`Fetching real-time song facts for: ${songTitle}`)
     const facts = await realtimeSongFactsService.getFirstLast(songTitle)
-    return NextResponse.json(facts)
+    return NextResponse.json(facts, {
+      headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' },
+    })
   } catch (error) {
     console.error('Error in song-facts API:', error)
     return NextResponse.json(

@@ -11,7 +11,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await realtimeSongFactsService.getAllPerformances(songTitle)
-    return NextResponse.json(result)
+    return NextResponse.json(result, {
+      headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' },
+    })
   } catch (error) {
     console.error('Error in song-timeline API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

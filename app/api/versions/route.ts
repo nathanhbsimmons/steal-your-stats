@@ -18,11 +18,14 @@ export async function GET(request: NextRequest) {
     // Get versions from real-time service
     const versionsFacts = await realtimeSongFactsService.getVersions(songTitle)
     
-    return NextResponse.json({
-      tracks: versionsFacts.tracks,
-      extremes: versionsFacts.extremes,
-      songTitle: versionsFacts.songTitle
-    })
+    return NextResponse.json(
+      {
+        tracks: versionsFacts.tracks,
+        extremes: versionsFacts.extremes,
+        songTitle: versionsFacts.songTitle
+      },
+      { headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' } }
+    )
   } catch (error) {
     console.error('Error fetching versions:', error)
     return NextResponse.json(

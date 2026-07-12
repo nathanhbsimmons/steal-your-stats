@@ -55,7 +55,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(Array.from(songs.values()))
+    return NextResponse.json(Array.from(songs.values()), {
+      headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' },
+    })
   } catch (error) {
     console.error('Error in search-songs API:', error)
     return NextResponse.json(

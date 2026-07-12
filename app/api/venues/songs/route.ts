@@ -8,7 +8,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const songs = await realtimeSongFactsService.getTopSongsByVenue(venue)
-    return NextResponse.json({ songs })
+    return NextResponse.json({ songs }, {
+      headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' },
+    })
   } catch (error) {
     console.error('Error fetching venue songs:', error)
     return NextResponse.json({ error: 'Failed to fetch venue songs' }, { status: 500 })

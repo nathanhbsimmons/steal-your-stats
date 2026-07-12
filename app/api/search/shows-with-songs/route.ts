@@ -55,7 +55,10 @@ export async function GET(request: NextRequest) {
       await new Promise(r => setTimeout(r, 200))
     }
     results.sort((a, b) => a.date.localeCompare(b.date))
-    return NextResponse.json({ shows: results, query: songsParam })
+    return NextResponse.json(
+      { shows: results, query: songsParam },
+      { headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' } }
+    )
   }
 
   // Two songs: fetch each and intersect by show date
@@ -88,5 +91,8 @@ export async function GET(request: NextRequest) {
   const results = intersection.map(setlistToResult)
   results.sort((a, b) => a.date.localeCompare(b.date))
 
-  return NextResponse.json({ shows: results, query: songsParam })
+  return NextResponse.json(
+    { shows: results, query: songsParam },
+    { headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' } }
+  )
 }

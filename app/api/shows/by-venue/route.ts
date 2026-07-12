@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
       .map(setlistToResult)
       .sort((a, b) => a.date.localeCompare(b.date))
 
-    return NextResponse.json({ shows, total: shows.length, venue: name })
+    return NextResponse.json(
+      { shows, total: shows.length, venue: name },
+      { headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' } }
+    )
   } catch {
     return NextResponse.json({ shows: [], total: 0 })
   }

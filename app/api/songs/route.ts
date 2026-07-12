@@ -29,5 +29,8 @@ export async function GET(request: NextRequest) {
     return { ...s, hints }
   }))
 
-  return NextResponse.json({ songs: withHints, total: withHints.length })
+  return NextResponse.json(
+    { songs: withHints, total: withHints.length },
+    { headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' } }
+  )
 }

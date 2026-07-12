@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { showOfTheDayService } from '@/lib/services/show-of-the-day'
 
+export const revalidate = 300
+
 export async function GET() {
   try {
     const payload = await showOfTheDayService.get()

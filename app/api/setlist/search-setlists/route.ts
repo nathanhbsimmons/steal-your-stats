@@ -35,7 +35,9 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json()
-    return NextResponse.json(data.setlist || [])
+    return NextResponse.json(data.setlist || [], {
+      headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' },
+    })
   } catch (error) {
     console.error('Error in search-setlists API:', error)
     return NextResponse.json(

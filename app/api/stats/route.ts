@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 
+export const revalidate = 86400
+
 export async function GET() {
   try {
     const stats = await realtimeSongFactsService.getGlobalStats()

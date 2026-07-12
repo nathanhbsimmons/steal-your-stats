@@ -14,12 +14,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const cacheHeaders = { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' }
     if (topSongs) {
       const songs = await realtimeSongFactsService.getTopSongsByYearRange(yearFrom, yearTo, 20)
-      return NextResponse.json({ songs })
+      return NextResponse.json({ songs }, { headers: cacheHeaders })
     }
     const result = await realtimeSongFactsService.getShowsByYearRange(yearFrom, yearTo, page, perPage)
-    return NextResponse.json(result)
+    return NextResponse.json(result, { headers: cacheHeaders })
   } catch (err) {
     console.error('Error in /api/shows:', err)
     return NextResponse.json({ error: 'Failed to fetch shows' }, { status: 500 })

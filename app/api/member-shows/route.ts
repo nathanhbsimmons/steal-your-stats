@@ -28,10 +28,13 @@ export async function GET(request: NextRequest) {
     }))
     .sort((a, b) => a.date.localeCompare(b.date))
 
-  return NextResponse.json({
-    shows,
-    total: result.total,
-    page,
-    itemsPerPage: result.itemsPerPage,
-  })
+  return NextResponse.json(
+    {
+      shows,
+      total: result.total,
+      page,
+      itemsPerPage: result.itemsPerPage,
+    },
+    { headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' } }
+  )
 }

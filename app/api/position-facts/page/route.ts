@@ -37,7 +37,9 @@ export async function GET(request: NextRequest) {
       pageSize: pageSize ? parseInt(pageSize, 10) : 20
     })
     
-    return NextResponse.json(result)
+    return NextResponse.json(result, {
+      headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' },
+    })
   } catch (error) {
     console.error('Error in position-facts page API:', error)
     return NextResponse.json(
