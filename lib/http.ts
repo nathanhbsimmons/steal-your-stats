@@ -8,6 +8,7 @@ export interface HttpOptions {
   cacheTtl?: number
   retries?: number
   retryDelay?: number
+  timeout?: number
 }
 
 export interface HttpResponse<T = unknown> {
@@ -64,6 +65,7 @@ export class HttpClient {
       cacheTtl = 300000, // 5 minutes default
       retries = 3,
       retryDelay = 1000,
+      timeout = 10000,
     } = options
 
     const fullUrl = this.baseUrl + url
@@ -85,6 +87,8 @@ export class HttpClient {
     let lastError: Error | null = null
 
     for (let attempt = 0; attempt <= retries; attempt++) {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), timeout)
       try {
         // Inject auth header for setlist.fm automatically by host match.
         const host = (() => {
@@ -118,6 +122,7 @@ export class HttpClient {
           method,
           headers: dynamicHeaders,
           body,
+          signal: controller.signal,
         })
 
         // Log rate limit headers
@@ -172,19 +177,23 @@ export class HttpClient {
 
         return result
       } catch (error) {
-        lastError = error as Error
-        
+        lastError = (error instanceof Error && error.name === 'AbortError')
+          ? new Error(`Request timed out after ${timeout}ms: ${fullUrl}`)
+          : (error as Error)
+
         // Don't retry on client errors (4xx) except 429
-        if (error instanceof HttpError && error.status >= 400 && error.status < 500 && error.status !== 429) {
-          throw error
+        if (lastError instanceof HttpError && lastError.status >= 400 && lastError.status < 500 && lastError.status !== 429) {
+          throw lastError
         }
 
-        // Retry on network errors or server errors
+        // Retry on network errors, timeouts, or server errors
         if (attempt < retries) {
           const delay = retryDelay * Math.pow(2, attempt)
-          console.log(`Request failed, retrying after ${delay}ms:`, error)
+          console.log(`Request failed, retrying after ${delay}ms:`, lastError)
           await this.delay(delay)
         }
+      } finally {
+        clearTimeout(timeoutId)
       }
     }
 

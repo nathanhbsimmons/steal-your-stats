@@ -152,6 +152,42 @@ describe('HttpClient', () => {
     })
   })
 
+  describe('timeout', () => {
+    it('should abort a hung request after the timeout and retry', async () => {
+      vi.useFakeTimers()
+      let callCount = 0
+      mockFetch.mockImplementation((_url: string, opts: RequestInit) => {
+        callCount++
+        if (callCount === 1) {
+          return new Promise((_resolve, reject) => {
+            opts.signal?.addEventListener('abort', () => {
+              const err = new Error('Aborted')
+              err.name = 'AbortError'
+              reject(err)
+            })
+          })
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Map(),
+          json: vi.fn().mockResolvedValue({ data: 'ok' }),
+        })
+      })
+
+      const resultPromise = client.get('/hangs', { timeout: 50, retryDelay: 1 })
+
+      await vi.advanceTimersByTimeAsync(50) // trigger the timeout abort
+      await vi.advanceTimersByTimeAsync(1) // trigger the retry backoff delay
+
+      const result = await resultPromise
+      expect(result.data).toEqual({ data: 'ok' })
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+
+      vi.useRealTimers()
+    })
+  })
+
   describe('cache management', () => {
     it('should clear cache', async () => {
       const mockResponse = {
