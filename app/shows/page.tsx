@@ -1,17 +1,16 @@
-'use client'
-
 import React from 'react'
-import useSWR from 'swr'
 import Link from 'next/link'
-import { fetcher, swrOpts } from '@/lib/swr-fetcher'
+import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 
 interface YearCount { year: number; count: number }
 
 const TOUR_YEARS = Array.from({ length: 31 }, (_, i) => 1965 + i)
 
-export default function ShowsIndexPage() {
-  const { data, isLoading: loading } = useSWR<{ showsPerYear: YearCount[] }>('/api/stats', fetcher, swrOpts)
-  const yearData = data?.showsPerYear ?? []
+export const revalidate = 86400
+
+export default async function ShowsIndexPage() {
+  const stats = await realtimeSongFactsService.getGlobalStats().catch(() => ({ showsPerYear: [] as YearCount[], leaderboard: [] }))
+  const yearData = stats.showsPerYear
 
   const countByYear = new Map(yearData.map(d => [d.year, d.count]))
   const maxCount = Math.max(...yearData.map(d => d.count), 1)
@@ -29,7 +28,7 @@ export default function ShowsIndexPage() {
           <div className="kicker">Shows · VII</div>
           <h2>Every show, <span className="italic">by year.</span></h2>
           <div className="lede">
-            {loading ? 'Loading…' : `${yearData.reduce((s, d) => s + d.count, 0).toLocaleString()} shows across 31 years.`}
+            {yearData.reduce((s, d) => s + d.count, 0).toLocaleString()} shows across 31 years.
           </div>
         </div>
       </div>
@@ -49,38 +48,19 @@ export default function ShowsIndexPage() {
               href={`/shows/${year}`}
               style={{ textDecoration: 'none' }}
             >
-              <div style={{
-                border: '2px solid var(--ink)',
-                borderRadius: 0,
-                padding: '14px 16px 12px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                cursor: 'pointer',
-                background: 'var(--paper)',
-                transition: 'background 0.12s, box-shadow 0.12s',
-              }}
-              onMouseEnter={e => {
-                ;(e.currentTarget as HTMLDivElement).style.background = 'var(--ink)'
-                ;(e.currentTarget as HTMLDivElement).style.color = 'var(--paper)'
-              }}
-              onMouseLeave={e => {
-                ;(e.currentTarget as HTMLDivElement).style.background = 'var(--paper)'
-                ;(e.currentTarget as HTMLDivElement).style.color = ''
-              }}
-              >
+              <div className="year-card">
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                   <span style={{ fontFamily: 'var(--serif-display)', fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
                     {year}
                   </span>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: loading ? 'transparent' : 'inherit', letterSpacing: '0.06em' }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.06em' }}>
                     {count > 0 ? count : '—'}
                   </span>
                 </div>
                 {/* Mini bar */}
-                <div style={{ height: 3, background: 'var(--rule-soft)', overflow: 'hidden' }}>
+                <div className="mini-bar">
                   {count > 0 && (
-                    <div style={{ height: '100%', width: `${barPct}%`, background: 'var(--rust)' }} />
+                    <div className="mini-bar-fill" style={{ width: `${barPct}%` }} />
                   )}
                 </div>
               </div>
