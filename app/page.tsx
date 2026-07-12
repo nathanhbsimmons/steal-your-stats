@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
+import useSWR from 'swr'
 import Link from 'next/link'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { TimelineStrip } from '@/components/ui/timeline-strip'
@@ -8,6 +9,7 @@ import { getVenueTidbit } from '@/lib/venue-tidbits'
 import { formatDuration } from '@/lib/utils'
 import { getDateParts } from '@/lib/date-parts'
 import { formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
+import { fetcher, swrOpts } from '@/lib/swr-fetcher'
 import type { ArchiveSetlistMatch, ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
 
 interface ShowOnThisDay {
@@ -50,62 +52,36 @@ interface MostPlayed {
   pct: number
 }
 
+interface ShowOfTheDayPayload {
+  shows?: ShowOnThisDay[]
+  featured?: ShowOnThisDay | null
+  showDetail?: ShowDetail | null
+  archive?: { identifier?: string; description?: string | null }
+  archiveMatch?: ArchiveSetlistMatch | null
+}
 
 export default function HomePage() {
-  const [shows, setShows] = useState<ShowOnThisDay[]>([])
-  const [featured, setFeatured] = useState<ShowOnThisDay | null>(null)
-  const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
-  const [kpi, setKpi] = useState<SummaryStats | null>(null)
-  const [mostPlayed, setMostPlayed] = useState<MostPlayed[]>([])
-  const [loading, setLoading] = useState(true)
   const { enqueueEntireShow, enqueueShowTrack, playShowTrack, prependToQueue, selectTrack, addToQueue } = usePlayer()
 
-  // Fetch KPI summary
-  useEffect(() => {
-    fetch('/api/stats/summary')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setKpi(data) })
-      .catch(() => {})
-  }, [])
+  const { data: kpi } = useSWR<SummaryStats>('/api/stats/summary', fetcher, swrOpts)
+  const { data: statsData } = useSWR<{ leaderboard: MostPlayed[] }>('/api/stats', fetcher, swrOpts)
+  const mostPlayed = statsData?.leaderboard?.slice(0, 8) ?? []
 
-  // Fetch most-played leaderboard
-  useEffect(() => {
-    fetch('/api/stats')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.leaderboard) setMostPlayed(data.leaderboard.slice(0, 8)) })
-      .catch(() => {})
-  }, [])
+  // Single aggregated fetch: the server precomputes shows, featured pick,
+  // setlist detail, and the archive/setlist track match once per day.
+  const { data: dayPayload, isLoading: loading } = useSWR<ShowOfTheDayPayload>('/api/show-of-the-day', fetcher, swrOpts)
+  const shows = dayPayload?.shows ?? []
+  const featured = dayPayload?.featured ?? null
+  const showDetail = dayPayload?.showDetail ?? null
+  const archiveIdentifier = dayPayload?.archive?.identifier
+  const archiveDescription = dayPayload?.archive?.description ?? null
+  const archiveMatch = dayPayload?.archiveMatch ?? null
+  const archiveLoaded = !loading
 
   const [queuedSet, setQueuedSet] = useState<Set<number>>(new Set())
   const [flashIdx, setFlashIdx] = useState<number | null>(null)
   const [isEnqueuing, setIsEnqueuing] = useState(false)
-
-  const [archiveIdentifier, setArchiveIdentifier] = useState<string | undefined>(undefined)
-  const [archiveDescription, setArchiveDescription] = useState<string | null>(null)
-  const [archiveMatch, setArchiveMatch] = useState<ArchiveSetlistMatch | null>(null)
-  const [archiveLoaded, setArchiveLoaded] = useState(false)
   const [showBonus, setShowBonus] = useState(false)
-
-  // Single aggregated fetch: the server precomputes shows, featured pick,
-  // setlist detail, and the archive/setlist track match once per day.
-  useEffect(() => {
-    fetch('/api/show-of-the-day')
-      .then(r => r.ok ? r.json() : null)
-      .then(payload => {
-        if (!payload) return
-        setShows(payload.shows ?? [])
-        setFeatured(payload.featured ?? null)
-        setShowDetail(payload.showDetail ?? null)
-        setArchiveIdentifier(payload.archive?.identifier)
-        setArchiveDescription(payload.archive?.description ?? null)
-        setArchiveMatch(payload.archiveMatch ?? null)
-      })
-      .catch(() => {})
-      .finally(() => {
-        setArchiveLoaded(true)
-        setLoading(false)
-      })
-  }, [])
 
   // Which flat song indices have a matched archive track.
   // null = archive not yet loaded (show pending shimmer on rows).

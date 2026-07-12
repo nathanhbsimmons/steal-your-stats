@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import useSWR from 'swr'
 import Link from 'next/link'
+import { fetcher, swrOpts } from '@/lib/swr-fetcher'
 
 interface YearCount { year: number; count: number }
 
@@ -100,9 +102,7 @@ function sumYears(data: YearCount[], from: number, to: number): number {
 }
 
 export default function ErasPage() {
-  const [showsPerYear, setShowsPerYear] = useState<YearCount[]>([])
   const [focusId, setFocusId] = useState('europe72')
-  const [loading, setLoading] = useState(true)
 
   // Read ?focus= URL param on mount to pre-select an era from member links
   useEffect(() => {
@@ -111,13 +111,8 @@ export default function ErasPage() {
     if (focus && ERA_DEFS.some(e => e.id === focus)) setFocusId(focus)
   }, [])
 
-  useEffect(() => {
-    fetch('/api/stats')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.showsPerYear) setShowsPerYear(d.showsPerYear) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+  const { data, isLoading: loading } = useSWR<{ showsPerYear: YearCount[] }>('/api/stats', fetcher, swrOpts)
+  const showsPerYear = data?.showsPerYear ?? []
 
   const eras = ERA_DEFS.map(e => ({
     ...e,

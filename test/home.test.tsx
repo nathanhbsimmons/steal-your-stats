@@ -1,4 +1,5 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { SWRConfig } from 'swr'
 import { PlayerProvider } from '@/lib/contexts/player-context'
 import { matchArchiveTracksToSetlist } from '@/lib/archive-track-match'
 import Home from '../app/page'
@@ -40,10 +41,15 @@ function mockFetch(responses: Record<string, unknown>) {
 }
 
 function renderHome() {
+  // Fresh SWR cache per render — SWR's default cache is a module-level
+  // singleton, so without this, later tests in this file would reuse an
+  // earlier test's mocked response for the same key (24h dedupingInterval).
   return render(
-    <PlayerProvider>
-      <Home />
-    </PlayerProvider>
+    <SWRConfig value={{ provider: () => new Map() }}>
+      <PlayerProvider>
+        <Home />
+      </PlayerProvider>
+    </SWRConfig>
   )
 }
 

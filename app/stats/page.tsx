@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
+import useSWR from 'swr'
 import Link from 'next/link'
+import { fetcher, swrOpts } from '@/lib/swr-fetcher'
 
 interface YearCount { year: number; count: number }
 interface LeaderEntry { name: string; count: number; pct: number }
@@ -88,8 +90,8 @@ function DonutChart({ positions, songLabel }: { positions: PositionEntry[]; song
 interface SongSuggestion { title: string; displayTitle: string }
 
 export default function StatsPage() {
-  const [stats, setStats] = useState<GlobalStats | null>(null)
-  const [summary, setSummary] = useState<SummaryData | null>(null)
+  const { data: stats } = useSWR<GlobalStats>('/api/stats', fetcher, swrOpts)
+  const { data: summary } = useSWR<SummaryData>('/api/stats/summary', fetcher, swrOpts)
 
   // Position breakdown state
   const [positionSong, setPositionSong] = useState('Dark Star')
@@ -103,17 +105,6 @@ export default function StatsPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    fetch('/api/stats')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setStats(d) })
-      .catch(() => {})
-    fetch('/api/stats/summary')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setSummary(d) })
-      .catch(() => {})
-  }, [])
 
   // Close dropdown when clicking outside
   useEffect(() => {

@@ -1,23 +1,17 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React from 'react'
+import useSWR from 'swr'
 import Link from 'next/link'
+import { fetcher, swrOpts } from '@/lib/swr-fetcher'
 
 interface YearCount { year: number; count: number }
 
 const TOUR_YEARS = Array.from({ length: 31 }, (_, i) => 1965 + i)
 
 export default function ShowsIndexPage() {
-  const [yearData, setYearData] = useState<YearCount[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/stats')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.showsPerYear) setYearData(d.showsPerYear) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+  const { data, isLoading: loading } = useSWR<{ showsPerYear: YearCount[] }>('/api/stats', fetcher, swrOpts)
+  const yearData = data?.showsPerYear ?? []
 
   const countByYear = new Map(yearData.map(d => [d.year, d.count]))
   const maxCount = Math.max(...yearData.map(d => d.count), 1)

@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React from 'react'
+import useSWR from 'swr'
 import Link from 'next/link'
 import Image from 'next/image'
+import { fetcher, swrOpts } from '@/lib/swr-fetcher'
 
 interface YearCount { year: number; count: number }
 
@@ -86,14 +88,8 @@ function MemberCard({
 }
 
 export default function ArtistsPage() {
-  const [yearData, setYearData] = useState<YearCount[]>([])
-
-  useEffect(() => {
-    fetch('/api/stats')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.showsPerYear) setYearData(d.showsPerYear) })
-      .catch(() => {})
-  }, [])
+  const { data } = useSWR<{ showsPerYear: YearCount[] }>('/api/stats', fetcher, swrOpts)
+  const yearData = data?.showsPerYear ?? []
 
   return (
     <section className="col">
