@@ -30,7 +30,7 @@ export class HttpError extends Error {
 }
 
 export class HttpClient {
-  private cache = new Cache<HttpResponse>()
+  private cache = new Cache<HttpResponse>(1000)
   private baseUrl: string
   private defaultHeaders: Record<string, string>
 

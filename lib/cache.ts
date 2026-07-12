@@ -1,10 +1,17 @@
-// Simple in-memory cache with TTL
+// Simple in-memory cache with TTL and LRU eviction
 export class Cache<T> {
   private cache = new Map<string, { value: T; expiry: number }>()
 
+  constructor(private maxEntries: number = 500) {}
+
   set(key: string, value: T, ttlMs: number = 60000): void {
-    const expiry = Date.now() + ttlMs
-    this.cache.set(key, { value, expiry })
+    if (this.cache.has(key)) this.cache.delete(key)
+    this.cache.set(key, { value, expiry: Date.now() + ttlMs })
+
+    if (this.cache.size > this.maxEntries) {
+      const oldestKey = this.cache.keys().next().value
+      if (oldestKey !== undefined) this.cache.delete(oldestKey)
+    }
   }
 
   get(key: string): T | undefined {
@@ -16,6 +23,9 @@ export class Cache<T> {
       return undefined
     }
 
+    // refresh recency
+    this.cache.delete(key)
+    this.cache.set(key, item)
     return item.value
   }
 

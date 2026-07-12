@@ -57,4 +57,36 @@ describe('Cache', () => {
     cache.set('key2', 'value2')
     expect(cache.size()).toBe(2)
   })
+
+  it('should evict the oldest entry when maxEntries is exceeded', () => {
+    const bounded = new Cache<string>(3)
+    bounded.set('a', '1')
+    bounded.set('b', '2')
+    bounded.set('c', '3')
+    bounded.set('d', '4')
+
+    expect(bounded.size()).toBe(3)
+    expect(bounded.has('a')).toBe(false)
+    expect(bounded.has('b')).toBe(true)
+    expect(bounded.has('c')).toBe(true)
+    expect(bounded.has('d')).toBe(true)
+  })
+
+  it('should refresh recency on get, protecting a recently-read entry from eviction', () => {
+    const bounded = new Cache<string>(3)
+    bounded.set('a', '1')
+    bounded.set('b', '2')
+    bounded.set('c', '3')
+
+    // touch 'a' so it becomes most-recently-used
+    bounded.get('a')
+
+    bounded.set('d', '4')
+
+    expect(bounded.size()).toBe(3)
+    expect(bounded.has('a')).toBe(true)
+    expect(bounded.has('b')).toBe(false)
+    expect(bounded.has('c')).toBe(true)
+    expect(bounded.has('d')).toBe(true)
+  })
 })
