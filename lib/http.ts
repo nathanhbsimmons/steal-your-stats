@@ -177,7 +177,8 @@ export class HttpClient {
 
         return result
       } catch (error) {
-        lastError = (error instanceof Error && error.name === 'AbortError')
+        const isTimeout = error instanceof Error && error.name === 'AbortError'
+        lastError = isTimeout
           ? new Error(`Request timed out after ${timeout}ms: ${fullUrl}`)
           : (error as Error)
 
@@ -186,7 +187,14 @@ export class HttpClient {
           throw lastError
         }
 
-        // Retry on network errors, timeouts, or server errors
+        // Don't retry on timeout — a slow-but-legitimate response just needs
+        // more time, not a fresh attempt with the same cap; retrying only
+        // compounds the wait (up to retries+1 timeouts back-to-back).
+        if (isTimeout) {
+          throw lastError
+        }
+
+        // Retry on network errors or server errors
         if (attempt < retries) {
           const delay = retryDelay * Math.pow(2, attempt)
           console.log(`Request failed, retrying after ${delay}ms:`, lastError)

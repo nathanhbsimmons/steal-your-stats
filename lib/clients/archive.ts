@@ -141,9 +141,13 @@ export class ArchiveClientImpl implements ArchiveClient {
   }
 
   async listTracks(identifier: string): Promise<ArchiveTrack[]> {
+    // Archive.org's metadata endpoint returns the item's entire file listing
+    // and is known to be slow (12-20s+) on cold/rarely-accessed items —
+    // give it more room than the 10s default so a legitimately slow response
+    // doesn't get cut off.
     const response = await this.http.get<{
       files: ArchiveTrack[]
-    }>(`/metadata/${identifier}`)
+    }>(`/metadata/${identifier}`, { timeout: 30000 })
 
     // Filter for MP3 files only
     const audioFiles = (response.data.files || []).filter(file => 
@@ -379,7 +383,7 @@ export class ArchiveClientImpl implements ArchiveClient {
 
   async getAllTracks(itemId: string): Promise<ArchiveTrack[]> {
     try {
-      const response = await this.http.get<{ files?: ArchiveTrack[] }>(`/metadata/${itemId}`)
+      const response = await this.http.get<{ files?: ArchiveTrack[] }>(`/metadata/${itemId}`, { timeout: 30000 })
       const files = response.data?.files || []
       return files.filter(file =>
         file.name?.match(/\.mp3$/i) && file.format !== 'Metadata'
