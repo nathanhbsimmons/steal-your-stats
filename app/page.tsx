@@ -6,6 +6,9 @@ import { usePlayer } from '@/lib/contexts/player-context'
 import { TimelineStrip } from '@/components/ui/timeline-strip'
 import { getVenueTidbit } from '@/lib/venue-tidbits'
 import { formatDuration } from '@/lib/utils'
+import { getDateParts } from '@/lib/date-parts'
+import { formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
+import type { ArchiveSetlistMatch, ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
 
 interface ShowOnThisDay {
   date: string
@@ -47,17 +50,6 @@ interface MostPlayed {
   pct: number
 }
 
-function ordinal(n: number): string {
-  const s = String(n)
-  if (s.endsWith('11') || s.endsWith('12') || s.endsWith('13')) return s + 'th'
-  if (s.endsWith('1')) return s + 'st'
-  if (s.endsWith('2')) return s + 'nd'
-  if (s.endsWith('3')) return s + 'rd'
-  return s + 'th'
-}
-
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const WEEKDAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
 export default function HomePage() {
   const [shows, setShows] = useState<ShowOnThisDay[]>([])
@@ -66,7 +58,7 @@ export default function HomePage() {
   const [kpi, setKpi] = useState<SummaryStats | null>(null)
   const [mostPlayed, setMostPlayed] = useState<MostPlayed[]>([])
   const [loading, setLoading] = useState(true)
-  const { enqueueEntireShow, enqueueShowTrack, playShowTrack, prependToQueue, selectTrack } = usePlayer()
+  const { enqueueEntireShow, enqueueShowTrack, playShowTrack, prependToQueue, selectTrack, addToQueue } = usePlayer()
 
   // Fetch KPI summary
   useEffect(() => {
@@ -89,11 +81,13 @@ export default function HomePage() {
   const [isEnqueuing, setIsEnqueuing] = useState(false)
 
   const [archiveIdentifier, setArchiveIdentifier] = useState<string | undefined>(undefined)
-  const [archiveTracks, setArchiveTracks] = useState<Array<{ title?: string; url?: string; duration?: number }>>([])
+  const [archiveDescription, setArchiveDescription] = useState<string | null>(null)
+  const [archiveMatch, setArchiveMatch] = useState<ArchiveSetlistMatch | null>(null)
   const [archiveLoaded, setArchiveLoaded] = useState(false)
+  const [showBonus, setShowBonus] = useState(false)
 
   // Single aggregated fetch: the server precomputes shows, featured pick,
-  // setlist detail, and archive tracks once per day.
+  // setlist detail, and the archive/setlist track match once per day.
   useEffect(() => {
     fetch('/api/show-of-the-day')
       .then(r => r.ok ? r.json() : null)
@@ -103,9 +97,8 @@ export default function HomePage() {
         setFeatured(payload.featured ?? null)
         setShowDetail(payload.showDetail ?? null)
         setArchiveIdentifier(payload.archive?.identifier)
-        setArchiveTracks(
-          ((payload.archive?.tracks ?? []) as Array<{ title?: string; url?: string; duration?: number }>).filter(t => t.url)
-        )
+        setArchiveDescription(payload.archive?.description ?? null)
+        setArchiveMatch(payload.archiveMatch ?? null)
       })
       .catch(() => {})
       .finally(() => {
@@ -114,130 +107,59 @@ export default function HomePage() {
       })
   }, [])
 
-  // Which flat song indices have a title match in the archive recording.
+  // Which flat song indices have a matched archive track.
   // null = archive not yet loaded (show pending shimmer on rows).
-  // Empty set = archive loaded, no title matches found.
+  // Empty set = archive loaded, no matches (or archive unavailable).
   const archiveCoveredIndices = useMemo((): Set<number> | null => {
-    if (!archiveLoaded || !showDetail) return null
-    if (archiveTracks.length === 0) return new Set<number>()
-    const titledTracks = archiveTracks.filter(t => t.title)
-    if (titledTracks.length === 0) return new Set<number>()
-    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-    const covered = new Set<number>()
-    let i = 0
-    for (const set of showDetail.sets) {
-      for (const song of set.songs) {
-        const songNorm = norm(song)
-        const found = titledTracks.some(t => {
-          const titleNorm = norm(t.title ?? '')
-          return titleNorm.includes(songNorm) || songNorm.includes(titleNorm)
-        })
-        if (found) covered.add(i)
-        i++
-      }
-    }
-    return covered
-  }, [archiveTracks, archiveLoaded, showDetail])
+    if (!archiveLoaded) return null
+    if (!archiveMatch) return new Set<number>()
+    return new Set(archiveMatch.matched.filter(m => m.track).map(m => m.flatIdx))
+  }, [archiveLoaded, archiveMatch])
 
   const archiveSegueIndices = useMemo((): Set<number> => {
-    if (!showDetail || archiveTracks.length === 0) return new Set()
-    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-    const titledTracks = archiveTracks.filter(t => t.title)
-    const segued = new Set<number>()
-    let i = 0
-    for (const set of showDetail.sets) {
-      for (const song of set.songs) {
-        const songNorm = norm(song)
-        const matched = titledTracks.find(t => {
-          const titleNorm = norm(t.title!)
-          return titleNorm.includes(songNorm) || songNorm.includes(titleNorm)
-        })
-        if (matched?.title?.trim().endsWith('>')) segued.add(i)
-        i++
-      }
-    }
-    return segued
-  }, [archiveTracks, showDetail])
+    if (!archiveMatch) return new Set()
+    return new Set(
+      archiveMatch.matched.filter(m => m.track?.title?.trim().endsWith('>')).map(m => m.flatIdx)
+    )
+  }, [archiveMatch])
 
   const archiveDurations = useMemo((): Map<number, number> => {
-    if (!showDetail || archiveTracks.length === 0) return new Map()
-    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-    const titledTracks = archiveTracks.filter(t => t.title && t.duration)
-    const durations = new Map<number, number>()
-    let i = 0
-    for (const set of showDetail.sets) {
-      for (const song of set.songs) {
-        const songNorm = norm(song)
-        const matched = titledTracks.find(t => {
-          const titleNorm = norm(t.title!)
-          return titleNorm.includes(songNorm) || songNorm.includes(titleNorm)
-        })
-        if (matched?.duration) durations.set(i, matched.duration)
-        i++
-      }
-    }
-    return durations
-  }, [archiveTracks, showDetail])
-
-  interface HomeSongItem { kind: 'song'; song: string; setIdx: number; ji: number; flatIdx: number }
-  interface HomeAncItem { kind: 'ancillary'; title: string; url: string; duration?: number; setIdx: number }
-  type HomeMergeItem = HomeSongItem | HomeAncItem
-
-  const mergedProgram = useMemo((): HomeMergeItem[] => {
-    if (!showDetail?.sets) return []
-    let fi = 0
-    const songItems: HomeSongItem[] = showDetail.sets.flatMap((set, si) =>
-      set.songs.map((song, ji) => ({ kind: 'song' as const, song, setIdx: si, ji, flatIdx: fi++ }))
+    if (!archiveMatch) return new Map()
+    return new Map(
+      archiveMatch.matched.filter(m => m.track?.duration).map(m => [m.flatIdx, m.track!.duration!])
     )
-    if (!archiveLoaded || archiveTracks.length === 0) return songItems
-    const hasMetadata = archiveTracks.some(t => t.title?.trim())
-    if (!hasMetadata) return songItems
-    const norm = (s: string) => s.toLowerCase().replace(/\s*&\s*/g, 'and').replace(/[^a-z0-9]/g, '')
-    const titleCore = (t: string) => { const ci = t.indexOf(':'); return ci > 0 && ci < 12 ? t.slice(ci + 1).trim() : t }
-    const result: HomeMergeItem[] = []
-    let songCursor = 0
-    let currentSetIdx = 0
-    for (let ai = 0; ai < archiveTracks.length; ai++) {
-      const track = archiveTracks[ai]
-      if (!track.url) continue
-      if (!track.title?.trim()) {
-        result.push({ kind: 'ancillary', title: '', url: track.url, duration: track.duration, setIdx: currentSetIdx })
-        continue
-      }
-      const titleNorm = norm(titleCore(track.title))
-      let matchIdx = -1
-      for (let li = songCursor; li < Math.min(songCursor + 8, songItems.length); li++) {
-        const songNorm = norm(songItems[li].song)
-        if (titleNorm.includes(songNorm) || songNorm.includes(titleNorm)) { matchIdx = li; break }
-      }
-      if (matchIdx !== -1) {
-        for (let ski = songCursor; ski < matchIdx; ski++) { result.push(songItems[ski]); currentSetIdx = songItems[ski].setIdx }
-        result.push(songItems[matchIdx])
-        currentSetIdx = songItems[matchIdx].setIdx
-        songCursor = matchIdx + 1
-      } else {
-        result.push({ kind: 'ancillary', title: track.title, url: track.url, duration: track.duration, setIdx: currentSetIdx })
-      }
-    }
-    for (let ski = songCursor; ski < songItems.length; ski++) result.push(songItems[ski])
-    return result
-  }, [archiveLoaded, archiveTracks, showDetail])
+  }, [archiveMatch])
 
-  const handlePlayAncillaryTrack = useCallback((url: string, title: string, duration?: number) => {
+  const handlePlayAncillaryTrack = useCallback((archiveTrack: ArchiveTrackPayload) => {
     if (!featured) return
     const track = {
-      id: `${archiveIdentifier || 'anc'}-${Date.now()}`,
-      name: title || 'Archive Track',
-      url,
-      duration,
+      id: archiveTrack.id,
+      name: formatBonusTrackTitle(archiveTrack),
+      url: archiveTrack.url,
+      duration: archiveTrack.duration,
       showDate: featured.date,
       venue: featured.venue,
       city: featured.city,
-      archiveItemId: archiveIdentifier || '',
+      archiveItemId: archiveTrack.archiveItemId,
     }
     prependToQueue([track])
     selectTrack(track)
-  }, [featured, archiveIdentifier, prependToQueue, selectTrack])
+  }, [featured, prependToQueue, selectTrack])
+
+  const handleAddBonusTrack = useCallback((e: React.MouseEvent, archiveTrack: ArchiveTrackPayload) => {
+    e.stopPropagation()
+    if (!featured) return
+    addToQueue([{
+      id: archiveTrack.id,
+      name: formatBonusTrackTitle(archiveTrack),
+      url: archiveTrack.url,
+      duration: archiveTrack.duration,
+      showDate: featured.date,
+      venue: featured.venue,
+      city: featured.city,
+      archiveItemId: archiveTrack.archiveItemId,
+    }])
+  }, [featured, addToQueue])
 
   const handlePlayShow = async (startFrom?: number) => {
     if (!featured) return
@@ -284,11 +206,11 @@ export default function HomePage() {
     }
   }, [featured, showDetail, archiveIdentifier, playShowTrack])
 
-  // Format the featured date for the display — use today's calendar date for weekday/month/day
-  const today = new Date()
-  const weekday = WEEKDAY_NAMES[today.getDay()]
-  const monthName = MONTH_NAMES[today.getMonth()]
-  const dayNum = today.getDate()
+  // Format the featured date for display — use the show's own historical
+  // weekday/month/day, not today's real-world weekday.
+  const dateParts = featured ? getDateParts(featured.date) : null
+  const weekday = dateParts?.weekday ?? ''
+  const monthName = dateParts?.monthName ?? ''
   const year = featured?.year ?? 0
   const yearsAgo = new Date().getFullYear() - year
   const venue = featured?.venue ?? ''
@@ -332,7 +254,7 @@ export default function HomePage() {
             <>
               <h2>
                 <span style={{ fontSize: '0.75em' }}>
-                  {weekday}, the {ordinal(dayNum)}{' '}
+                  {weekday}, the {dateParts?.ordinalDay ?? ''}{' '}
                   <span className="italic">of</span>{' '}
                   {monthName}
                 </span>
@@ -393,27 +315,27 @@ export default function HomePage() {
         )}
 
         {/* Setlist from the show detail */}
-        {(showDetail?.sets?.length ?? 0) > 0 && (
-          <div className="setlist">
-            {showDetail!.sets.map((set, si) => {
-              const romanNumerals = ['I', 'II', 'III', 'IV', 'E.']
-              const isEncore = set.encore
-              const roman = isEncore ? 'E.' : romanNumerals[si] ?? String(si + 1)
-              const setItems = mergedProgram.filter(item => item.setIdx === si)
-              let songNum = 0
-              return (
-                <div key={set.name} className={`set-block${si === 1 ? ' alt' : ''}`}>
-                  <div className="set-head">
-                    <h3>
-                      <span className="roman">{roman}</span>
-                      {set.name}
-                    </h3>
-                    <div className="duration">{set.songs.length} songs</div>
-                  </div>
-                  {setItems.map((item, ii) => {
-                    if (item.kind === 'song') {
-                      songNum++
-                      const { song, ji, flatIdx: globalNum } = item
+        {(showDetail?.sets?.length ?? 0) > 0 && (() => {
+          let flatOffset = 0
+          return (
+            <div className="setlist">
+              {showDetail!.sets.map((set, si) => {
+                const romanNumerals = ['I', 'II', 'III', 'IV', 'E.']
+                const isEncore = set.encore
+                const roman = isEncore ? 'E.' : romanNumerals[si] ?? String(si + 1)
+                const setOffset = flatOffset
+                flatOffset += set.songs.length
+                return (
+                  <div key={set.name} className={`set-block${si === 1 ? ' alt' : ''}`}>
+                    <div className="set-head">
+                      <h3>
+                        <span className="roman">{roman}</span>
+                        {set.name}
+                      </h3>
+                      <div className="duration">{set.songs.length} songs</div>
+                    </div>
+                    {set.songs.map((song, ji) => {
+                      const globalNum = setOffset + ji
                       const pending = archiveCoveredIndices === null
                       const inArchive = !pending && archiveCoveredIndices!.has(globalNum)
                       const hasSegue = set.segues?.[ji] === true || archiveSegueIndices.has(globalNum)
@@ -424,7 +346,7 @@ export default function HomePage() {
                           onClick={inArchive ? () => handlePlaySingleSong(globalNum) : undefined}
                           style={!inArchive && !pending ? { cursor: 'default', opacity: 0.4 } : undefined}
                         >
-                          <span className="num">{String(songNum).padStart(2, '0')}</span>
+                          <span className="num">{String(ji + 1).padStart(2, '0')}</span>
                           <span className="play-dot" style={!inArchive && !pending ? { visibility: 'hidden' } : undefined}>▶</span>
                           <Link
                             href={`/song/${encodeURIComponent(song)}`}
@@ -453,31 +375,53 @@ export default function HomePage() {
                           )}
                         </div>
                       )
-                    } else {
-                      const rawTitle = item.title?.replace(/>$/, '').trim() || ''
-                      const ci = rawTitle.indexOf(':')
-                      const stripped = ci > 0 && ci < 12 ? rawTitle.slice(ci + 1).trim() : rawTitle
-                      const displayName = stripped ? stripped.charAt(0).toUpperCase() + stripped.slice(1) : 'Archive Track'
-                      return (
-                        <div
-                          key={`a${si}-${ii}`}
-                          className="track"
-                          onClick={() => handlePlayAncillaryTrack(item.url, displayName, item.duration)}
-                          data-queue-safe="true"
-                        >
-                          <span className="num" style={{ opacity: 0.35, fontSize: 13 }}>·</span>
-                          <span className="play-dot">▶</span>
-                          <span className="title" style={{ fontStyle: 'italic', display: 'block' }}>{displayName}</span>
-                          <span className="chev" />
-                          <span className="dur">{item.duration ? formatDuration(item.duration) : ''}</span>
-                          <span style={{ width: 26, display: 'inline-block' }} />
-                        </div>
-                      )
-                    }
-                  })}
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })()}
+
+        {/* Bonus tracks (soundcheck, banter, etc.) bundled in the recording but not part of the setlist */}
+        {archiveMatch && archiveMatch.bonus.length > 0 && (
+          <div className="bonus-tracks" style={{ marginTop: 8 }}>
+            <button
+              className="bonus-toggle"
+              onClick={() => setShowBonus(s => !s)}
+              style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
+                background: 'none', border: '2px solid var(--gray)', borderRadius: 12, padding: '10px 14px',
+                cursor: 'pointer', font: 'inherit', fontSize: 14,
+              }}
+            >
+              <span>+ {deriveBonusSectionLabel(archiveMatch.bonus, archiveDescription)} ({archiveMatch.bonus.length} tracks)</span>
+              <span>{showBonus ? '▲' : '▼'}</span>
+            </button>
+            {showBonus && (
+              <div className="setlist" style={{ marginTop: 4 }}>
+                <div className="set-block">
+                  {archiveMatch.bonus.map(track => (
+                    <div
+                      key={track.id}
+                      className="track"
+                      onClick={() => handlePlayAncillaryTrack(track)}
+                    >
+                      <span className="num" style={{ opacity: 0.35, fontSize: 13 }}>·</span>
+                      <span className="play-dot">▶</span>
+                      <span className="title" style={{ fontStyle: 'italic', display: 'block' }}>{formatBonusTrackTitle(track)}</span>
+                      <span className="chev" />
+                      <span className="dur">{track.duration ? formatDuration(track.duration) : ''}</span>
+                      <button
+                        className="add-q"
+                        title="Add to queue"
+                        onClick={e => handleAddBonusTrack(e, track)}
+                      >+</button>
+                    </div>
+                  ))}
                 </div>
-              )
-            })}
+              </div>
+            )}
           </div>
         )}
 
@@ -518,20 +462,20 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Recording mismatch warning for home page */}
-        {archiveLoaded && archiveTracks.length > 0 && showDetail &&
-          Math.abs(archiveTracks.length - showDetail.totalSongs) > 2 && (
+        {/* Recording mismatch warning for home page — only when setlist songs
+            are actually missing from the tape, not when the tape just has
+            extra bonus material (handled by the bonus section above). */}
+        {archiveMatch && archiveMatch.matched.filter(m => !m.track).length > 2 && (
           <div className="margin-note" style={{ marginTop: 8, borderColor: 'var(--rust)' }}>
             <span className="head" style={{ color: 'var(--rust)' }}>Recording note</span>
-            The best available recording for this show has {archiveTracks.length} tracks;
-            setlist.fm lists {showDetail.totalSongs} songs. Some songs may be missing from
-            this tape.{' '}
+            {archiveMatch.matched.filter(m => !m.track).length} of {archiveMatch.matched.length} songs
+            couldn&apos;t be matched to a track on this recording.{' '}
             {featured && (
               <Link href={`/show/${featured.date}`} style={{ color: 'var(--rust)' }}>
                 Open full setlist ↗
               </Link>
             )}{' '}
-            to browse all available recordings and switch between them.
+            to browse other available recordings and switch between them.
           </div>
         )}
 

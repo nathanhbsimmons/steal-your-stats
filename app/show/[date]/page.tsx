@@ -8,6 +8,8 @@ import { usePlayer } from '@/lib/contexts/player-context'
 import { TimelineStrip } from '@/components/ui/timeline-strip'
 import { formatArchiveTrackName } from '@/lib/hooks/use-audio-player'
 import { formatDuration } from '@/lib/utils'
+import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
+import type { ArchiveTrackPayload, ArchiveSetlistMatch } from '@/lib/show-of-the-day-types'
 
 interface ShowSet {
   name: string
@@ -60,21 +62,18 @@ export default function ShowPage() {
     { revalidateOnFocus: false, revalidateOnReconnect: false, dedupingInterval: 24 * 60 * 60 * 1000 }
   )
 
-  const { enqueueEntireShow, enqueueShowTrack, playShowTrack, pause, currentTrack, isPlaying, prependToQueue, selectTrack } = usePlayer()
+  const { enqueueEntireShow, enqueueShowTrack, playShowTrack, pause, currentTrack, isPlaying, prependToQueue, selectTrack, addToQueue } = usePlayer()
 
   const [queuedSet, setQueuedSet] = useState<Set<number>>(new Set())
   const [flashIdx, setFlashIdx] = useState<number | null>(null)
   const [isEnqueuing, setIsEnqueuing] = useState(false)
+  const [showBonus, setShowBonus] = useState(false)
 
-  interface ArchiveTrackInfo { name: string; title?: string; duration?: number; url: string }
-
-  interface SongMergeItem { kind: 'song'; song: string; ji: number; setIdx: number; flatIdx: number }
-  interface AncillaryMergeItem { kind: 'ancillary'; archiveIdx: number; track: ArchiveTrackInfo; setIdx: number }
-  type MergeItem = SongMergeItem | AncillaryMergeItem
   interface ArchiveRecording {
     identifier: string
     archiveTitle?: string
-    tracks: ArchiveTrackInfo[]
+    description?: string | null
+    tracks: ArchiveTrackPayload[]
   }
   interface RecordingCandidate { identifier: string; title: string; recordingType: string; score: number }
   const [archiveRecording, setArchiveRecording] = useState<ArchiveRecording | null>(null)
@@ -83,119 +82,30 @@ export default function ShowPage() {
   const [switchingRecording, setSwitchingRecording] = useState(false)
   const [showRecording, setShowRecording] = useState(false)
 
-  // Which setlist.fm flat indices have a matching title in the archive recording.
-  // null = archive not yet loaded (show pending shimmer).
-  // Empty set = archive loaded but no title matches found.
-  const archiveCoveredIndices = useMemo((): Set<number> | null => {
+  // Matches archive tracks against the setlist. null = archive not yet loaded
+  // (show pending shimmer). Tracks that don't match any song (banter, tuning,
+  // a bundled soundcheck, etc.) end up in `bonus` instead of the setlist.
+  const archiveMatch = useMemo((): ArchiveSetlistMatch | null => {
     if (!archiveLoaded || !data) return null
-    if (!archiveRecording) return new Set<number>()
-    const titledTracks = archiveRecording.tracks.filter(t => t.title)
-    if (titledTracks.length === 0) return new Set<number>()
-    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-    const covered = new Set<number>()
-    let i = 0
-    for (const set of data.sets) {
-      for (const song of set.songs) {
-        const songNorm = norm(song)
-        const found = titledTracks.some(t => {
-          const titleNorm = norm(t.title!)
-          return titleNorm.includes(songNorm) || songNorm.includes(titleNorm)
-        })
-        if (found) covered.add(i)
-        i++
-      }
-    }
-    return covered
-  }, [archiveRecording, archiveLoaded, data])
-
-  // Supplement setlist.fm segue markers with segues detected from Archive.org track titles.
-  // Tapers often encode segues as "Song Name ->" which setlist.fm may not have recorded.
-  const archiveSegueIndices = useMemo((): Set<number> => {
-    if (!archiveRecording || !data) return new Set()
-    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-    const titledTracks = archiveRecording.tracks.filter(t => t.title)
-    const segued = new Set<number>()
-    let i = 0
-    for (const set of data.sets) {
-      for (const song of set.songs) {
-        const songNorm = norm(song)
-        const matched = titledTracks.find(t => {
-          const titleNorm = norm(t.title!)
-          return titleNorm.includes(songNorm) || songNorm.includes(titleNorm)
-        })
-        if (matched?.title?.trim().endsWith('>')) segued.add(i)
-        i++
-      }
-    }
-    return segued
-  }, [archiveRecording, data])
-
-  // Maps each flat song index to its matched archive track's duration (seconds).
-  const archiveDurations = useMemo((): Map<number, number> => {
-    if (!archiveRecording || !data) return new Map()
-    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-    const titledTracks = archiveRecording.tracks.filter(t => t.title && t.duration)
-    const durations = new Map<number, number>()
-    let i = 0
-    for (const set of data.sets) {
-      for (const song of set.songs) {
-        const songNorm = norm(song)
-        const matched = titledTracks.find(t => {
-          const titleNorm = norm(t.title!)
-          return titleNorm.includes(songNorm) || songNorm.includes(titleNorm)
-        })
-        if (matched?.duration) durations.set(i, matched.duration)
-        i++
-      }
-    }
-    return durations
-  }, [archiveRecording, data])
-
-  // Sequential merge of archive tracks and setlist songs. When archive is loaded and has
-  // metadata, ancillary tracks (banter, tuning, crowd) appear inline between setlist songs.
-  const mergedProgram = useMemo((): MergeItem[] => {
-    if (!data) return []
-    let fi = 0
-    const songItems: SongMergeItem[] = data.sets.flatMap((set, si) =>
-      set.songs.map((song, ji) => ({ kind: 'song' as const, song, ji, setIdx: si, flatIdx: fi++ }))
-    )
-    if (!archiveLoaded || !archiveRecording) return songItems
-    const hasMetadata = archiveRecording.tracks.some(t => t.title?.trim())
-    if (!hasMetadata) return songItems
-    // Normalize & → "and" before stripping non-alphanumeric so "Samson & Delilah" matches "Samson and Delilah"
-    const norm = (s: string) => s.toLowerCase().replace(/\s*&\s*/g, 'and').replace(/[^a-z0-9]/g, '')
-    // Strip "Set N:" / "Encore:" prefixes that tapers add to archive track titles
-    const titleCore = (t: string) => { const c = t.replace(/>$/, '').trim(); const ci = c.indexOf(':'); return ci > 0 && ci < 12 ? c.slice(ci + 1).trim() : c }
-    const result: MergeItem[] = []
-    let songCursor = 0
-    let currentSetIdx = 0
-    for (let ai = 0; ai < archiveRecording.tracks.length; ai++) {
-      const track = archiveRecording.tracks[ai]
-      if (!track.title?.trim()) {
-        result.push({ kind: 'ancillary', archiveIdx: ai, track, setIdx: currentSetIdx })
-        continue
-      }
-      const titleNorm = norm(titleCore(track.title))
-      let matchIdx = -1
-      for (let li = songCursor; li < Math.min(songCursor + 8, songItems.length); li++) {
-        const songNorm = norm(songItems[li].song)
-        if (titleNorm.includes(songNorm) || songNorm.includes(titleNorm)) { matchIdx = li; break }
-      }
-      if (matchIdx !== -1) {
-        for (let ski = songCursor; ski < matchIdx; ski++) {
-          result.push(songItems[ski])
-          currentSetIdx = songItems[ski].setIdx
-        }
-        result.push(songItems[matchIdx])
-        currentSetIdx = songItems[matchIdx].setIdx
-        songCursor = matchIdx + 1
-      } else {
-        result.push({ kind: 'ancillary', archiveIdx: ai, track, setIdx: currentSetIdx })
-      }
-    }
-    for (let ski = songCursor; ski < songItems.length; ski++) result.push(songItems[ski])
-    return result
+    const setlistSongs = data.sets.flatMap(s => s.songs)
+    if (!archiveRecording) return { matched: setlistSongs.map((song, flatIdx) => ({ song, flatIdx, track: null })), bonus: [] }
+    return matchArchiveTracksToSetlist(archiveRecording.tracks, setlistSongs)
   }, [archiveLoaded, archiveRecording, data])
+
+  const archiveCoveredIndices = useMemo((): Set<number> | null => {
+    if (!archiveMatch) return null
+    return new Set(archiveMatch.matched.filter(m => m.track).map(m => m.flatIdx))
+  }, [archiveMatch])
+
+  const archiveSegueIndices = useMemo((): Set<number> => {
+    if (!archiveMatch) return new Set()
+    return new Set(archiveMatch.matched.filter(m => m.track?.title?.trim().endsWith('>')).map(m => m.flatIdx))
+  }, [archiveMatch])
+
+  const archiveDurations = useMemo((): Map<number, number> => {
+    if (!archiveMatch) return new Map()
+    return new Map(archiveMatch.matched.filter(m => m.track?.duration).map(m => [m.flatIdx, m.track!.duration!]))
+  }, [archiveMatch])
 
   // Background fetch: resolve archive.org item + load tracks for display and comparison.
   // Runs after setlist.fm data loads; does not block the UI.
@@ -223,7 +133,8 @@ export default function ShowPage() {
         const recording: ArchiveRecording = {
           identifier: archiveData.identifier,
           archiveTitle: archiveData.title,
-          tracks: (tracks as ArchiveTrackInfo[]).filter(t => t.url),
+          description: archiveData.description ?? null,
+          tracks: (tracks as ArchiveTrackPayload[]).filter(t => t.url),
         }
         setArchiveRecording(recording)
         if (Array.isArray(archiveData.candidates)) {
@@ -278,23 +189,36 @@ export default function ShowPage() {
     } catch {}
   }, [data, date, archiveRecording, enqueueEntireShow])
 
-  const handlePlayAncillaryTrack = useCallback((archiveIdx: number) => {
-    if (!archiveRecording || !data) return
-    const archTrack = archiveRecording.tracks[archiveIdx]
-    if (!archTrack?.url) return
+  const handlePlayBonusTrack = useCallback((archiveTrack: ArchiveTrackPayload) => {
+    if (!data) return
     const track = {
-      id: `${archiveRecording.identifier}-anc${archiveIdx}-${Date.now()}`,
-      name: archTrack.title || formatArchiveTrackName(archTrack.name.replace(/\.mp3$/i, '')),
-      url: archTrack.url,
-      duration: archTrack.duration,
+      id: archiveTrack.id,
+      name: formatBonusTrackTitle(archiveTrack),
+      url: archiveTrack.url,
+      duration: archiveTrack.duration,
       showDate: date,
       venue: data.venue,
       city: data.city,
-      archiveItemId: archiveRecording.identifier,
+      archiveItemId: archiveTrack.archiveItemId,
     }
     prependToQueue([track])
     selectTrack(track)
-  }, [archiveRecording, data, date, prependToQueue, selectTrack])
+  }, [data, date, prependToQueue, selectTrack])
+
+  const handleAddBonusTrack = useCallback((e: React.MouseEvent, archiveTrack: ArchiveTrackPayload) => {
+    e.stopPropagation()
+    if (!data) return
+    addToQueue([{
+      id: archiveTrack.id,
+      name: formatBonusTrackTitle(archiveTrack),
+      url: archiveTrack.url,
+      duration: archiveTrack.duration,
+      showDate: date,
+      venue: data.venue,
+      city: data.city,
+      archiveItemId: archiveTrack.archiveItemId,
+    }])
+  }, [data, date, addToQueue])
 
   const handleSwitchRecording = useCallback(async (identifier: string) => {
     if (identifier === archiveRecording?.identifier || switchingRecording) return
@@ -310,7 +234,7 @@ export default function ShowPage() {
       setArchiveRecording({
         identifier,
         archiveTitle: cand?.title,
-        tracks: (tracks as ArchiveTrackInfo[]).filter(t => t.url),
+        tracks: (tracks as ArchiveTrackPayload[]).filter(t => t.url),
       })
       setShowRecording(true)
     } catch {
@@ -421,13 +345,14 @@ export default function ShowPage() {
         </div>
       )}
 
-      {/* Recording mismatch warning */}
-      {data && archiveRecording !== null && archiveRecording.tracks.length > 0 &&
-        Math.abs(archiveRecording.tracks.length - data.totalSongs) > 2 && (
+      {/* Recording mismatch warning — only when setlist songs are actually
+          missing from the tape, not when the tape just has extra bonus
+          material (handled by the bonus section below). */}
+      {archiveMatch && archiveMatch.matched.filter(m => !m.track).length > 2 && (
         <div className="margin-note" style={{ marginTop: 8, borderColor: 'var(--rust)' }}>
           <span className="head" style={{ color: 'var(--rust)' }}>Recording note</span>
-          Archive.org lists {archiveRecording.tracks.length} tracks; setlist.fm shows {data.totalSongs}.
-          The audio recording may not match this setlist exactly — see the recording
+          {archiveMatch.matched.filter(m => !m.track).length} of {archiveMatch.matched.length} songs
+          couldn&apos;t be matched to a track on this recording — see the recording
           section below for actual track titles.
         </div>
       )}
@@ -444,101 +369,126 @@ export default function ShowPage() {
       {/* Setlist */}
       {data && (
         <>
-          <div className="setlist">
-            {data.sets.map((set, si) => {
-              const isEncore = set.encore
-              const romanIdx = isEncore ? si : setIndex++
-              const roman = isEncore ? 'E.' : SET_ROMANS[romanIdx] ?? String(romanIdx + 1)
-              const setItems = mergedProgram.filter(item => item.setIdx === si)
-              let songNum = 0
-              return (
-                <div key={si} className={`set-block${si % 2 === 1 ? ' alt' : ''}`}>
-                  <div className="set-head">
-                    <h3>
-                      <span className="roman">{roman}</span>
-                      {isEncore ? 'Encore' : set.name}
-                    </h3>
-                    <div className="duration">{set.songs.length} songs</div>
-                  </div>
-                  {setItems.map((item, ii) => {
-                    if (item.kind === 'song') {
-                      songNum++
-                      const { song, ji, flatIdx: songFlatIdx } = item
-                      const isCurrentSong = currentTrack?.name?.toLowerCase().includes(song.toLowerCase())
-                      const pending = archiveCoveredIndices === null
-                      const inArchive = !pending && archiveCoveredIndices!.has(songFlatIdx)
-                      const hasSegue = set.segues?.[ji] === true || archiveSegueIndices.has(songFlatIdx)
+          {(() => {
+            let flatOffset = 0
+            return (
+              <div className="setlist">
+                {data.sets.map((set, si) => {
+                  const isEncore = set.encore
+                  const romanIdx = isEncore ? si : setIndex++
+                  const roman = isEncore ? 'E.' : SET_ROMANS[romanIdx] ?? String(romanIdx + 1)
+                  const setOffset = flatOffset
+                  flatOffset += set.songs.length
+                  return (
+                    <div key={si} className={`set-block${si % 2 === 1 ? ' alt' : ''}`}>
+                      <div className="set-head">
+                        <h3>
+                          <span className="roman">{roman}</span>
+                          {isEncore ? 'Encore' : set.name}
+                        </h3>
+                        <div className="duration">{set.songs.length} songs</div>
+                      </div>
+                      {set.songs.map((song, ji) => {
+                        const songFlatIdx = setOffset + ji
+                        const isCurrentSong = currentTrack?.name?.toLowerCase().includes(song.toLowerCase())
+                        const pending = archiveCoveredIndices === null
+                        const inArchive = !pending && archiveCoveredIndices!.has(songFlatIdx)
+                        const hasSegue = set.segues?.[ji] === true || archiveSegueIndices.has(songFlatIdx)
+                        return (
+                          <div
+                            key={`s${ji}`}
+                            className={`track${isCurrentSong && isPlaying ? ' playing' : ''}${pending ? ' pending' : ''}`}
+                            onClick={inArchive ? () => { if (isCurrentSong && isPlaying) { pause() } else { void handlePlaySingleSong(songFlatIdx) } } : undefined}
+                            style={!inArchive && !pending && archiveRecording !== null ? { cursor: 'default', opacity: 0.4 } : undefined}
+                            data-queue-safe={inArchive ? 'true' : undefined}
+                          >
+                            <span className="num">{String(ji + 1).padStart(2, '0')}</span>
+                            <span
+                              className="play-dot"
+                              style={!inArchive && !pending ? { visibility: 'hidden' } : undefined}
+                            >
+                              {isCurrentSong && isPlaying ? '❚❚' : '▶'}
+                            </span>
+                            <Link
+                              href={`/song/${encodeURIComponent(song)}`}
+                              className="title"
+                              onClick={e => e.stopPropagation()}
+                              style={{ textDecoration: 'none', display: 'block' }}
+                            >
+                              {song}{hasSegue && <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--rust)', marginLeft: 8, fontWeight: 500 }}>→</span>}
+                            </Link>
+                            <Link
+                              href={`/song/${encodeURIComponent(song)}`}
+                              className="chev"
+                              onClick={e => e.stopPropagation()}
+                            >go to song ↗</Link>
+                            <span className="dur">
+                              {archiveDurations.has(songFlatIdx) ? formatDuration(archiveDurations.get(songFlatIdx)!) : ''}
+                            </span>
+                            {inArchive ? (
+                              <button
+                                className={`add-q${flashIdx === songFlatIdx ? ' flash' : queuedSet.has(songFlatIdx) ? ' queued' : ''}`}
+                                title="Add to queue"
+                                onClick={e => handleAddToQueue(e, songFlatIdx)}
+                              >+</button>
+                            ) : (
+                              <span style={{ width: 26, display: 'inline-block' }} />
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
+
+          {/* Bonus tracks (soundcheck, banter, etc.) bundled in the recording but not part of the setlist */}
+          {archiveMatch && archiveMatch.bonus.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <button
+                onClick={() => setShowBonus(s => !s)}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
+                  background: 'none', border: '2px solid var(--gray)', borderRadius: 12, padding: '10px 14px',
+                  cursor: 'pointer', font: 'inherit', fontSize: 14,
+                }}
+              >
+                <span>+ {deriveBonusSectionLabel(archiveMatch.bonus, archiveRecording?.description)} ({archiveMatch.bonus.length} tracks)</span>
+                <span>{showBonus ? '▲' : '▼'}</span>
+              </button>
+              {showBonus && (
+                <div className="setlist" style={{ marginTop: 4 }}>
+                  <div className="set-block">
+                    {archiveMatch.bonus.map(track => {
+                      const displayName = formatBonusTrackTitle(track)
+                      const isCurrentBonus = currentTrack?.url === track.url
                       return (
                         <div
-                          key={`s${ji}`}
-                          className={`track${isCurrentSong && isPlaying ? ' playing' : ''}${pending ? ' pending' : ''}`}
-                          onClick={inArchive ? () => { if (isCurrentSong && isPlaying) { pause() } else { void handlePlaySingleSong(songFlatIdx) } } : undefined}
-                          style={!inArchive && !pending && archiveRecording !== null ? { cursor: 'default', opacity: 0.4 } : undefined}
-                          data-queue-safe={inArchive ? 'true' : undefined}
-                        >
-                          <span className="num">{String(songNum).padStart(2, '0')}</span>
-                          <span
-                            className="play-dot"
-                            style={!inArchive && !pending ? { visibility: 'hidden' } : undefined}
-                          >
-                            {isCurrentSong && isPlaying ? '❚❚' : '▶'}
-                          </span>
-                          <Link
-                            href={`/song/${encodeURIComponent(song)}`}
-                            className="title"
-                            onClick={e => e.stopPropagation()}
-                            style={{ textDecoration: 'none', display: 'block' }}
-                          >
-                            {song}{hasSegue && <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--rust)', marginLeft: 8, fontWeight: 500 }}>→</span>}
-                          </Link>
-                          <Link
-                            href={`/song/${encodeURIComponent(song)}`}
-                            className="chev"
-                            onClick={e => e.stopPropagation()}
-                          >go to song ↗</Link>
-                          <span className="dur">
-                            {archiveDurations.has(songFlatIdx) ? formatDuration(archiveDurations.get(songFlatIdx)!) : ''}
-                          </span>
-                          {inArchive ? (
-                            <button
-                              className={`add-q${flashIdx === songFlatIdx ? ' flash' : queuedSet.has(songFlatIdx) ? ' queued' : ''}`}
-                              title="Add to queue"
-                              onClick={e => handleAddToQueue(e, songFlatIdx)}
-                            >+</button>
-                          ) : (
-                            <span style={{ width: 26, display: 'inline-block' }} />
-                          )}
-                        </div>
-                      )
-                    } else {
-                      const { archiveIdx, track } = item
-                      const rawTitle = track.title?.replace(/>$/, '').trim() || ''
-                      const colonIdx = rawTitle.indexOf(':')
-                      const strippedTitle = colonIdx > 0 && colonIdx < 12 ? rawTitle.slice(colonIdx + 1).trim() : rawTitle
-                      const baseName = strippedTitle || formatArchiveTrackName(track.name.replace(/\.mp3$/i, ''))
-                      const displayName = baseName.charAt(0).toUpperCase() + baseName.slice(1)
-                      const isCurrentAnc = currentTrack?.url === track.url
-                      return (
-                        <div
-                          key={`a${archiveIdx}-${ii}`}
-                          className={`track${isCurrentAnc && isPlaying ? ' playing' : ''}`}
-                          onClick={() => { if (isCurrentAnc && isPlaying) { pause() } else { handlePlayAncillaryTrack(archiveIdx) } }}
+                          key={track.id}
+                          className={`track${isCurrentBonus && isPlaying ? ' playing' : ''}`}
+                          onClick={() => { if (isCurrentBonus && isPlaying) { pause() } else { handlePlayBonusTrack(track) } }}
                           data-queue-safe="true"
                         >
                           <span className="num" style={{ opacity: 0.35, fontSize: 13 }}>·</span>
-                          <span className="play-dot">{isCurrentAnc && isPlaying ? '❚❚' : '▶'}</span>
+                          <span className="play-dot">{isCurrentBonus && isPlaying ? '❚❚' : '▶'}</span>
                           <span className="title" style={{ fontStyle: 'italic', display: 'block' }}>{displayName}</span>
                           <span className="chev" />
                           <span className="dur">{track.duration ? formatDuration(track.duration) : ''}</span>
-                          <span style={{ width: 26, display: 'inline-block' }} />
+                          <button
+                            className="add-q"
+                            title="Add to queue"
+                            onClick={e => handleAddBonusTrack(e, track)}
+                          >+</button>
                         </div>
                       )
-                    }
-                  })}
+                    })}
+                  </div>
                 </div>
-              )
-            })}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Archive.org recording section */}
           {archiveRecording && (() => {

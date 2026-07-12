@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { getVenueTidbit } from '@/lib/venue-tidbits'
+import { getDateParts } from '@/lib/date-parts'
+import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
+import type { ArchiveSetlistMatch, ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
 
 /* ------------------------------------------------------------------ types */
 
@@ -21,7 +24,6 @@ interface VersionsFacts { tracks: VersionTrack[]; extremes?: { longest?: Version
 interface SummaryStats { totalShows?: number; uniqueSongs?: number; hoursArchived?: number }
 interface LeaderEntry { name: string; count: number; pct: number }
 interface GlobalStats { leaderboard: LeaderEntry[]; showsPerYear?: { year: number; count: number }[] }
-type ArchiveTrack = { title?: string; url?: string; duration?: number }
 
 /* ---------------------------------------------------------------- helpers */
 
@@ -44,24 +46,11 @@ function fmtDate(iso: string): string {
   return iso.replace(/-/g, '·')
 }
 
-function parseDateParts(iso: string) {
-  const [year, month, day] = iso.split('-').map(Number)
-  const d = new Date(Date.UTC(year, month - 1, day))
-  const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getUTCDay()]
-  const monthName = ['January','February','March','April','May','June','July','August','September','October','November','December'][d.getUTCMonth()]
-  const ord = (n: number) => {
-    if (n >= 11 && n <= 13) return `${n}th`
-    const r = n % 10
-    return `${n}${r === 1 ? 'st' : r === 2 ? 'nd' : r === 3 ? 'rd' : 'th'}`
-  }
-  return { dayName, ord: ord(day), monthName, year: String(year) }
-}
-
 function ShowDate({ iso }: { iso: string }) {
-  const { dayName, ord, monthName, year } = parseDateParts(iso)
+  const { weekday, ordinalDay, monthName, year } = getDateParts(iso)
   return (
     <>
-      {dayName}, the {ord}{' '}
+      {weekday}, the {ordinalDay}{' '}
       <em>of</em>{' '}
       {monthName}{' '}
       <span className="mv-date-year">{year}</span>
@@ -78,29 +67,6 @@ function shortDate(iso: string): string {
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
 
 /* ---------------------------------------- archive coverage helpers */
-
-function computeArchiveMaps(
-  tracks: ArchiveTrack[],
-  allSongs: string[]
-): { covered: Set<number>; durations: Map<number, number> } {
-  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-  const covered = new Set<number>()
-  const durations = new Map<number, number>()
-  for (const t of tracks) {
-    if (!t.title || !t.url) continue
-    const tn = norm(t.title)
-    if (!tn) continue
-    for (let i = 0; i < allSongs.length; i++) {
-      if (covered.has(i)) continue
-      const sn = norm(allSongs[i])
-      if (sn && (sn.includes(tn) || tn.includes(sn))) {
-        covered.add(i)
-        if (t.duration) durations.set(i, t.duration)
-      }
-    }
-  }
-  return { covered, durations }
-}
 
 /* -------------------------------------------------------------- era donut */
 
@@ -505,22 +471,30 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
 /* ============================================================ HOME SCREEN */
 
 function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
-  const { currentTrack, isPlaying, play, pause, enqueueEntireShow, playShowTrack, enqueueShowTrack } = usePlayer()
+  const { currentTrack, isPlaying, play, pause, enqueueEntireShow, playShowTrack, enqueueShowTrack, prependToQueue, selectTrack, addToQueue } = usePlayer()
 
   const [shows, setShows] = useState<ShowOnThisDay[]>([])
   const [featured, setFeatured] = useState<ShowOnThisDay | null>(null)
   const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
   const [loading, setLoading] = useState(true)
-  const [archiveDurations, setArchiveDurations] = useState<Map<number, number>>(new Map())
-  const [archiveCoveredIndices, setArchiveCoveredIndices] = useState<Set<number> | null>(null)
+  const [archiveMatch, setArchiveMatch] = useState<ArchiveSetlistMatch | null>(null)
   const [archiveIdentifier, setArchiveIdentifier] = useState<string | undefined>(undefined)
+  const [archiveDescription, setArchiveDescription] = useState<string | null>(null)
+  const [showBonus, setShowBonus] = useState(false)
 
   const otherShows = shows.filter(s => s.date !== featured?.date)
 
   const displayDate = featured?.date ?? null
 
+  const archiveCoveredIndices = archiveMatch
+    ? new Set(archiveMatch.matched.filter(m => m.track).map(m => m.flatIdx))
+    : null
+  const archiveDurations = new Map(
+    archiveMatch ? archiveMatch.matched.filter(m => m.track?.duration).map(m => [m.flatIdx, m.track!.duration!]) : []
+  )
+
   // Single aggregated fetch: the server precomputes shows, featured pick,
-  // setlist detail, and archive tracks once per day.
+  // setlist detail, and the archive/setlist track match once per day.
   useEffect(() => {
     fetch('/api/show-of-the-day')
       .then(r => r.ok ? r.json() : null)
@@ -529,19 +503,32 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
         setShows(payload.shows ?? [])
         setFeatured(payload.featured ?? null)
         setShowDetail(payload.showDetail ?? null)
-        if (payload.archive?.identifier) setArchiveIdentifier(payload.archive.identifier)
-        if (payload.showDetail && payload.archive?.tracks?.length) {
-          const allSongs = (payload.showDetail as ShowDetail).sets.flatMap(s => s.songs)
-          const { covered, durations } = computeArchiveMaps(payload.archive.tracks as ArchiveTrack[], allSongs)
-          setArchiveDurations(durations)
-          setArchiveCoveredIndices(covered)
-        } else {
-          setArchiveCoveredIndices(new Set())
-        }
+        setArchiveIdentifier(payload.archive?.identifier)
+        setArchiveDescription(payload.archive?.description ?? null)
+        setArchiveMatch(payload.archiveMatch ?? null)
       })
-      .catch(() => { setArchiveCoveredIndices(new Set()) })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  const handlePlayBonusTrack = useCallback((track: ArchiveTrackPayload) => {
+    if (!featured) return
+    const t = {
+      id: track.id, name: formatBonusTrackTitle(track), url: track.url, duration: track.duration,
+      showDate: featured.date, venue: featured.venue, city: featured.city, archiveItemId: track.archiveItemId,
+    }
+    prependToQueue([t])
+    selectTrack(t)
+  }, [featured, prependToQueue, selectTrack])
+
+  const handleAddBonusTrack = useCallback((e: React.MouseEvent, track: ArchiveTrackPayload) => {
+    e.stopPropagation()
+    if (!featured) return
+    addToQueue([{
+      id: track.id, name: formatBonusTrackTitle(track), url: track.url, duration: track.duration,
+      showDate: featured.date, venue: featured.venue, city: featured.city, archiveItemId: track.archiveItemId,
+    }])
+  }, [featured, addToQueue])
 
   const handlePlay = useCallback(async () => {
     if (!featured) return
@@ -669,6 +656,42 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Bonus tracks (soundcheck, banter, etc.) bundled in the recording but not part of the setlist */}
+      {archiveMatch && archiveMatch.bonus.length > 0 && (
+        <div className="mv-setlist" style={{ paddingTop: 0 }}>
+          <button
+            className="mv-bonus-toggle"
+            onClick={() => setShowBonus(s => !s)}
+            style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
+              background: 'none', border: '2px solid var(--gray)', borderRadius: 12, padding: '10px 14px',
+              cursor: 'pointer', font: 'inherit', fontSize: 14, marginTop: 4,
+            }}
+          >
+            <span>+ {deriveBonusSectionLabel(archiveMatch.bonus, archiveDescription)} ({archiveMatch.bonus.length} tracks)</span>
+            <span>{showBonus ? '▲' : '▼'}</span>
+          </button>
+          {showBonus && archiveMatch.bonus.map(track => (
+            <div
+              key={track.id}
+              className="mv-track"
+              onClick={() => handlePlayBonusTrack(track)}
+              role="button"
+              aria-label={`Play ${formatBonusTrackTitle(track)}`}
+            >
+              <span className="n" style={{ opacity: 0.35 }}>·</span>
+              <span className="title" style={{ fontStyle: 'italic' }}>{formatBonusTrackTitle(track)}</span>
+              <span className="dur">{formatDur(track.duration)}</span>
+              <button
+                className="mv-addq"
+                onClick={e => handleAddBonusTrack(e, track)}
+                aria-label={`Add ${formatBonusTrackTitle(track)} to queue`}
+              >+</button>
+            </div>
+          ))}
         </div>
       )}
 
@@ -1373,14 +1396,22 @@ function SearchScreen() {
 interface RecordingCandidate { identifier: string; title: string; recordingType: string; score: number }
 
 function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () => void }) {
-  const { playShowTrack, currentTrack, enqueueEntireShow, enqueueShowTrack } = usePlayer()
+  const { playShowTrack, currentTrack, enqueueEntireShow, enqueueShowTrack, prependToQueue, selectTrack, addToQueue } = usePlayer()
   const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
   const [loading, setLoading] = useState(true)
-  const [archiveDurations, setArchiveDurations] = useState<Map<number, number>>(new Map())
-  const [archiveCoveredIndices, setArchiveCoveredIndices] = useState<Set<number> | null>(null)
+  const [archiveMatch, setArchiveMatch] = useState<ArchiveSetlistMatch | null>(null)
+  const [archiveDescription, setArchiveDescription] = useState<string | null>(null)
   const [candidates, setCandidates] = useState<RecordingCandidate[]>([])
   const [selectedIdentifier, setSelectedIdentifier] = useState<string | null>(null)
   const [showRecordingPicker, setShowRecordingPicker] = useState(false)
+  const [showBonus, setShowBonus] = useState(false)
+
+  const archiveCoveredIndices = archiveMatch
+    ? new Set(archiveMatch.matched.filter(m => m.track).map(m => m.flatIdx))
+    : null
+  const archiveDurations = new Map(
+    archiveMatch ? archiveMatch.matched.filter(m => m.track?.duration).map(m => [m.flatIdx, m.track!.duration!]) : []
+  )
 
   useEffect(() => {
     setLoading(true)
@@ -1408,6 +1439,7 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
         if (cancelled) return
         if (Array.isArray(data.candidates)) setCandidates(data.candidates)
         if (data.identifier) setSelectedIdentifier(data.identifier)
+        setArchiveDescription(data.description ?? null)
       } catch {}
     })()
     return () => { cancelled = true }
@@ -1416,8 +1448,7 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
   useEffect(() => {
     if (!selectedIdentifier || !showDetail) return
     let cancelled = false
-    setArchiveDurations(new Map())
-    setArchiveCoveredIndices(null)
+    setArchiveMatch(null)
     ;(async () => {
       try {
         const tracksRes = await fetch('/api/archive/song-tracks', {
@@ -1427,18 +1458,34 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
         })
         if (cancelled) return
         const { tracks } = tracksRes.ok ? await tracksRes.json() : { tracks: [] }
-        const allSongs = showDetail.sets.flatMap(s => s.songs)
-        const { covered, durations } = computeArchiveMaps(tracks as ArchiveTrack[], allSongs)
-        if (!cancelled) {
-          setArchiveDurations(durations)
-          setArchiveCoveredIndices(covered)
-        }
+        const setlistSongs = showDetail.sets.flatMap(s => s.songs)
+        const match = matchArchiveTracksToSetlist(tracks as ArchiveTrackPayload[], setlistSongs)
+        if (!cancelled) setArchiveMatch(match)
       } catch {
-        if (!cancelled) setArchiveCoveredIndices(new Set())
+        if (!cancelled) setArchiveMatch({ matched: showDetail.sets.flatMap(s => s.songs).map((song, flatIdx) => ({ song, flatIdx, track: null })), bonus: [] })
       }
     })()
     return () => { cancelled = true }
   }, [selectedIdentifier, showDetail?.totalSongs])
+
+  const handlePlayBonusTrack = useCallback((track: ArchiveTrackPayload) => {
+    if (!showDetail) return
+    const t = {
+      id: track.id, name: formatBonusTrackTitle(track), url: track.url, duration: track.duration,
+      showDate: showDetail.date, venue: showDetail.venue, city: showDetail.city, archiveItemId: track.archiveItemId,
+    }
+    prependToQueue([t])
+    selectTrack(t)
+  }, [showDetail, prependToQueue, selectTrack])
+
+  const handleAddBonusTrack = useCallback((e: React.MouseEvent, track: ArchiveTrackPayload) => {
+    e.stopPropagation()
+    if (!showDetail) return
+    addToQueue([{
+      id: track.id, name: formatBonusTrackTitle(track), url: track.url, duration: track.duration,
+      showDate: showDetail.date, venue: showDetail.venue, city: showDetail.city, archiveItemId: track.archiveItemId,
+    }])
+  }, [showDetail, addToQueue])
 
   const handleTrackClick = useCallback(async (flatIdx: number) => {
     if (!showDetail) return
@@ -1575,6 +1622,41 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
             )
           })}
           <div className="mv-divider"><span className="glyph">❦</span></div>
+        </div>
+      )}
+
+      {archiveMatch && archiveMatch.bonus.length > 0 && (
+        <div className="mv-setlist" style={{ paddingTop: 0 }}>
+          <button
+            className="mv-bonus-toggle"
+            onClick={() => setShowBonus(s => !s)}
+            style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
+              background: 'none', border: '2px solid var(--gray)', borderRadius: 12, padding: '10px 14px',
+              cursor: 'pointer', font: 'inherit', fontSize: 14, marginTop: 4,
+            }}
+          >
+            <span>+ {deriveBonusSectionLabel(archiveMatch.bonus, archiveDescription)} ({archiveMatch.bonus.length} tracks)</span>
+            <span>{showBonus ? '▲' : '▼'}</span>
+          </button>
+          {showBonus && archiveMatch.bonus.map(track => (
+            <div
+              key={track.id}
+              className="mv-track"
+              onClick={() => handlePlayBonusTrack(track)}
+              role="button"
+              aria-label={`Play ${formatBonusTrackTitle(track)}`}
+            >
+              <span className="n" style={{ opacity: 0.35 }}>·</span>
+              <span className="title" style={{ fontStyle: 'italic' }}>{formatBonusTrackTitle(track)}</span>
+              <span className="dur">{formatDur(track.duration)}</span>
+              <button
+                className="mv-addq"
+                onClick={e => handleAddBonusTrack(e, track)}
+                aria-label={`Add ${formatBonusTrackTitle(track)} to queue`}
+              >+</button>
+            </div>
+          ))}
         </div>
       )}
     </>

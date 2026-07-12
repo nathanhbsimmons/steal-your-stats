@@ -39,12 +39,24 @@ export interface ArchiveTrackPayload {
   archiveItemId: string
 }
 
+export interface MatchedSongTrack {
+  song: string
+  flatIdx: number
+  track: ArchiveTrackPayload | null
+}
+
+export interface ArchiveSetlistMatch {
+  matched: MatchedSongTrack[]
+  bonus: ArchiveTrackPayload[]
+}
+
 export interface ShowOfTheDayPayload {
   dateKey: string
   shows: ShowOnThisDay[]
   featured: ShowOnThisDay | null
   showDetail: ShowDetail | null
-  archive: { identifier: string; tracks: ArchiveTrackPayload[] } | null
+  archive: { identifier: string; tracks: ArchiveTrackPayload[]; description: string | null } | null
+  archiveMatch: ArchiveSetlistMatch | null
   complete: boolean
   computedAt: number
 }

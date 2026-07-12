@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { usePathname, useRouter } from 'next/navigation'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { MobileShell } from '@/components/mobile/mobile-shell'
+import { matchArchiveTracksToSetlist } from '@/lib/archive-track-match'
 
 /* ---------------------------------------------------------------- hoisted mocks */
 
@@ -91,16 +92,20 @@ function mockFetch(responses: Record<string, unknown>) {
 }
 
 function sotdPayload(overrides: Record<string, unknown> = {}) {
-  return {
+  const merged = {
     dateKey: '1977-05-08',
-    shows: [],
+    shows: [] as unknown[],
     featured: null,
-    showDetail: null,
-    archive: null,
+    showDetail: null as { sets: Array<{ songs: string[] }> } | null,
+    archive: null as { identifier: string; tracks: Array<{ title?: string; url: string; duration?: number; id: string; name: string; archiveItemId: string }> } | null,
     complete: true,
     computedAt: Date.now(),
     ...overrides,
   }
+  const archiveMatch = merged.archive && merged.showDetail
+    ? matchArchiveTracksToSetlist(merged.archive.tracks, merged.showDetail.sets.flatMap(s => s.songs))
+    : null
+  return { ...merged, archiveMatch }
 }
 
 const defaultFetch: Record<string, unknown> = {

@@ -1,5 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { PlayerProvider } from '@/lib/contexts/player-context'
+import { matchArchiveTracksToSetlist } from '@/lib/archive-track-match'
 import Home from '../app/page'
 
 const featuredShow = {
@@ -13,16 +14,20 @@ const showDetail = {
 }
 
 function sotdPayload(overrides: Record<string, unknown> = {}) {
-  return {
+  const merged = {
     dateKey: '1977-05-08',
     shows: [featuredShow],
     featured: featuredShow,
     showDetail,
-    archive: null,
+    archive: null as { identifier: string; tracks: Array<{ title?: string; url: string; duration?: number; id: string; name: string; archiveItemId: string }> } | null,
     complete: true,
     computedAt: Date.now(),
     ...overrides,
   }
+  const archiveMatch = merged.archive && merged.showDetail
+    ? matchArchiveTracksToSetlist(merged.archive.tracks, merged.showDetail.sets.flatMap(s => s.songs))
+    : null
+  return { ...merged, archiveMatch }
 }
 
 function mockFetch(responses: Record<string, unknown>) {
@@ -114,13 +119,16 @@ describe('Home', () => {
 
   describe('ancillary tracks', () => {
     it('shows archive-only tracks inline in the setlist after the payload loads', async () => {
+      // "banter"/"tuning"-style clips are filler (see isFillerTrack) and are
+      // dropped rather than shown as bonus tracks — use a real alternate-take
+      // title here so the bonus section actually has something to show.
       mockFetch({
         '/api/show-of-the-day': sotdPayload({
           archive: {
             identifier: 'gd77-05-08',
             tracks: [
               { name: 'gd77-05-08d1t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77-05-08/t01.mp3', duration: 1380 },
-              { name: 'gd77-05-08d1t02.mp3', title: 'banter', url: 'https://archive.org/download/gd77-05-08/t02.mp3', duration: 60 },
+              { name: 'gd77-05-08d1t02.mp3', title: 'noodling', url: 'https://archive.org/download/gd77-05-08/t02.mp3', duration: 300 },
               { name: 'gd77-05-08d1t03.mp3', title: 'St. Stephen', url: 'https://archive.org/download/gd77-05-08/t03.mp3', duration: 420 },
             ],
           },
@@ -132,8 +140,11 @@ describe('Home', () => {
       renderHome()
 
       await waitFor(() => {
-        expect(screen.getByText('Banter')).toBeInTheDocument()
+        expect(screen.getByText(/bonus tracks/i)).toBeInTheDocument()
       }, { timeout: 5000 })
+      fireEvent.click(screen.getByText(/bonus tracks/i))
+
+      expect(screen.getByText('Noodling')).toBeInTheDocument()
     })
 
     it('capitalizes archive track titles for display', async () => {
@@ -142,9 +153,9 @@ describe('Home', () => {
           archive: {
             identifier: 'gd77-05-08',
             tracks: [
-              { name: 'gd77-05-08d1t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77-05-08/t01.mp3' },
-              { name: 'gd77-05-08d1t02.mp3', title: 'tuning', url: 'https://archive.org/download/gd77-05-08/t02.mp3' },
-              { name: 'gd77-05-08d1t03.mp3', title: 'St. Stephen', url: 'https://archive.org/download/gd77-05-08/t03.mp3' },
+              { name: 'gd77-05-08d1t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77-05-08/t01.mp3', duration: 1380 },
+              { name: 'gd77-05-08d1t02.mp3', title: 'jam', url: 'https://archive.org/download/gd77-05-08/t02.mp3', duration: 300 },
+              { name: 'gd77-05-08d1t03.mp3', title: 'St. Stephen', url: 'https://archive.org/download/gd77-05-08/t03.mp3', duration: 420 },
             ],
           },
         }),
@@ -155,10 +166,39 @@ describe('Home', () => {
       renderHome()
 
       await waitFor(() => {
-        expect(screen.getByText('Tuning')).toBeInTheDocument()
-        // Should NOT display lowercase version
-        expect(screen.queryByText('tuning')).not.toBeInTheDocument()
+        expect(screen.getByText(/bonus tracks/i)).toBeInTheDocument()
       }, { timeout: 5000 })
+      fireEvent.click(screen.getByText(/bonus tracks/i))
+
+      expect(screen.getByText('Jam')).toBeInTheDocument()
+      // Should NOT display lowercase version
+      expect(screen.queryByText('jam')).not.toBeInTheDocument()
+    })
+
+    it('drops filler clips (tuning, banter, short set-break gaps) from the bonus section entirely', async () => {
+      mockFetch({
+        '/api/show-of-the-day': sotdPayload({
+          archive: {
+            identifier: 'gd77-05-08',
+            tracks: [
+              { name: 'gd77-05-08d1t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77-05-08/t01.mp3', duration: 1380 },
+              { name: 'gd77-05-08d1t02.mp3', title: 'tuning', url: 'https://archive.org/download/gd77-05-08/t02.mp3', duration: 45 },
+              { name: 'gd77-05-08d1t03.mp3', title: 'Encore Break', url: 'https://archive.org/download/gd77-05-08/t03.mp3', duration: 27 },
+              { name: 'gd77-05-08d1t04.mp3', title: 'St. Stephen', url: 'https://archive.org/download/gd77-05-08/t04.mp3', duration: 420 },
+            ],
+          },
+        }),
+        '/api/stats/summary': {},
+        '/api/stats': { leaderboard: [] },
+      })
+
+      renderHome()
+
+      await waitFor(() => {
+        expect(screen.getByText(/play entire show/i)).toBeInTheDocument()
+      })
+
+      expect(screen.queryByText(/bonus tracks/i)).not.toBeInTheDocument()
     })
 
     it('does not show "Encore: SongName" as an ancillary row (strips prefix in matching)', async () => {

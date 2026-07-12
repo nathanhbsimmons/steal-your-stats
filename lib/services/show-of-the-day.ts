@@ -5,6 +5,7 @@ import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 import { fetchShowDetail } from '@/lib/services/show-detail'
 import { pickFeaturedShow } from '@/lib/featured-show'
 import { formatArchiveTracks } from '@/lib/archive-track-format'
+import { matchArchiveTracksToSetlist } from '@/lib/archive-track-match'
 import type { ShowOfTheDayPayload } from '@/lib/show-of-the-day-types'
 
 // "The day" is server-local time, matching the /api/on-this-day convention.
@@ -70,7 +71,7 @@ export class ShowOfTheDayService {
     const featured = pickFeaturedShow(shows)
 
     if (!featured) {
-      return { dateKey, shows, featured: null, showDetail: null, archive: null, complete: true, computedAt: Date.now() }
+      return { dateKey, shows, featured: null, showDetail: null, archive: null, archiveMatch: null, complete: true, computedAt: Date.now() }
     }
 
     let showDetail = null
@@ -94,22 +95,36 @@ export class ShowOfTheDayService {
         const identifier = showDetail?.totalSongs
           ? (await archiveClient.selectBestRecording(candidates, showDetail.totalSongs)).identifier
           : candidates[0].identifier
-        const tracks = await archiveClient.getAllTracks(identifier)
-        archive = { identifier, tracks: formatArchiveTracks(identifier, tracks) }
+        const [tracks, description] = await Promise.all([
+          archiveClient.getAllTracks(identifier),
+          archiveClient.getItemDescription(identifier),
+        ])
+        archive = { identifier, tracks: formatArchiveTracks(identifier, tracks), description }
       }
     } catch (err) {
       console.warn('[show-of-the-day] archive resolution failed:', err)
     }
 
-    const complete = showDetail !== null && archive !== null
+    let archiveMatch: ShowOfTheDayPayload['archiveMatch'] = null
+    if (archive && showDetail) {
+      const setlistSongs = showDetail.sets.flatMap(s => s.songs)
+      archiveMatch = matchArchiveTracksToSetlist(archive.tracks, setlistSongs)
+    }
+
+    const complete = showDetail !== null && archive !== null && archiveMatch !== null
     console.log(`[show-of-the-day] computed ${dateKey}: featured=${featured.date} complete=${complete}`)
-    return { dateKey, shows, featured, showDetail, archive, complete, computedAt: Date.now() }
+    return { dateKey, shows, featured, showDetail, archive, archiveMatch, complete, computedAt: Date.now() }
   }
 
   private loadFromDisk(): ShowOfTheDayPayload | null {
     try {
       const raw = fs.readFileSync(DISK_CACHE_PATH, 'utf8')
-      return JSON.parse(raw) as ShowOfTheDayPayload
+      const payload = JSON.parse(raw) as ShowOfTheDayPayload
+      // A disk payload written before archiveMatch existed has archive but no
+      // match data — treat as incomplete so it self-heals via the normal
+      // background-retry path instead of serving permanently-ungraded matches.
+      if (payload.archive && !payload.archiveMatch) payload.complete = false
+      return payload
     } catch {}
     return null
   }

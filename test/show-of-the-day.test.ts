@@ -5,6 +5,7 @@ const fetchShowDetailMock = vi.fn()
 const listCandidates = vi.fn()
 const selectBest = vi.fn()
 const getAllTracks = vi.fn()
+const getItemDescription = vi.fn()
 const readFileSync = vi.fn()
 const writeFileSync = vi.fn()
 const mkdirSync = vi.fn()
@@ -24,6 +25,7 @@ vi.mock('@/lib/clients/archive', () => ({
     listArchiveShowCandidates = (...args: unknown[]) => listCandidates(...args)
     selectBestRecording = (...args: unknown[]) => selectBest(...args)
     getAllTracks = (...args: unknown[]) => getAllTracks(...args)
+    getItemDescription = (...args: unknown[]) => getItemDescription(...args)
   },
 }))
 
@@ -55,7 +57,9 @@ function happyPathMocks() {
   selectBest.mockResolvedValue({ identifier: 'gd77-05-08.sbd', mp3Count: 2 })
   getAllTracks.mockResolvedValue([
     { name: 'gd77t01.mp3', title: 'Dark Star', length: '23:00' },
+    { name: 'gd77soundcheck.mp3', title: 'Set III: Soundcheck', length: '2:00' },
   ])
+  getItemDescription.mockResolvedValue('Includes a pre-show soundcheck.')
 }
 
 async function flushAsync() {
@@ -86,6 +90,15 @@ describe('ShowOfTheDayService', () => {
     expect(payload.archive?.identifier).toBe('gd77-05-08.sbd')
     expect(payload.archive?.tracks[0].url).toBe('https://archive.org/download/gd77-05-08.sbd/gd77t01.mp3')
     expect(payload.complete).toBe(true)
+
+    // Dark Star matches; St. Stephen has no archive track; the soundcheck
+    // track goes to bonus instead of getting force-matched to St. Stephen.
+    expect(payload.archiveMatch?.matched).toHaveLength(2)
+    expect(payload.archiveMatch?.matched[0]).toMatchObject({ song: 'Dark Star' })
+    expect(payload.archiveMatch?.matched[0].track?.title).toBe('Dark Star')
+    expect(payload.archiveMatch?.matched[1]).toMatchObject({ song: 'St. Stephen', track: null })
+    expect(payload.archiveMatch?.bonus).toHaveLength(1)
+    expect(payload.archiveMatch?.bonus[0].title).toBe('Set III: Soundcheck')
   })
 
   it('serves from memory on subsequent get() without recomputing', async () => {
@@ -172,6 +185,25 @@ describe('ShowOfTheDayService', () => {
     expect(payload.dateKey).toBe('2026-07-12')
     expect(payload.complete).toBe(true)
     expect(getShowsOnDate).not.toHaveBeenCalled()
+  })
+
+  it('treats a same-day disk payload missing archiveMatch as incomplete and self-heals', async () => {
+    happyPathMocks()
+    readFileSync.mockReturnValue(JSON.stringify({
+      dateKey: '2026-07-12', shows: [barton], featured: barton, showDetail: bartonDetail,
+      archive: { identifier: 'gd77-05-08.sbd', tracks: [{ id: 't', name: 't', title: 'Dark Star', url: 'https://x/t', archiveItemId: 'gd77-05-08.sbd' }] },
+      complete: true, computedAt: Date.now() - 11 * 60 * 1000, // old enough to trigger retry
+      // no archiveMatch — payload written before this field existed
+    }))
+    const svc = new ShowOfTheDayService()
+
+    const stale = await svc.get()
+    expect(stale.complete).toBe(false)
+
+    await flushAsync()
+    const healed = await svc.get()
+    expect(healed.complete).toBe(true)
+    expect(healed.archiveMatch).not.toBeNull()
   })
 
   it('ignores a disk payload from a different date', async () => {

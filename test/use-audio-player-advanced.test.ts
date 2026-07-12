@@ -199,6 +199,58 @@ describe('useAudioPlayer — edge cases', () => {
     expect(result.current.isPlaying).toBe(true)
   })
 
+  it('enqueueEntireShow with songs excludes bonus/soundcheck tracks from the queue', async () => {
+    const mockResolveResponse = { identifier: 'gd76-07-12.sbd', licenseurl: '', rights: '' }
+    const mockTracksResponse = {
+      tracks: [
+        { id: 'trk1', name: '01 Dark Star.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd76/01.mp3' },
+        { id: 'trk2', name: '02 Soundcheck.mp3', title: 'Set III: Soundcheck', url: 'https://archive.org/download/gd76/02.mp3' },
+        { id: 'trk3', name: '03 Soundcheck.mp3', title: 'Set III: Soundcheck', url: 'https://archive.org/download/gd76/03.mp3' },
+      ]
+    }
+
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => mockResolveResponse })
+      .mockResolvedValueOnce({ ok: true, json: async () => mockTracksResponse })
+
+    const { result } = renderHook(() => useAudioPlayer())
+
+    await act(async () => {
+      await result.current.enqueueEntireShow(
+        { date: '1976-07-12', venue: 'Orpheum Theatre', city: 'San Francisco' },
+        { clearExisting: true, songs: ['Dark Star'] }
+      )
+    })
+
+    expect(result.current.queue).toHaveLength(1)
+    expect(result.current.queue[0].name).toBe('Dark Star')
+  })
+
+  it('enqueueEntireShow with startFromArchiveIdx keeps every track, including bonus material', async () => {
+    const mockResolveResponse = { identifier: 'gd76-07-12.sbd', licenseurl: '', rights: '' }
+    const mockTracksResponse = {
+      tracks: [
+        { id: 'trk1', name: '01 Dark Star.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd76/01.mp3' },
+        { id: 'trk2', name: '02 Soundcheck.mp3', title: 'Set III: Soundcheck', url: 'https://archive.org/download/gd76/02.mp3' },
+      ]
+    }
+
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => mockResolveResponse })
+      .mockResolvedValueOnce({ ok: true, json: async () => mockTracksResponse })
+
+    const { result } = renderHook(() => useAudioPlayer())
+
+    await act(async () => {
+      await result.current.enqueueEntireShow(
+        { date: '1976-07-12', venue: 'Orpheum Theatre', city: 'San Francisco' },
+        { clearExisting: true, songs: ['Dark Star'], startFromArchiveIdx: 0 }
+      )
+    })
+
+    expect(result.current.queue).toHaveLength(2)
+  })
+
   // Versions carrying a direct URL resolve without any network round-trip.
   const makeVersion = (showDate: string) => ({
     showDate,

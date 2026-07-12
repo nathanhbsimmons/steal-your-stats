@@ -3,6 +3,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { Track } from '@/components/ui/audio-player-dock'
 import { formatArchiveTrackName } from '@/lib/utils'
+import { matchArchiveTracksToSetlist } from '@/lib/archive-track-match'
+import type { ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
 
 export { formatArchiveTrackName } from '@/lib/utils'
 
@@ -276,8 +278,16 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
       const { tracks } = await tracksResponse.json()
 
       // Process and deduplicate tracks
-      const processedTracks = processTracksForEnqueue(tracks, preferredFormats, archiveShow, showRef, options.songs)
-      
+      const { tracks: allProcessed, matchedFlags } = processTracksForEnqueue(tracks, preferredFormats, archiveShow, showRef, options.songs)
+      // "Play entire show" queues setlist-matched tracks only — bonus material
+      // (soundcheck, banter, etc.) is surfaced separately in the UI, not
+      // auto-queued. Exception: browsing the raw tape (startFromArchiveIdx)
+      // must keep every track, since that's its entire purpose.
+      const shouldFilterToSetlist = options.startFromArchiveIdx === undefined && !!options.songs
+      const processedTracks = shouldFilterToSetlist
+        ? allProcessed.filter((_, i) => matchedFlags[i])
+        : allProcessed
+
       if (clearExisting) {
         setQueue(processedTracks)
         if (processedTracks.length > 0) {
@@ -360,7 +370,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
       if (!tracksResponse.ok) throw new Error(`tracks: ${tracksResponse.status}`)
       const { tracks } = await tracksResponse.json()
 
-      const processed = processTracksForEnqueue(tracks, ['mp3'], archiveShow, showRef, songs)
+      const { tracks: processed } = processTracksForEnqueue(tracks, ['mp3'], archiveShow, showRef, songs)
       const resolvedIdx = findTrackByName(processed, targetSong)
       const track = processed[resolvedIdx]
       if (track) {
@@ -396,7 +406,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
       if (!tracksResponse.ok) throw new Error(`tracks: ${tracksResponse.status}`)
       const { tracks } = await tracksResponse.json()
 
-      const processed = processTracksForEnqueue(tracks, ['mp3'], archiveShow, showRef, songs)
+      const { tracks: processed } = processTracksForEnqueue(tracks, ['mp3'], archiveShow, showRef, songs)
       const resolvedIdx = findTrackByName(processed, songs?.[trackIdx])
       const track = processed[resolvedIdx]
       if (track) {
@@ -561,7 +571,7 @@ function processTracksForEnqueue(
   archiveShow: { identifier: string; licenseurl?: string; rights?: string },
   showRef: ShowRef,
   songs?: string[]
-): Track[] {
+): { tracks: Track[]; matchedFlags: boolean[] } {
   // Filter to only MP3 files
   const mp3Tracks = tracks.filter(track =>
     track.name.toLowerCase().endsWith('.mp3')
@@ -601,11 +611,34 @@ function processTracksForEnqueue(
     return nameA.localeCompare(nameB)
   })
   
+  // Which logical track groups match a setlist song vs. are bonus material
+  // (banter, tuning, a bundled soundcheck, etc.) — used by callers that want
+  // to exclude bonus tracks from "Play entire show".
+  let matchedGroupIndices: Set<number> | null = null
+  // Clean setlist.fm name per matched group — preferred over the raw archive.org
+  // taper title, which carries tape-position numbering (e.g. "09 Brown Eyed Women")
+  // that has no business leaking into the queue/now-playing display.
+  let matchedGroupSongs: Map<number, string> | null = null
+  if (songs && songs.length > 0) {
+    const matchInput: ArchiveTrackPayload[] = sortedGroups.map(([logicalName, variants], i) => ({
+      id: String(i),
+      name: logicalName,
+      title: variants[0].title,
+      url: variants[0].url,
+      duration: variants[0].duration,
+      archiveItemId: archiveShow.identifier,
+    }))
+    const { matched } = matchArchiveTracksToSetlist(matchInput, songs)
+    matchedGroupIndices = new Set(matched.filter(m => m.track).map(m => Number(m.track!.id)))
+    matchedGroupSongs = new Map(matched.filter(m => m.track).map(m => [Number(m.track!.id), m.song]))
+  }
+
   // Select preferred format for each track
   const processedTracks: Track[] = []
+  const matchedFlags: boolean[] = []
   let setlistIdx = 0
 
-  sortedGroups.forEach(([logicalName, trackVariants]) => {
+  sortedGroups.forEach(([logicalName, trackVariants], groupIdx) => {
     // Find the best format match
     let selectedTrack = trackVariants[0] // fallback
 
@@ -626,9 +659,13 @@ function processTracksForEnqueue(
     if (tuning) {
       // Don't consume a setlist index — label with the archive title or generic fallback
       songName = trackTitle || 'Tuning'
+    } else if (matchedGroupSongs?.has(groupIdx)) {
+      // Matched to a setlist song — use its clean name, not the raw tape title.
+      songName = matchedGroupSongs.get(groupIdx)!
+      if (songs) setlistIdx++
     } else if (trackTitle && trackTitle.trim()) {
-      // Archive.org taper metadata is ground truth for what audio is actually playing.
-      // Only advance the setlist pointer so caller-side counts stay consistent.
+      // Unmatched track (bonus/soundcheck material) — archive.org taper metadata
+      // is the only name available.
       songName = trackTitle
       if (songs) setlistIdx++
     } else if (songs && songs[setlistIdx]) {
@@ -653,7 +690,8 @@ function processTracksForEnqueue(
     }
     
     processedTracks.push(track)
+    matchedFlags.push(matchedGroupIndices ? matchedGroupIndices.has(groupIdx) : true)
   })
-  
-  return processedTracks
+
+  return { tracks: processedTracks, matchedFlags }
 }
