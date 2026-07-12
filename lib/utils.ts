@@ -157,6 +157,30 @@ export function formatShowDate(isoDate: string): string {
   })
 }
 
+// Converts raw Archive.org filenames (e.g. "gd1993-09-09d1t01") into readable labels
+export function formatArchiveTrackName(filename: string): string {
+  // disc-based: gd74-05-14d1t01 → "Track 1", d2t03 → "Track 3 (Disc 2)"
+  const dtMatch = filename.match(/d(\d+)t(\d+)/i)
+  if (dtMatch) {
+    const disc = parseInt(dtMatch[1])
+    const track = parseInt(dtMatch[2])
+    return disc > 1 ? `Track ${track} (Disc ${disc})` : `Track ${track}`
+  }
+  // set-based: gd75-04-14.s1t01 → "Track 1", s2t03 → "Track 3 (Set 2)"
+  const stMatch = filename.match(/s(\d+)t(\d+)/i)
+  if (stMatch) {
+    const set = parseInt(stMatch[1])
+    const track = parseInt(stMatch[2])
+    return set > 1 ? `Track ${track} (Set ${set})` : `Track ${track}`
+  }
+  // strip leading date prefix (2 or 4 digit year) then clean separators
+  const cleaned = filename
+    .replace(/^[a-z]+\d{2,4}[-_.]\d{2}[-_.]\d{2}[-_.]+/i, '')
+    .replace(/[-_.]+/g, ' ')
+    .trim()
+  return cleaned || filename
+}
+
 export function toTitleCase(str: string): string {
   const minor = new Set(['a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'by', 'in', 'of', 'up'])
   return str.split(' ').map((word, i) => {

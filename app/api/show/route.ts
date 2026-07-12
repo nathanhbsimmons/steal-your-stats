@@ -1,33 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SetlistClientImpl } from '@/lib/clients/setlist'
-
-interface ShowDetail {
-  date: string       // YYYY-MM-DD
-  venue: string
-  city: string
-  state?: string
-  country: string
-  sets: {
-    name: string
-    encore: boolean
-    songs: string[]
-    segues: boolean[]
-  }[]
-  setlistUrl?: string
-  totalSongs: number
-}
-
-function fromSetlistDate(d: string): string {
-  const parts = d.split('-')
-  if (parts.length === 3 && parts[2].length === 4) return `${parts[2]}-${parts[1]}-${parts[0]}`
-  return d
-}
-
-function toSetlistDate(d: string): string {
-  const parts = d.split('-')
-  if (parts.length === 3 && parts[0].length === 4) return `${parts[2]}-${parts[1]}-${parts[0]}`
-  return d
-}
+import { fetchShowDetail } from '@/lib/services/show-detail'
+import type { ShowDetail } from '@/lib/show-of-the-day-types'
 
 // Module-level cache: key = YYYY-MM-DD, 24h TTL
 const showCache = new Map<string, { show: ShowDetail | null; expiresAt: number }>()
@@ -46,42 +19,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(cached.show)
   }
 
-  const client = new SetlistClientImpl()
-  const setlistDate = toSetlistDate(date)  // DD-MM-YYYY for setlist.fm
-  const setlists = await client.getSetlistsByDate(setlistDate)
-
-  if (setlists.length === 0) {
-    showCache.set(date, { show: null, expiresAt: Date.now() + 24 * 60 * 60 * 1000 })
-    return NextResponse.json({ error: 'Show not found' }, { status: 404 })
-  }
-
-  // Pick the first result (GD usually played one show per day)
-  const setlist = setlists[0]
-
-  const sets = setlist.sets.set.map((set, i) => {
-    const filteredSongs = set.song.filter(s => s.name)
-    return {
-      name: set.name || (set.encore ? 'Encore' : `Set ${i + 1}`),
-      encore: !!set.encore,
-      songs: filteredSongs.map(s => s.name),
-      // setlist.fm uses info ending with '>' to indicate a segue into the next song
-      segues: filteredSongs.map(s => !!s.info?.trim().endsWith('>')),
-    }
-  })
-
-  const totalSongs = sets.reduce((sum, s) => sum + s.songs.length, 0)
-
-  const show: ShowDetail = {
-    date: fromSetlistDate(setlist.eventDate),
-    venue: setlist.venue.name,
-    city: setlist.venue.city.name,
-    state: setlist.venue.city.state,
-    country: setlist.venue.city.country.name,
-    sets,
-    setlistUrl: setlist.url,
-    totalSongs,
-  }
-
+  const show = await fetchShowDetail(date)
   showCache.set(date, { show, expiresAt: Date.now() + 24 * 60 * 60 * 1000 })
+
+  if (!show) return NextResponse.json({ error: 'Show not found' }, { status: 404 })
   return NextResponse.json(show)
 }

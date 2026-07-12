@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ArchiveClientImpl } from '@/lib/clients/archive'
 import { resolveSong } from '@/lib/ids'
-import { parseArchiveDuration } from '@/lib/utils'
-import { createHash } from 'crypto'
+import { formatArchiveTracks } from '@/lib/archive-track-format'
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,28 +31,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Convert ArchiveTrack to Track format with proper URLs
-    const formattedTracks = tracks.map((track, index) => {
-      // Create a unique ID by combining itemId, track name, index, and crypto hash
-      const trackHash = createHash('md5')
-        .update(`${itemId}-${track.name}-${index}-${Date.now()}-${Math.random()}`)
-        .digest('hex')
-        .substr(0, 8)
-      const uniqueId = `${itemId}-${track.name.replace(/[^a-zA-Z0-9]/g, '_')}-${index}-${trackHash}`
-      
-      return {
-        id: uniqueId,
-        name: track.name,
-        title: track.title || undefined,
-        url: `https://archive.org/download/${itemId}/${track.name}`,
-        duration: track.length ? parseArchiveDuration(track.length) : undefined,
-        showDate: '', // Will be filled by caller
-        venue: '', // Will be filled by caller
-        city: '', // Will be filled by caller
-        archiveItemId: itemId,
-        licenseUrl: '', // Will be filled by caller
-        rights: '' // Will be filled by caller
-      }
-    })
+    const formattedTracks = formatArchiveTracks(itemId, tracks).map(track => ({
+      ...track,
+      showDate: '', // Will be filled by caller
+      venue: '', // Will be filled by caller
+      city: '', // Will be filled by caller
+      licenseUrl: '', // Will be filled by caller
+      rights: '' // Will be filled by caller
+    }))
 
     return NextResponse.json({ tracks: formattedTracks })
   } catch (error) {

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { mockAllApis, mockOnThisDay, mockStatsSummary } from './fixtures'
+import { mockAllApis, mockShowOfTheDay, mockShowOfTheDayEmpty, mockStatsSummary } from './fixtures'
 
 test.describe('Home page', () => {
   test.beforeEach(async ({ page }) => {
@@ -34,9 +34,9 @@ test.describe('Home page', () => {
   })
 
   test('shows loading skeletons before data arrives', async ({ page }) => {
-    await page.route('**/api/on-this-day**', async route => {
+    await page.route('**/api/show-of-the-day**', async route => {
       await new Promise(r => setTimeout(r, 1500))
-      await route.fulfill({ json: mockOnThisDay })
+      await route.fulfill({ json: mockShowOfTheDay })
     })
     await page.goto('/')
     const skeletons = page.locator('.skeleton-vault')
@@ -51,8 +51,8 @@ test.describe('Home page', () => {
     expect(errors).toHaveLength(0)
   })
 
-  test('shows empty-state gracefully when on-this-day returns no shows', async ({ page }) => {
-    await page.route('**/api/on-this-day**', r => r.fulfill({ json: { shows: [] } }))
+  test('shows empty-state gracefully when the payload has no shows', async ({ page }) => {
+    await page.route('**/api/show-of-the-day**', r => r.fulfill({ json: mockShowOfTheDayEmpty }))
     await page.goto('/')
     await expect(page.getByText(/On This Day/).first()).toBeVisible({ timeout: 8_000 })
     await expect(page.locator('body')).not.toContainText('Error')

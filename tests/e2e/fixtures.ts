@@ -101,6 +101,26 @@ export const mockOnThisDay = {
   }],
 }
 
+export const mockShowOfTheDay = {
+  dateKey: '1977-05-08',
+  shows: mockOnThisDay.shows,
+  featured: mockOnThisDay.shows[0],
+  showDetail: mockShowDetail,
+  archive: null,
+  complete: true,
+  computedAt: 0,
+}
+
+export const mockShowOfTheDayEmpty = {
+  dateKey: '1977-05-08',
+  shows: [],
+  featured: null,
+  showDetail: null,
+  archive: null,
+  complete: true,
+  computedAt: 0,
+}
+
 export const mockSongsList = {
   songs: [
     { title: 'althea',           displayTitle: 'Althea',           aliases: [] },
@@ -160,6 +180,7 @@ export async function mockAllApis(page: Page) {
     return r.fulfill({ json: mockEraShows })
   })
   // These must come AFTER their parent patterns (last-registered = highest priority):
+  await page.route('**/api/show-of-the-day**',         r => r.fulfill({ json: mockShowOfTheDay }))
   await page.route('**/api/stats/summary**',           r => r.fulfill({ json: mockStatsSummary }))
   await page.route('**/api/venues/songs**',            r => r.fulfill({ json: mockVenueSongs }))
   await page.route('**/api/search/shows-with-songs**', r => r.fulfill({ json: { shows: [] } }))

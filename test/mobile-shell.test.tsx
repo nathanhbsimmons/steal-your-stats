@@ -90,8 +90,21 @@ function mockFetch(responses: Record<string, unknown>) {
   }) as unknown as typeof fetch
 }
 
+function sotdPayload(overrides: Record<string, unknown> = {}) {
+  return {
+    dateKey: '1977-05-08',
+    shows: [],
+    featured: null,
+    showDetail: null,
+    archive: null,
+    complete: true,
+    computedAt: Date.now(),
+    ...overrides,
+  }
+}
+
 const defaultFetch: Record<string, unknown> = {
-  '/api/on-this-day': { shows: [] },
+  '/api/show-of-the-day': sotdPayload(),
   '/api/show': {
     date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US',
     sets: [], totalSongs: 0,
@@ -551,8 +564,14 @@ describe('MobileShell', () => {
   /* ---------------------------------------------------------------- home screen */
 
   describe('HomeScreen', () => {
-    it('shows "No show for today\'s date" when on-this-day returns no shows', async () => {
-      mockFetch({ ...defaultFetch, '/api/on-this-day': { shows: [] } })
+    const barton = { date: '1977-05-08', year: 1977, venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', songs: ['Dark Star'] }
+    const bartonDetail = {
+      date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', totalSongs: 1,
+      sets: [{ name: 'Set I', encore: false, songs: ['Dark Star'] }],
+    }
+
+    it('shows "No show for today\'s date" when the payload has no shows', async () => {
+      mockFetch({ ...defaultFetch, '/api/show-of-the-day': sotdPayload() })
       render(<MobileShell />)
       await waitFor(() => expect(screen.queryByText(/Loading/)).not.toBeInTheDocument())
       expect(screen.getByText(/No show for today/i)).toBeInTheDocument()
@@ -561,13 +580,15 @@ describe('MobileShell', () => {
     it('renders setlist entries when show detail is available', async () => {
       mockFetch({
         ...defaultFetch,
-        '/api/on-this-day': {
-          shows: [{ date: '1977-05-08', year: 1977, venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', songs: ['Dark Star'] }],
-        },
-        '/api/show': {
-          date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', totalSongs: 1,
-          sets: [{ name: 'Set I', encore: false, songs: ['Dark Star'] }],
-        },
+        '/api/show-of-the-day': sotdPayload({
+          shows: [barton],
+          featured: barton,
+          showDetail: bartonDetail,
+          archive: {
+            identifier: 'gd77-05-08',
+            tracks: [{ name: 'gd77t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77/t01.mp3' }],
+          },
+        }),
       })
       render(<MobileShell />)
       await waitFor(() => expect(screen.getByLabelText('Play Dark Star')).toBeInTheDocument())
@@ -577,16 +598,15 @@ describe('MobileShell', () => {
       setPlayer({ currentTrack: null })
       mockFetch({
         ...defaultFetch,
-        '/api/on-this-day': {
-          shows: [{ date: '1977-05-08', year: 1977, venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', songs: ['Dark Star'] }],
-        },
-        '/api/show': {
-          date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', totalSongs: 1,
-          sets: [{ name: 'Set I', encore: false, songs: ['Dark Star'] }],
-        },
-        '/api/archive/song-tracks': {
-          tracks: [{ name: 'gd77t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77/t01.mp3' }],
-        },
+        '/api/show-of-the-day': sotdPayload({
+          shows: [barton],
+          featured: barton,
+          showDetail: bartonDetail,
+          archive: {
+            identifier: 'gd77-05-08',
+            tracks: [{ name: 'gd77t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77/t01.mp3' }],
+          },
+        }),
       })
       render(<MobileShell />)
       await waitFor(() => expect(screen.getByLabelText('Play Dark Star')).toBeInTheDocument())
@@ -595,14 +615,10 @@ describe('MobileShell', () => {
     })
 
     it('renders "Also on this day" when multiple shows exist', async () => {
+      const greek = { date: '1982-05-08', year: 1982, venue: 'Greek Theatre', city: 'Berkeley', state: 'CA', country: 'US', songs: [] }
       mockFetch({
         ...defaultFetch,
-        '/api/on-this-day': {
-          shows: [
-            { date: '1977-05-08', year: 1977, venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', songs: ['Dark Star'] },
-            { date: '1982-05-08', year: 1982, venue: 'Greek Theatre', city: 'Berkeley', state: 'CA', country: 'US', songs: [] },
-          ],
-        },
+        '/api/show-of-the-day': sotdPayload({ shows: [barton, greek], featured: barton, showDetail: bartonDetail }),
       })
       render(<MobileShell />)
       await waitFor(() => expect(screen.getByText(/Also on this day/i)).toBeInTheDocument())
@@ -610,7 +626,7 @@ describe('MobileShell', () => {
     })
 
     it('does not render home content when deck tab is active', async () => {
-      mockFetch({ ...defaultFetch, '/api/on-this-day': { shows: [] } })
+      mockFetch({ ...defaultFetch, '/api/show-of-the-day': sotdPayload() })
       render(<MobileShell />)
       await waitFor(() => expect(screen.queryByText(/Loading/)).not.toBeInTheDocument())
       fireEvent.click(screen.getByText('Deck'))
@@ -934,6 +950,9 @@ describe('MobileShell', () => {
           date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', totalSongs: 1,
           sets: [{ name: 'Set I', encore: false, songs: ['Dark Star'] }],
         },
+        '/api/archive/song-tracks': {
+          tracks: [{ name: 'gd77t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77/t01.mp3' }],
+        },
       })
       render(<MobileShell />)
       await waitFor(() => expect(screen.getByLabelText('Play Dark Star')).toBeInTheDocument())
@@ -948,6 +967,9 @@ describe('MobileShell', () => {
         '/api/show': {
           date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', totalSongs: 1,
           sets: [{ name: 'Set I', encore: false, songs: ['Dark Star'] }],
+        },
+        '/api/archive/song-tracks': {
+          tracks: [{ name: 'gd77t01.mp3', title: 'Dark Star', url: 'https://archive.org/download/gd77/t01.mp3' }],
         },
       })
       render(<MobileShell />)
@@ -1107,7 +1129,7 @@ describe('MobileShell', () => {
   describe('MobileShell routing', () => {
     it('renders HomeScreen (song-of-day content) on "/"', async () => {
       setPathname('/')
-      mockFetch({ ...defaultFetch, '/api/on-this-day': { shows: [] } })
+      mockFetch({ ...defaultFetch, '/api/show-of-the-day': sotdPayload() })
       render(<MobileShell />)
       await waitFor(() => expect(screen.queryByText(/Loading/)).not.toBeInTheDocument())
       // HomeScreen renders, not DeckScreen - no reel player by default

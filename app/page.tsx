@@ -61,20 +61,12 @@ const WEEKDAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Frida
 
 export default function HomePage() {
   const [shows, setShows] = useState<ShowOnThisDay[]>([])
+  const [featured, setFeatured] = useState<ShowOnThisDay | null>(null)
   const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
   const [kpi, setKpi] = useState<SummaryStats | null>(null)
   const [mostPlayed, setMostPlayed] = useState<MostPlayed[]>([])
   const [loading, setLoading] = useState(true)
   const { enqueueEntireShow, enqueueShowTrack, playShowTrack, prependToQueue, selectTrack } = usePlayer()
-
-  // Fetch on-this-day shows
-  useEffect(() => {
-    fetch('/api/on-this-day')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setShows(data.shows ?? []) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
 
   // Fetch KPI summary
   useEffect(() => {
@@ -92,70 +84,35 @@ export default function HomePage() {
       .catch(() => {})
   }, [])
 
-  // Pick the best featured show
-  const sortedShows = [...shows].sort((a, b) => {
-    const score = (s: ShowOnThisDay) => (s.songs.length > 0 ? 100 : 0) + (s.year >= 1967 && s.year <= 1994 ? 50 : 0)
-    if (score(b) !== score(a)) return score(b) - score(a)
-    return Math.abs(a.year - 1977) - Math.abs(b.year - 1977)
-  })
-  const featured = sortedShows[0] ?? null
-
-  // Fetch full setlist for featured show
-  useEffect(() => {
-    if (!featured?.date) return
-    fetch(`/api/show?date=${featured.date}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setShowDetail(data) })
-      .catch(() => {})
-  }, [featured?.date])
-
   const [queuedSet, setQueuedSet] = useState<Set<number>>(new Set())
   const [flashIdx, setFlashIdx] = useState<number | null>(null)
   const [isEnqueuing, setIsEnqueuing] = useState(false)
 
-  // Archive coverage: resolve the featured show's recording and compute which
-  // setlist.fm songs have a matching track title in Archive.org.
   const [archiveIdentifier, setArchiveIdentifier] = useState<string | undefined>(undefined)
   const [archiveTracks, setArchiveTracks] = useState<Array<{ title?: string; url?: string; duration?: number }>>([])
   const [archiveLoaded, setArchiveLoaded] = useState(false)
 
-  // Archive fetch runs after showDetail loads so we can pass totalSongs for smart selection.
+  // Single aggregated fetch: the server precomputes shows, featured pick,
+  // setlist detail, and archive tracks once per day.
   useEffect(() => {
-    if (!featured?.date || !showDetail) return
-    let cancelled = false
-    setArchiveLoaded(false)
-    setArchiveIdentifier(undefined)
-    setArchiveTracks([])
-    ;(async () => {
-      try {
-        const resolveRes = await fetch('/api/archive/resolve-show', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            date: featured.date,
-            venue: featured.venue,
-            city: featured.city,
-            totalSongs: showDetail.totalSongs,
-          }),
-        })
-        if (!resolveRes.ok || cancelled) return
-        const archiveData = await resolveRes.json()
-        setArchiveIdentifier(archiveData.identifier)
-
-        const tracksRes = await fetch('/api/archive/song-tracks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ itemId: archiveData.identifier, songTitle: '' }),
-        })
-        if (cancelled) return
-        const { tracks } = tracksRes.ok ? await tracksRes.json() : { tracks: [] }
-        setArchiveTracks((tracks as Array<{ title?: string; url?: string; duration?: number }>).filter(t => t.url))
-      } catch {} finally {
-        if (!cancelled) setArchiveLoaded(true)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [featured?.date, showDetail?.totalSongs])
+    fetch('/api/show-of-the-day')
+      .then(r => r.ok ? r.json() : null)
+      .then(payload => {
+        if (!payload) return
+        setShows(payload.shows ?? [])
+        setFeatured(payload.featured ?? null)
+        setShowDetail(payload.showDetail ?? null)
+        setArchiveIdentifier(payload.archive?.identifier)
+        setArchiveTracks(
+          ((payload.archive?.tracks ?? []) as Array<{ title?: string; url?: string; duration?: number }>).filter(t => t.url)
+        )
+      })
+      .catch(() => {})
+      .finally(() => {
+        setArchiveLoaded(true)
+        setLoading(false)
+      })
+  }, [])
 
   // Which flat song indices have a title match in the archive recording.
   // null = archive not yet loaded (show pending shimmer on rows).

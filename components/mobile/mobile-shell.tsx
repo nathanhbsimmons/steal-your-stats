@@ -508,81 +508,40 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
   const { currentTrack, isPlaying, play, pause, enqueueEntireShow, playShowTrack, enqueueShowTrack } = usePlayer()
 
   const [shows, setShows] = useState<ShowOnThisDay[]>([])
+  const [featured, setFeatured] = useState<ShowOnThisDay | null>(null)
   const [showDetail, setShowDetail] = useState<ShowDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [archiveDurations, setArchiveDurations] = useState<Map<number, number>>(new Map())
   const [archiveCoveredIndices, setArchiveCoveredIndices] = useState<Set<number> | null>(null)
   const [archiveIdentifier, setArchiveIdentifier] = useState<string | undefined>(undefined)
 
-  // Pick the best show for "featured"
-  const featured = [...shows].sort((a, b) => {
-    const score = (s: ShowOnThisDay) => (s.songs.length > 0 ? 100 : 0) + (s.year >= 1967 && s.year <= 1994 ? 50 : 0)
-    if (score(b) !== score(a)) return score(b) - score(a)
-    return Math.abs(a.year - 1977) - Math.abs(b.year - 1977)
-  })[0] ?? null
-
   const otherShows = shows.filter(s => s.date !== featured?.date)
 
   const displayDate = featured?.date ?? null
 
+  // Single aggregated fetch: the server precomputes shows, featured pick,
+  // setlist detail, and archive tracks once per day.
   useEffect(() => {
-    fetch('/api/on-this-day')
+    fetch('/api/show-of-the-day')
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.shows?.length) setShows(data.shows) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
-
-  useEffect(() => {
-    if (!displayDate) return
-    fetch(`/api/show?date=${displayDate}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setShowDetail(data) })
-      .catch(() => {})
-  }, [displayDate])
-
-  useEffect(() => {
-    if (!displayDate || !showDetail) return
-    let cancelled = false
-    setArchiveDurations(new Map())
-    setArchiveCoveredIndices(null)
-    ;(async () => {
-      try {
-        const resolveRes = await fetch('/api/archive/resolve-show', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            date: displayDate,
-            venue: featured?.venue,
-            city: featured?.city,
-            totalSongs: showDetail.totalSongs,
-          }),
-        })
-        if (!resolveRes.ok || cancelled) { if (!cancelled) setArchiveCoveredIndices(new Set()); return }
-        const resolveData = await resolveRes.json()
-        const { identifier } = resolveData
-        if (!identifier || cancelled) { if (!cancelled) setArchiveCoveredIndices(new Set()); return }
-        if (!cancelled) setArchiveIdentifier(identifier)
-
-        const tracksRes = await fetch('/api/archive/song-tracks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ itemId: identifier, songTitle: '' }),
-        })
-        if (cancelled) return
-        const { tracks } = tracksRes.ok ? await tracksRes.json() : { tracks: [] }
-        const allSongs = showDetail.sets.flatMap(s => s.songs)
-        const { covered, durations } = computeArchiveMaps(tracks as ArchiveTrack[], allSongs)
-        if (!cancelled) {
+      .then(payload => {
+        if (!payload) return
+        setShows(payload.shows ?? [])
+        setFeatured(payload.featured ?? null)
+        setShowDetail(payload.showDetail ?? null)
+        if (payload.archive?.identifier) setArchiveIdentifier(payload.archive.identifier)
+        if (payload.showDetail && payload.archive?.tracks?.length) {
+          const allSongs = (payload.showDetail as ShowDetail).sets.flatMap(s => s.songs)
+          const { covered, durations } = computeArchiveMaps(payload.archive.tracks as ArchiveTrack[], allSongs)
           setArchiveDurations(durations)
           setArchiveCoveredIndices(covered)
+        } else {
+          setArchiveCoveredIndices(new Set())
         }
-      } catch {
-        if (!cancelled) setArchiveCoveredIndices(new Set())
-      }
-    })()
-    return () => { cancelled = true }
-  }, [displayDate, showDetail?.totalSongs])
+      })
+      .catch(() => { setArchiveCoveredIndices(new Set()) })
+      .finally(() => setLoading(false))
+  }, [])
 
   const handlePlay = useCallback(async () => {
     if (!featured) return
