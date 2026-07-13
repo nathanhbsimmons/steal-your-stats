@@ -61,6 +61,35 @@ export interface SetlistClient {
   getSetlistsByDate(date: string): Promise<Setlist[]>
 }
 
+export interface MemberShow {
+  date: string
+  venue: string
+  city: string
+  state?: string
+  country: string
+  songCount: number
+  url?: string
+}
+
+function setlistDateToISO(ddmmyyyy: string): string {
+  const [dd, mm, yyyy] = ddmmyyyy.split('-')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+export function mapSetlistsToMemberShows(setlists: Setlist[]): MemberShow[] {
+  return setlists
+    .map(s => ({
+      date: setlistDateToISO(s.eventDate),
+      venue: s.venue.name,
+      city: s.venue.city.name,
+      state: s.venue.city.state,
+      country: s.venue.city.country.name,
+      songCount: s.sets.set.reduce((n, set) => n + set.song.length, 0),
+      url: s.url,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
+
 export class SetlistClientImpl implements SetlistClient {
   private http: HttpClient
 

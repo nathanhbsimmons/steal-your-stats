@@ -1,21 +1,11 @@
-'use client'
-
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePlayer } from '@/lib/contexts/player-context'
+import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
+import { SetlistClientImpl, mapSetlistsToMemberShows } from '@/lib/clients/setlist'
+import { PlayShowButton } from '@/components/member/play-show-button'
+import { MemberShowBrowser } from '@/components/member/member-show-browser'
 
 interface YearCount { year: number; count: number }
-
-interface MemberShow {
-  date: string
-  venue: string
-  city: string
-  state?: string
-  country: string
-  songCount: number
-}
 
 interface MemberDef {
   name: string
@@ -263,70 +253,11 @@ const MEMBERS: Record<string, MemberDef> = {
   },
 }
 
-export default function MemberPage() {
-  const params = useParams()
-  const slug = params.slug as string
+export const revalidate = 86400
+
+export default async function MemberPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const member = MEMBERS[slug]
-
-  const memberAllYears = useMemo(() => {
-    if (!member) return []
-    const years: number[] = []
-    for (let y = member.startYear; y <= member.endYear; y++) years.push(y)
-    return years
-  }, [member?.startYear, member?.endYear]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const [showsPerYear, setShowsPerYear] = useState<YearCount[]>([])
-  const [selectedYear, setSelectedYear] = useState(() => {
-    if (!member) return 0
-    return member.startYear + Math.floor((member.endYear - member.startYear) / 2)
-  })
-  const [browsePage, setBrowsePage] = useState(1)
-  const [browseShows, setBrowseShows] = useState<MemberShow[]>([])
-  const [browseTotal, setBrowseTotal] = useState(0)
-  const [browseLoading, setBrowseLoading] = useState(false)
-
-  const { enqueueEntireShow } = usePlayer()
-
-  useEffect(() => {
-    fetch('/api/stats')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.showsPerYear) setShowsPerYear(d.showsPerYear) })
-      .catch(() => { })
-  }, [])
-
-  const fetchBrowse = useCallback(async (year: number, page: number) => {
-    if (!year) return
-    setBrowseLoading(true)
-    try {
-      const r = await fetch(`/api/member-shows?year=${year}&page=${page}`)
-      if (r.ok) {
-        const d = await r.json()
-        setBrowseShows(d.shows ?? [])
-        setBrowseTotal(d.total ?? 0)
-      }
-    } finally {
-      setBrowseLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (selectedYear) fetchBrowse(selectedYear, browsePage)
-  }, [selectedYear, browsePage, fetchBrowse])
-
-  const handlePlayShow = async (show: { date: string; venue: string; city: string }) => {
-    try {
-      await enqueueEntireShow({ date: show.date, venue: show.venue, city: show.city }, { clearExisting: true })
-    } catch { }
-  }
-
-  const jumpToYear = (year: number) => {
-    setSelectedYear(year)
-    setBrowsePage(1)
-    setTimeout(() => {
-      const el = document.getElementById('browse-shows')
-      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' })
-    }, 30)
-  }
 
   if (!member) {
     return (
@@ -338,16 +269,16 @@ export default function MemberPage() {
     )
   }
 
-  const yi = memberAllYears.indexOf(selectedYear)
-  const prevYear = yi > 0 ? memberAllYears[yi - 1] : null
-  const nextYear = yi < memberAllYears.length - 1 ? memberAllYears[yi + 1] : null
+  const memberAllYears: number[] = []
+  for (let y = member.startYear; y <= member.endYear; y++) memberAllYears.push(y)
 
-  const memberYearData = memberAllYears.map(y => ({
-    year: y,
-    count: showsPerYear.find(d => d.year === y)?.count ?? 0,
-  }))
-  const maxCount = Math.max(...memberYearData.map(d => d.count), 1)
-  const totalBrowsePages = Math.ceil(browseTotal / 20)
+  const selectedYear = member.startYear + Math.floor((member.endYear - member.startYear) / 2)
+
+  const [stats, browseResult] = await Promise.all([
+    realtimeSongFactsService.getGlobalStats().catch(() => ({ showsPerYear: [] as YearCount[], leaderboard: [] })),
+    new SetlistClientImpl().searchSetlistsByYear(selectedYear, 1).catch(() => ({ setlists: [], total: 0, itemsPerPage: 20 })),
+  ])
+  const initialBrowseShows = mapSetlistsToMemberShows(browseResult.setlists)
   const era = ERA_INFO[member.eraId]
 
   return (
@@ -409,9 +340,7 @@ export default function MemberPage() {
             <Link href={`/eras?focus=${member.eraId}`} className="btn primary">
               ⟶ View era · {era?.name ?? member.eraId}
             </Link>
-            <button className="btn ghost" onClick={() => handlePlayShow(member.signatureShows[0])}>
-              ▶ Play featured show
-            </button>
+            <PlayShowButton show={member.signatureShows[0]} label="▶ Play featured show" className="btn ghost" />
           </div>
         </div>
       </div>
@@ -423,36 +352,14 @@ export default function MemberPage() {
       </div>
       <p className="member-bio">{member.bio}</p>
 
-      {/* ── SHOWS PER YEAR ── */}
-      <div className="section-head">
-        <h3>Shows per year</h3>
-        <div className="descr">— click any bar to jump to that year below</div>
-        <span className="meta">N ≈ {member.shows.toLocaleString()}</span>
-      </div>
-      <div className="barchart member-chart">
-        {memberYearData.map(({ year, count }) => (
-          <div
-            key={year}
-            className={`bar${year === selectedYear ? ' peak' : ''}`}
-            style={{ height: count > 0 ? `${(count / maxCount) * 100}%` : '2%' }}
-            onClick={() => jumpToYear(year)}
-            title={`${year} · ${count} shows`}
-          >
-            <span className="val">{count || ''}</span>
-          </div>
-        ))}
-      </div>
-      <div className="barchart-axis-dense">
-        {memberYearData.map(({ year }) => (
-          <span
-            key={year}
-            className={year === selectedYear ? 'on' : ''}
-            onClick={() => jumpToYear(year)}
-          >
-            &apos;{String(year).slice(2)}
-          </span>
-        ))}
-      </div>
+      <MemberShowBrowser
+        member={member}
+        memberAllYears={memberAllYears}
+        showsPerYear={stats.showsPerYear}
+        initialSelectedYear={selectedYear}
+        initialBrowseShows={initialBrowseShows}
+        initialBrowseTotal={browseResult.total}
+      />
 
       {/* ── SIGNATURE SHOWS ── */}
       <div className="section-head">
@@ -463,7 +370,7 @@ export default function MemberPage() {
       <div className="sig-shows">
         {member.signatureShows.map((s, i) => (
           <div key={s.date} className="sig-show">
-            <button className="sig-play" onClick={() => handlePlayShow(s)} title="Play show">▶</button>
+            <PlayShowButton show={s} label="▶" className="sig-play" title="Play show" />
             <div className="meta">
               <div className="idx">№ {String(i + 1).padStart(2, '0')}</div>
               <div className="date">{s.date}</div>
@@ -498,126 +405,6 @@ export default function MemberPage() {
           <Link key={p} href={`/song/${encodeURIComponent(p)}`} className="pill">{p}</Link>
         ))}
       </div>
-
-      {/* ── BROWSE SHOWS ── */}
-      <div id="browse-shows" className="section-head" style={{ marginTop: 28 }}>
-        <h3>Browse shows</h3>
-        <div className="descr">— full archive, paged one year at a time</div>
-        <span className="meta">{selectedYear} · {browseShows.length} of {browseTotal || '?'}</span>
-      </div>
-
-      {/* ── YEAR PAGER ── */}
-      <div className="year-pager">
-        <button
-          className={`pg${prevYear ? '' : ' muted'}`}
-          onClick={() => prevYear && setSelectedYear(prevYear)}
-          disabled={!prevYear}
-        >
-          <span className="arrow">⟵</span>
-          <span className="col">
-            <span className="lbl">{prevYear ? 'previous year' : 'start of run'}</span>
-            <span className="yr">{prevYear ?? '—'}</span>
-          </span>
-        </button>
-        <span className="current-year">
-          <span className="lbl">viewing</span>
-          <span className="yr">{selectedYear}</span>
-        </span>
-        <button
-          className={`pg right${nextYear ? '' : ' muted'}`}
-          onClick={() => nextYear && setSelectedYear(nextYear)}
-          disabled={!nextYear}
-        >
-          <span className="col">
-            <span className="lbl">{nextYear ? 'next year' : 'end of run'}</span>
-            <span className="yr">{nextYear ?? '—'}</span>
-          </span>
-          <span className="arrow">⟶</span>
-        </button>
-      </div>
-
-      {browseLoading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="skeleton-vault" style={{ height: 44 }} />
-          ))}
-        </div>
-      ) : browseShows.length === 0 ? (
-        <div style={{ padding: '20px 0', fontFamily: 'var(--serif-body)', fontStyle: 'italic', color: 'var(--ink-3)' }}>
-          No setlist data found for {selectedYear}.
-        </div>
-      ) : (
-        <>
-          <table className="tbl member-tbl">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Venue · City</th>
-                <th className="r">Songs</th>
-                <th className="r">Play</th>
-                <th className="r">Setlist</th>
-              </tr>
-            </thead>
-            <tbody>
-              {browseShows.map((show, i) => (
-                <tr key={show.date}>
-                  <td className="num">{String((browsePage - 1) * 20 + i + 1).padStart(2, '0')}</td>
-                  <td><span className="title">{show.date}</span></td>
-                  <td>
-                    <span style={{ fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 14 }}>{show.venue}</span>
-                    <span className="sub">{show.city}{show.state ? `, ${show.state}` : ''}</span>
-                  </td>
-                  <td className="r">{show.songCount || '—'}</td>
-                  <td className="r">
-                    <button className="row-play" onClick={() => handlePlayShow(show)} title="Play show">▶</button>
-                  </td>
-                  <td className="r">
-                    <Link href={`/show/${show.date}`} className="row-link">open ↗</Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {totalBrowsePages > 1 && (
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
-              <button
-                className="btn ghost"
-                style={{ padding: '4px 10px', fontSize: 13 }}
-                disabled={browsePage <= 1}
-                onClick={() => setBrowsePage(p => p - 1)}
-              >
-                ← Prev
-              </button>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)' }}>
-                {browsePage} / {totalBrowsePages}
-              </span>
-              <button
-                className="btn ghost"
-                style={{ padding: '4px 10px', fontSize: 13 }}
-                disabled={browsePage >= totalBrowsePages}
-                onClick={() => setBrowsePage(p => p + 1)}
-              >
-                Next →
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      <div className="year-strip">
-        {memberAllYears.map(y => (
-          <button
-            key={y}
-            className={`year-tab${y === selectedYear ? ' on' : ''}`}
-            onClick={() => setSelectedYear(y)}
-          >
-            {y}
-          </button>
-        ))}
-      </div>
-
     </section>
   )
 }
