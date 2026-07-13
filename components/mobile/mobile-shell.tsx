@@ -1414,6 +1414,13 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
   )
 
   useEffect(() => {
+    // .mv is CSS-hidden (not unmounted) above the 767px breakpoint — skip the
+    // fetch chain entirely when the desktop route is the one actually visible,
+    // since it already fetches this same show server-side.
+    if (typeof window.matchMedia === 'function' && !window.matchMedia('(max-width: 767px)').matches) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     fetch(`/api/show?date=${date}`)
       .then(r => r.ok ? r.json() : null)
