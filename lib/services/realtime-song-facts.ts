@@ -450,21 +450,14 @@ export class RealtimeSongFactsService {
     }
   }
 
-  // Enrich up to SAMPLE_SIZE evenly-distributed tracks with Archive.org durations.
-  // Races against ENRICH_TIMEOUT_MS so we never block the response indefinitely.
+  // Enrich every track with Archive.org durations. Cheap now that ArchiveClientImpl
+  // is catalog-backed (in-memory lookup, no network) for any indexed show — only
+  // uncatalogued shows fall through to live Archive.org calls. Still races against
+  // ENRICH_TIMEOUT_MS as a safety net so a slew of uncatalogued shows can't block
+  // the response indefinitely.
   private async enrichSample(tracks: VersionTrack[], normalizedTitle: string, aliases: string[]): Promise<void> {
-    const SAMPLE_SIZE = 8
-
-    const indices: number[] = []
-    if (tracks.length <= SAMPLE_SIZE) {
-      indices.push(...tracks.map((_, i) => i))
-    } else {
-      const step = Math.floor(tracks.length / SAMPLE_SIZE)
-      for (let i = 0; i < SAMPLE_SIZE; i++) indices.push(i * step)
-    }
-
     const work = Promise.allSettled(
-      indices.map(idx => this.enrichTrack(tracks[idx], normalizedTitle, aliases))
+      tracks.map(track => this.enrichTrack(track, normalizedTitle, aliases))
     )
     const timeout = new Promise<void>(resolve => setTimeout(resolve, ENRICH_TIMEOUT_MS))
     await Promise.race([work, timeout])

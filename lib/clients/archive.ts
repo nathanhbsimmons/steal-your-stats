@@ -1,4 +1,5 @@
 import { HttpClient } from '../http'
+import { archiveCatalog, type ArchiveIndexBest, type ArchiveIndexTrack } from '../services/archive-catalog'
 
 // A resolved show's identity on Archive.org is effectively immutable — safe to cache long.
 const SHOW_RESOLUTION_TTL_MS = 24 * 60 * 60 * 1000
@@ -90,6 +91,126 @@ export interface ArchiveClient {
   selectBestRecording(candidates: ArchiveShowCandidate[], totalSongs: number): Promise<{ identifier: string; mp3Count: number }>
 }
 
+function normalizeForMatch(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+function fuzzyMatchTrack(trackName: string, searchTitle: string): boolean {
+  // Handle common patterns in Grateful Dead track names
+  const escaped = searchTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const patterns = [
+    // Medley patterns: "Song > Song" or "Song -> Song"
+    new RegExp(`\\b${escaped}\\s*[>->]`, 'i'),
+    // Segue patterns: "Song >" or "Song ->"
+    new RegExp(`\\b${escaped}\\s*[>->]\\s*$`, 'i'),
+    // Jam patterns: "Song Jam" or "Song (Jam)"
+    new RegExp(`\\b${escaped}\\s*(jam|jam\\))`, 'i'),
+    // Live patterns: "Song (Live)" or "Song - Live"
+    new RegExp(`\\b${escaped}\\s*[-(]\\s*live`, 'i'),
+  ]
+  return patterns.some(pattern => pattern.test(trackName))
+}
+
+// Filters a track listing down to the ones matching a song title (+ aliases).
+// Shared by the live lookup path (ArchiveClientImpl.getSongTracks) and callers
+// matching against a cached track listing from the archive catalog.
+export function matchTracksForSong(
+  tracks: ArchiveTrack[],
+  normalizedTitle: string,
+  aliases: string[],
+): ArchiveTrack[] {
+  if (tracks.length === 0) return []
+
+  const searchTitlesRaw = [normalizedTitle, ...aliases].map(t => t.toLowerCase())
+  const searchTitlesNorm = searchTitlesRaw.map(normalizeForMatch).filter(n => n.length > 0)
+
+  return tracks.filter(track => {
+    const trackNameRaw = track.name.toLowerCase()
+    const trackTitleRaw = (track.title || '').toLowerCase()
+    const trackNameNorm = normalizeForMatch(trackNameRaw)
+    const trackTitleNorm = normalizeForMatch(trackTitleRaw)
+
+    for (const raw of searchTitlesRaw) {
+      if (trackNameRaw.includes(raw) || raw.includes(trackNameRaw)) return true
+      if (trackTitleRaw && (trackTitleRaw.includes(raw) || raw.includes(trackTitleRaw))) return true
+    }
+
+    // Normalized pass: handles "Love Light" vs "Lovelight", apostrophes, hyphens, etc.
+    for (const n of searchTitlesNorm) {
+      if (trackNameNorm.includes(n) || n.includes(trackNameNorm)) return true
+      if (trackTitleNorm && (trackTitleNorm.includes(n) || n.includes(trackTitleNorm))) return true
+    }
+
+    // Fuzzy match on filename and title (raw strings only — fuzzyMatch uses regex)
+    for (const searchTitle of searchTitlesRaw) {
+      if (fuzzyMatchTrack(trackNameRaw, searchTitle) || (trackTitleRaw && fuzzyMatchTrack(trackTitleRaw, searchTitle))) {
+        return true
+      }
+    }
+
+    return false
+  })
+}
+
+// Synthesizes an ArchiveTrack from a catalog entry's trimmed track record —
+// only name/title/length are stored on disk, the rest are unused by callers.
+function toArchiveTrack(t: ArchiveIndexTrack): ArchiveTrack {
+  return {
+    name: t.name,
+    title: t.title,
+    length: t.length ?? '',
+    format: 'MP3',
+    source: 'original',
+    md5: '', mtime: '', size: '', crc32: '', sha1: '',
+  }
+}
+
+function toArchiveShow(best: ArchiveIndexBest): ArchiveShow {
+  return {
+    identifier: best.identifier,
+    title: best.identifier,
+    creator: 'Grateful Dead',
+    date: '',
+    description: best.description ?? undefined,
+    venue: best.venue,
+    city: best.city,
+    state: best.state,
+    country: best.country,
+    publicdate: best.publicdate ?? '',
+    addeddate: '',
+    updatedate: '',
+    mediatype: 'collection',
+    collection: ['GratefulDead'],
+    subject: [],
+    language: [],
+    licenseurl: best.licenseurl ?? '',
+    rights: best.rights ?? '',
+    format: [],
+    type: 'collection',
+    files: best.tracks.map(t => ({
+      name: t.name, source: 'original', format: 'MP3', length: t.length ?? '',
+      md5: '', mtime: '', size: '', crc32: '', sha1: '',
+    })),
+  }
+}
+
+function toShowMetadata(date: string, best: ArchiveIndexBest): ArchiveShowMetadata {
+  return {
+    title: best.identifier,
+    creator: 'Grateful Dead',
+    date,
+    venue: best.venue ?? '',
+    city: best.city ?? '',
+    state: best.state,
+    country: best.country,
+    licenseurl: best.licenseurl ?? '',
+    rights: best.rights ?? '',
+    publicdate: best.publicdate ?? '',
+    description: best.description ?? null,
+    mp3Count: best.tracks.length,
+  }
+}
+
 export class ArchiveClientImpl implements ArchiveClient {
   private http: HttpClient
 
@@ -141,6 +262,9 @@ export class ArchiveClientImpl implements ArchiveClient {
   }
 
   async listTracks(identifier: string): Promise<ArchiveTrack[]> {
+    const cached = archiveCatalog.getByIdentifier(identifier)
+    if (cached?.best) return cached.best.tracks.map(toArchiveTrack)
+
     // Archive.org's metadata endpoint returns the item's entire file listing
     // and is known to be slow (12-20s+) on cold/rarely-accessed items —
     // give it more room than the 10s default so a legitimately slow response
@@ -158,6 +282,9 @@ export class ArchiveClientImpl implements ArchiveClient {
   }
 
   async resolveArchiveShow(params: { date: string; venue?: string; city?: string }): Promise<ArchiveShow | null> {
+    const cached = archiveCatalog.getByDate(params.date)
+    if (cached) return cached.best ? toArchiveShow(cached.best) : null
+
     const { date, venue, city } = params
     const [year, month, day] = date.split('-')
     const shortYear = year.slice(2)
@@ -207,6 +334,9 @@ export class ArchiveClientImpl implements ArchiveClient {
   }
 
   async listArchiveShowCandidates(params: { date: string; venue?: string; city?: string }): Promise<ArchiveShowCandidate[]> {
+    const cachedEntry = archiveCatalog.getByDate(params.date)
+    if (cachedEntry) return cachedEntry.candidates
+
     const { date, venue, city } = params
     const [year, month, day] = date.split('-')
     const shortYear = year.slice(2)
@@ -254,46 +384,7 @@ export class ArchiveClientImpl implements ArchiveClient {
 
   async getSongTracks(itemId: string, normalizedTitle: string, aliases: string[]): Promise<ArchiveTrack[]> {
     const allTracks = await this.listTracks(itemId)
-    
-    if (allTracks.length === 0) {
-      return []
-    }
-    
-    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-
-    // Create a set of all possible titles to match against (raw lowercase + normalized)
-    const searchTitlesRaw = [normalizedTitle, ...aliases].map(t => t.toLowerCase())
-    const searchTitlesNorm = searchTitlesRaw.map(norm).filter(n => n.length > 0)
-
-    // Find tracks that match any of the song titles (check both filename and title metadata)
-    const matchingTracks = allTracks.filter(track => {
-      const trackNameRaw = track.name.toLowerCase()
-      const trackTitleRaw = (track.title || '').toLowerCase()
-      const trackNameNorm = norm(trackNameRaw)
-      const trackTitleNorm = norm(trackTitleRaw)
-
-      for (const raw of searchTitlesRaw) {
-        if (trackNameRaw.includes(raw) || raw.includes(trackNameRaw)) return true
-        if (trackTitleRaw && (trackTitleRaw.includes(raw) || raw.includes(trackTitleRaw))) return true
-      }
-
-      // Normalized pass: handles "Love Light" vs "Lovelight", apostrophes, hyphens, etc.
-      for (const n of searchTitlesNorm) {
-        if (trackNameNorm.includes(n) || n.includes(trackNameNorm)) return true
-        if (trackTitleNorm && (trackTitleNorm.includes(n) || n.includes(trackTitleNorm))) return true
-      }
-
-      // Fuzzy match on filename and title (raw strings only — fuzzyMatch uses regex)
-      for (const searchTitle of searchTitlesRaw) {
-        if (this.fuzzyMatch(trackNameRaw, searchTitle) || (trackTitleRaw && this.fuzzyMatch(trackTitleRaw, searchTitle))) {
-          return true
-        }
-      }
-
-      return false
-    })
-    
-    return matchingTracks
+    return matchTracksForSong(allTracks, normalizedTitle, aliases)
   }
 
   private calculateMatchScore(show: ArchiveShow, criteria: { venue?: string; city?: string }): number {
@@ -365,23 +456,10 @@ export class ArchiveClientImpl implements ArchiveClient {
     return matrix[str2.length][str1.length]
   }
 
-  private fuzzyMatch(trackName: string, searchTitle: string): boolean {
-    // Handle common patterns in Grateful Dead track names
-    const patterns = [
-      // Medley patterns: "Song > Song" or "Song -> Song"
-      new RegExp(`\\b${searchTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[>->]`, 'i'),
-      // Segue patterns: "Song >" or "Song ->"
-      new RegExp(`\\b${searchTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[>->]\\s*$`, 'i'),
-      // Jam patterns: "Song Jam" or "Song (Jam)"
-      new RegExp(`\\b${searchTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*(jam|jam\\))`, 'i'),
-      // Live patterns: "Song (Live)" or "Song - Live"
-      new RegExp(`\\b${searchTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[-(]\\s*live`, 'i'),
-    ]
-    
-    return patterns.some(pattern => pattern.test(trackName))
-  }
-
   async getAllTracks(itemId: string): Promise<ArchiveTrack[]> {
+    const cached = archiveCatalog.getByIdentifier(itemId)
+    if (cached?.best) return cached.best.tracks.map(toArchiveTrack)
+
     try {
       const response = await this.http.get<{ files?: ArchiveTrack[] }>(`/metadata/${itemId}`, { timeout: 30000 })
       const files = response.data?.files || []
@@ -397,6 +475,9 @@ export class ArchiveClientImpl implements ArchiveClient {
   // Fetches the taper-written description embedded in the Archive.org item metadata.
   // The description typically contains a comma-separated setlist and recording notes.
   async getItemDescription(identifier: string): Promise<string | null> {
+    const cached = archiveCatalog.getByIdentifier(identifier)
+    if (cached?.best) return cached.best.description ?? null
+
     try {
       const response = await this.http.get<{
         metadata?: { description?: string | string[] }
@@ -413,6 +494,9 @@ export class ArchiveClientImpl implements ArchiveClient {
   // Fetches full item metadata including description, venue info, license, and MP3 count
   // in a single /metadata call. Used by the resolve-show route after recording selection.
   async getShowMetadata(identifier: string): Promise<ArchiveShowMetadata> {
+    const cached = archiveCatalog.getByIdentifier(identifier)
+    if (cached?.best) return toShowMetadata(cached.date, cached.best)
+
     const fallback: ArchiveShowMetadata = {
       title: identifier, creator: '', date: '', venue: '', city: '',
       licenseurl: '', rights: '', publicdate: '', description: null, mp3Count: 0,

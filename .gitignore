@@ -46,9 +46,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# disk cache — commit gd-setlists.json so deploys start warm; ignore everything else
+# disk cache — commit gd-setlists.json and archive-index.json so deploys start warm; ignore everything else
 /.cache/*
 !/.cache/gd-setlists.json
+!/.cache/archive-index.json
 
 # claude code local settings (machine-specific, e.g. enabled MCP servers)
 .claude/settings.local.json
