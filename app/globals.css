@@ -20,6 +20,7 @@
   --rust:         #a8391f;
   --rust-dark:    #7a2511;
   --ledger-blue:  #2c4a6a;
+  --amber:        #b6702c;
   --rule:         rgba(26, 20, 12, 0.55);
   --rule-soft:    rgba(26, 20, 12, 0.22);
   --rule-faint:   rgba(26, 20, 12, 0.10);
@@ -856,45 +857,13 @@ p { margin: 0; }
 .vault-player .inner {
   max-width: 1480px;
   margin: 0 auto;
-  padding: 12px 56px;
+  padding: 12px 20px;
   display: grid;
   grid-template-columns: minmax(260px, 320px) 1fr minmax(220px, 280px);
   gap: 28px;
   align-items: center;
 }
-.vault-player .now {
-  display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 12px;
-  align-items: center;
-  min-width: 0;
-}
-.vault-player .stamp {
-  width: 56px; height: 56px;
-  background: var(--paper-2);
-  border: 1.5px solid var(--ink);
-  display: grid;
-  place-items: center;
-  position: relative;
-  box-shadow: 2px 2px 0 var(--rust);
-  flex-shrink: 0;
-}
-.vault-player .stamp .ring {
-  width: 36px; height: 36px;
-  border: 1.5px solid var(--ink);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-}
-.vault-player .stamp .ring::after {
-  content: "";
-  width: 8px; height: 8px;
-  background: var(--rust);
-  border-radius: 50%;
-  border: 1px solid var(--ink);
-}
-.vault-player .stamp.spinning .ring { animation: spin 6s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.vault-player .now { min-width: 0; }
 .vault-player .now .meta { min-width: 0; }
 .vault-player .now .title {
   font-family: var(--serif-display);
@@ -913,6 +882,10 @@ p { margin: 0; }
   text-transform: uppercase;
   color: var(--ink-3);
   margin-top: 3px;
+  min-width: 0;
+}
+.vault-player .now .sub .sub-text {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -948,10 +921,22 @@ p { margin: 0; }
   grid-template-columns: 48px 1fr 48px;
   gap: 10px;
   align-items: center;
+  height: auto;
+  background: none;
+  border: 0;
+  position: static;
 }
 .vault-player .progress .time { font-family: var(--mono); font-size: 11px; color: var(--ink-3); font-feature-settings: "tnum"; }
 .vault-player .progress .time.right { text-align: right; }
 .vault-player .bar { position: relative; height: 14px; cursor: pointer; }
+.vault-player .bar::before {
+  content: "";
+  position: absolute; left: 0; right: 0; top: 50%;
+  height: 4px; transform: translateY(-50%);
+  background: var(--paper-3);
+  border: 1px solid var(--rule-soft);
+  pointer-events: none;
+}
 .vault-player .bar .track-rule {
   position: absolute; left: 0; right: 0; top: 50%;
   height: 1px; background: var(--ink); transform: translateY(-50%);
@@ -993,22 +978,6 @@ p { margin: 0; }
 .vault-player .toggleq:hover { background: var(--hi); }
 .vault-player .toggleq.active { background: var(--ink); color: var(--paper); }
 .vault-player .toggleq .badge { font-family: var(--mono); font-size: 9.5px; padding: 1px 4px; border: 1px solid currentColor; }
-.vault-player .status-row {
-  max-width: 1480px;
-  margin: 0 auto;
-  padding: 6px 56px 8px;
-  border-top: 1px dotted var(--rule);
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.vault-player .status-row .lit { display: inline-flex; align-items: center; gap: 6px; color: var(--forest); }
-.vault-player .status-row .lit .dot { width: 6px; height: 6px; background: var(--forest); border-radius: 50%; animation: pulse 1.6s infinite; }
-
 /* QUEUE drawer */
 .vault-queue {
   position: fixed;

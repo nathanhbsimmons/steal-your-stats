@@ -2,6 +2,8 @@
 
 import React, { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import type { OfficialRelease } from '@/lib/official-releases'
+import { ReleaseBadge } from '@/components/ui/release-badge'
 
 export interface ShowRef {
   id: string
@@ -16,10 +18,19 @@ type SortKey = 'date' | 'date-desc' | 'venue'
 
 function formatDate(iso: string) { return iso.replace(/-/g, ' · ') }
 
-export function ShowsYearTable({ initialShows, audioDates }: { initialShows: ShowRef[]; audioDates: string[] }) {
+export function ShowsYearTable({ initialShows, audioDates, officialReleases }: { initialShows: ShowRef[]; audioDates: string[]; officialReleases: OfficialRelease[] }) {
   const router = useRouter()
   const [sortKey, setSortKey] = useState<SortKey>('date')
   const audioDateSet = useMemo(() => new Set(audioDates), [audioDates])
+  const releasesByDate = useMemo(() => {
+    const map = new Map<string, OfficialRelease[]>()
+    for (const r of officialReleases) {
+      const list = map.get(r.date)
+      if (list) list.push(r)
+      else map.set(r.date, [r])
+    }
+    return map
+  }, [officialReleases])
 
   const sortedShows = [...initialShows].sort((a, b) => {
     if (sortKey === 'date') return a.date.localeCompare(b.date)
@@ -68,12 +79,14 @@ export function ShowsYearTable({ initialShows, audioDates }: { initialShows: Sho
             <th>Date</th>
             <th>Venue</th>
             <th>City</th>
+            <th style={{ textAlign: 'right' }}>Release</th>
             <th style={{ width: 80, textAlign: 'right' }}>Audio</th>
           </tr>
         </thead>
         <tbody>
           {sortedShows.map((s, i) => {
             const hasAudio = audioDateSet.has(s.date)
+            const releases = releasesByDate.get(s.date) ?? []
             return (
               <tr
                 key={s.id || i}
@@ -84,6 +97,9 @@ export function ShowsYearTable({ initialShows, audioDates }: { initialShows: Sho
                 <td><span className="tbl-title">{s.venue}</span></td>
                 <td style={{ fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink-3)' }}>
                   {s.city}{s.state ? `, ${s.state}` : ''}
+                </td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <ReleaseBadge releases={releases} size="xs" />
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   {hasAudio && (

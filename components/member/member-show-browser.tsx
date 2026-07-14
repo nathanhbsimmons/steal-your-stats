@@ -3,6 +3,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { PlayShowButton } from '@/components/member/play-show-button'
+import { getOfficialReleasesForDate } from '@/lib/official-releases'
+import { ReleaseBadge } from '@/components/ui/release-badge'
 
 interface YearCount { year: number; count: number }
 
@@ -177,20 +179,27 @@ export function MemberShowBrowser({
               <tr>
                 <th>#</th>
                 <th>Date</th>
-                <th>Venue · City</th>
+                <th style={{ width: '1%', whiteSpace: 'nowrap', paddingRight: 48 }}>Venue</th>
+                <th style={{ width: '1%', whiteSpace: 'nowrap', paddingRight: 48 }}>City</th>
+                <th>Release</th>
                 <th className="r">Songs</th>
                 <th className="r">Play</th>
                 <th className="r">Setlist</th>
               </tr>
             </thead>
             <tbody>
-              {browseShows.map((show, i) => (
+              {browseShows.map((show, i) => {
+                const releases = getOfficialReleasesForDate(show.date)
+                return (
                 <tr key={show.date}>
                   <td className="num">{String((browsePage - 1) * PER_PAGE + i + 1).padStart(2, '0')}</td>
                   <td><span className="title">{show.date}</span></td>
-                  <td>
+                  <td style={{ whiteSpace: 'nowrap', paddingRight: 48 }}>
                     <span style={{ fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 14 }}>{show.venue}</span>
-                    <span className="sub">{show.city}{show.state ? `, ${show.state}` : ''}</span>
+                  </td>
+                  <td style={{ whiteSpace: 'nowrap', paddingRight: 48 }}>{show.city}{show.state ? `, ${show.state}` : ''}</td>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    {releases.length > 0 && <ReleaseBadge releases={releases} size="xs" />}
                   </td>
                   <td className="r">{show.songCount || '—'}</td>
                   <td className="r">
@@ -200,7 +209,8 @@ export function MemberShowBrowser({
                     <Link href={`/show/${show.date}`} className="row-link">open ↗</Link>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
 

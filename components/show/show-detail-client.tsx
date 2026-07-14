@@ -8,6 +8,8 @@ import { formatArchiveTrackName } from '@/lib/hooks/use-audio-player'
 import { formatDuration } from '@/lib/utils'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import type { ArchiveTrackPayload, ArchiveSetlistMatch, ShowDetail } from '@/lib/show-of-the-day-types'
+import type { OfficialRelease } from '@/lib/official-releases'
+import { ReleaseBadge } from '@/components/ui/release-badge'
 
 function formatDateLong(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number)
@@ -25,7 +27,7 @@ function recordingTypeLabel(type: string): string {
   return '?'
 }
 
-export function ShowDetailClient({ date, initialShow }: { date: string; initialShow: ShowDetail }) {
+export function ShowDetailClient({ date, initialShow, officialReleases = [] }: { date: string; initialShow: ShowDetail; officialReleases?: OfficialRelease[] }) {
   const show = initialShow
 
   const { enqueueEntireShow, enqueueShowTrack, playShowTrack, pause, currentTrack, isPlaying, prependToQueue, selectTrack, addToQueue } = usePlayer()
@@ -268,6 +270,13 @@ export function ShowDetailClient({ date, initialShow }: { date: string; initialS
             <strong style={{ fontStyle: 'normal', color: 'var(--ink)' }}>{show.venue}</strong>
             {' · '}{location}
           </div>
+          {officialReleases.length > 0 && (
+            <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {officialReleases.map((r, i) => (
+                <ReleaseBadge key={`${r.series}-${i}`} releases={[r]} />
+              ))}
+            </div>
+          )}
         </div>
         <div className="toolbar">
           <span>{show.totalSongs} songs</span>

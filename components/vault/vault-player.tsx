@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { usePlayer } from '@/lib/contexts/player-context'
+import { getOfficialReleasesForDate } from '@/lib/official-releases'
+import { ReleaseBadge } from '@/components/ui/release-badge'
 
 function formatTime(secs: number): string {
   if (!isFinite(secs) || isNaN(secs) || secs < 0) return '0:00'
@@ -170,7 +172,10 @@ export function VaultPlayer() {
     setVolume(v)
   }
 
-  const queueIndex = currentTrack ? queue.findIndex(t => t.id === currentTrack.id) : -1
+  const releases = useMemo(
+    () => currentTrack?.showDate ? getOfficialReleasesForDate(currentTrack.showDate) : [],
+    [currentTrack?.showDate]
+  )
 
   return (
     <>
@@ -180,9 +185,6 @@ export function VaultPlayer() {
         <div className="inner">
           {/* Now playing */}
           <div className="now">
-            <div className={`stamp${isPlaying ? ' spinning' : ''}`}>
-              <div className="ring" />
-            </div>
             <div className="meta">
               <div className="title">
                 {currentTrack
@@ -190,10 +192,14 @@ export function VaultPlayer() {
                   : <span style={{ color: 'var(--ink-3)', fontStyle: 'italic', fontSize: 16 }}>nothing in the deck</span>
                 }
               </div>
-              <div className="sub">
-                {currentTrack
-                  ? <>{currentTrack.showDate} · {currentTrack.venue}</>
-                  : null
+              <div className="sub" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {currentTrack &&
+                  <span className="sub-text">{currentTrack.showDate} · {currentTrack.venue}</span>
+                }
+                {releases.length > 0 &&
+                  <span style={{ flexShrink: 0, display: 'inline-flex' }}>
+                    <ReleaseBadge releases={releases} size="xs" variant="icon" />
+                  </span>
                 }
               </div>
               {currentTrack && (
@@ -255,24 +261,6 @@ export function VaultPlayer() {
               Queue <span className="badge">{queue.length}</span>
             </button>
           </div>
-        </div>
-
-        {/* Status row */}
-        <div className="status-row">
-          <span>
-            {queue.length > 0
-              ? isPlaying
-                ? <><span className="lit"><span className="dot" />playing</span> · {queue.length} track{queue.length !== 1 ? 's' : ''} · {formatQueueTime(queue.slice(queueIndex + 1))} left</>
-                : <>cued · {queue.length} track{queue.length !== 1 ? 's' : ''}</>
-              : <>standby · no queue · click a setlist or show track to begin</>
-            }
-          </span>
-          <span>
-            {currentTrack
-              ? `Track ${queueIndex + 1} / ${queue.length} · ${Math.round(volume * 100)} dB`
-              : '—'
-            }
-          </span>
         </div>
       </div>
 

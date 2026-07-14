@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 import { getDatesWithAudioForYear } from '@/lib/clients/archive-dates'
+import { getOfficialReleasesForDates } from '@/lib/official-releases'
 import { ShowsYearTable, type ShowRef } from '@/components/shows/shows-year-table'
 
 const PER_PAGE = 200
@@ -37,6 +38,7 @@ export default async function ShowsByYearPage({ params }: { params: Promise<{ ye
   ])
   const shows = showsResult.shows
   const total = showsResult.total
+  const officialReleases = getOfficialReleasesForDates(shows.map(s => s.date))
 
   return (
     <section className="col">
@@ -63,7 +65,7 @@ export default async function ShowsByYearPage({ params }: { params: Promise<{ ye
           No shows found for {year}.
         </div>
       ) : (
-        <ShowsYearTable initialShows={shows} audioDates={audioDates} />
+        <ShowsYearTable initialShows={shows} audioDates={audioDates} officialReleases={officialReleases} />
       )}
     </section>
   )

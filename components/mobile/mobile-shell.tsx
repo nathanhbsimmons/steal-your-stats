@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { getVenueTidbit } from '@/lib/venue-tidbits'
+import { getOfficialReleasesForDate } from '@/lib/official-releases'
+import { ReleaseBadge } from '@/components/ui/release-badge'
 import { getDateParts } from '@/lib/date-parts'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import type { ArchiveSetlistMatch, ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
@@ -255,13 +257,17 @@ function MobileMini({ onOpen }: { onOpen: () => void }) {
   if (!currentTrack) return null
   const dateStr = currentTrack.showDate ?? ''
   const venueStr = [currentTrack.venue, currentTrack.city].filter(Boolean).join(' · ').toUpperCase()
+  const releases = dateStr ? getOfficialReleasesForDate(dateStr) : []
   return (
     <div className={`mv-mini${!isPlaying ? ' paused' : ''}`} role="status" aria-live="polite">
       <div className="stamp" aria-hidden="true" />
       <button className="mv-mini-open" onClick={onOpen} aria-label="Open player">
         <div className="meta">
           <div className="title">{currentTrack.name}</div>
-          <div className="sub">{dateStr}{venueStr ? ` · ${venueStr}` : ''}</div>
+          <div className="sub" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span>{dateStr}{venueStr ? ` · ${venueStr}` : ''}</span>
+            {releases.length > 0 && <ReleaseBadge releases={releases} size="xs" variant="icon" />}
+          </div>
         </div>
       </button>
       <button className="next" onClick={next} aria-label="Skip to next track">▶▶</button>
@@ -1540,6 +1546,14 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
             <div className="mv-show-venue-info">
               <h2>{showDetail.venue}</h2>
               <div className="byline">{showDetail.city}{showDetail.state ? `, ${showDetail.state}` : ''} · {showDetail.totalSongs} songs</div>
+              {(() => {
+                const releases = getOfficialReleasesForDate(date)
+                return releases.length > 0 ? (
+                  <div style={{ marginTop: 6 }}>
+                    <ReleaseBadge releases={releases} />
+                  </div>
+                ) : null
+              })()}
             </div>
             {archiveCoveredIndices === null ? (
               <button className="mv-play-show-btn" disabled style={{ opacity: 0.6, cursor: 'default' }}>

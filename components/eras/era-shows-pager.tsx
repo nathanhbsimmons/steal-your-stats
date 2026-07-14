@@ -2,6 +2,8 @@
 
 import React, { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { getOfficialReleasesForDate } from '@/lib/official-releases'
+import { ReleaseBadge } from '@/components/ui/release-badge'
 
 interface ShowRef {
   id: string
@@ -110,7 +112,10 @@ export function EraShowsPager({
                     className="row"
                     style={{ textDecoration: 'none' }}
                   >
-                    <span className="t">{show.venue}</span>
+                    <span className="t" style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                      {show.venue}
+                      <ReleaseBadge releases={getOfficialReleasesForDate(show.date)} size="xs" />
+                    </span>
                     <span className="s">{show.date} · {show.city}{show.state ? `, ${show.state}` : ''}</span>
                   </Link>
                 ))

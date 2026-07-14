@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { fetchShowDetail } from '@/lib/services/show-detail'
+import { getOfficialReleasesForDate } from '@/lib/official-releases'
 import { ShowDetailClient } from '@/components/show/show-detail-client'
 
 export const revalidate = 86400
@@ -29,5 +30,7 @@ export default async function ShowPage({ params }: { params: Promise<{ date: str
     )
   }
 
-  return <ShowDetailClient date={date} initialShow={show} />
+  const officialReleases = getOfficialReleasesForDate(date)
+
+  return <ShowDetailClient date={date} initialShow={show} officialReleases={officialReleases} />
 }

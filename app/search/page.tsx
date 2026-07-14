@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
+import { getOfficialReleasesForDate } from '@/lib/official-releases'
+import { ReleaseBadge } from '@/components/ui/release-badge'
 
 interface SongResult {
   title: string
@@ -305,17 +307,23 @@ function SearchContent() {
                     ))
                   : venueShows.length === 0
                     ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>No shows found at this venue.</div>
-                    : venueShows.map(s => (
-                        <Link
-                          key={s.date}
-                          href={`/show/${s.date}`}
-                          className="row"
-                          style={{ textDecoration: 'none' }}
-                        >
-                          <span className="t">{s.venue}</span>
-                          <span className="s">{s.date} · {s.city}{s.state ? `, ${s.state}` : ''}</span>
-                        </Link>
-                      ))
+                    : venueShows.map(s => {
+                        const releases = getOfficialReleasesForDate(s.date)
+                        return (
+                          <Link
+                            key={s.date}
+                            href={`/show/${s.date}`}
+                            className="row"
+                            style={{ textDecoration: 'none' }}
+                          >
+                            <span className="t" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              {s.venue}
+                              {releases.length > 0 && <ReleaseBadge releases={releases} size="xs" />}
+                            </span>
+                            <span className="s">{s.date} · {s.city}{s.state ? `, ${s.state}` : ''}</span>
+                          </Link>
+                        )
+                      })
                 }
               </>
             ) : (
