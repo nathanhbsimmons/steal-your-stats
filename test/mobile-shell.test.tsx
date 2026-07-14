@@ -53,6 +53,7 @@ function makePlayer(overrides: Record<string, unknown> = {}) {
     currentTrack: null,
     isPlaying: false,
     queue: [] as typeof mockTrack[],
+    queueResolving: null,
     play: mockPlay,
     pause: mockPause,
     next: mockNext,

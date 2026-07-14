@@ -64,6 +64,7 @@ export interface UseAudioPlayerReturn {
   currentTrack: Track | null
   isPlaying: boolean
   queue: Track[]
+  queueResolving: { done: number; total: number } | null
   play: () => void
   pause: () => void
   next: () => void
@@ -84,6 +85,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [queue, setQueue] = useState<Track[]>([])
+  const [queueResolving, setQueueResolving] = useState<{ done: number; total: number } | null>(null)
 
   // Ref so stable callbacks can read the latest queue without stale closures
   const queueRef = useRef<Track[]>([])
@@ -518,29 +520,60 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
 
     let started = false
     const wasEmpty = queueRef.current.length === 0
-    for (let i = 0; i < ordered.length; i++) {
-      let track: Track | null = null
-      try {
-        track = await resolveSongVersion(songTitle, ordered[i])
-      } catch {
-        track = null
-      }
-      if (!track) continue
+    const results: (Track | null)[] = new Array(ordered.length).fill(null)
+    const settled: boolean[] = new Array(ordered.length).fill(false)
+    let flushedThrough = 0
 
-      if (mode === 'replace' && !started) {
-        // First successfully-resolved version replaces the queue and starts playing.
-        setQueue([track])
-        setCurrentTrack(track)
-        setIsPlaying(true)
-        started = true
-      } else {
-        addToQueue([track])
-        if (mode === 'append' && wasEmpty && !started) {
+    setQueueResolving({ done: 0, total: ordered.length })
+
+    // Flush resolved versions into the queue in date order, without waiting
+    // for every version to finish — a version can only be flushed once every
+    // version before it has also settled, so the queue never goes out of order.
+    const flush = () => {
+      while (flushedThrough < ordered.length && settled[flushedThrough]) {
+        const track = results[flushedThrough]
+        flushedThrough++
+        setQueueResolving({ done: flushedThrough, total: ordered.length })
+        if (!track) continue
+
+        if (mode === 'replace' && !started) {
+          // First successfully-resolved version replaces the queue and starts playing.
+          setQueue([track])
           setCurrentTrack(track)
           setIsPlaying(true)
           started = true
+        } else {
+          addToQueue([track])
+          if (mode === 'append' && wasEmpty && !started) {
+            setCurrentTrack(track)
+            setIsPlaying(true)
+            started = true
+          }
         }
       }
+    }
+
+    const CONCURRENCY = 5
+    let nextIdx = 0
+    const worker = async () => {
+      while (nextIdx < ordered.length) {
+        const idx = nextIdx++
+        try {
+          results[idx] = await resolveSongVersion(songTitle, ordered[idx])
+        } catch {
+          results[idx] = null
+        }
+        settled[idx] = true
+        flush()
+      }
+    }
+
+    try {
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, ordered.length) }, worker)
+      )
+    } finally {
+      setQueueResolving(null)
     }
   }, [resolveSongVersion, prependToQueue, selectTrack, addToQueue])
 
@@ -548,6 +581,7 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     currentTrack,
     isPlaying,
     queue,
+    queueResolving,
     play,
     pause,
     next,
