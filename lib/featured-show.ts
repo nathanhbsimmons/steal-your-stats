@@ -1,7 +1,6 @@
 import type { ShowOnThisDay } from '@/lib/show-of-the-day-types'
 
-// Featured-show scoring: prefer shows with setlists, prefer the classic
-// 1967-1994 era, tiebreak toward 1977.
+// Featured-show scoring: prefer shows with setlists
 function score(s: ShowOnThisDay): number {
   return (s.songs.length > 0 ? 100 : 0) + (s.year >= 1967 && s.year <= 1994 ? 50 : 0)
 }

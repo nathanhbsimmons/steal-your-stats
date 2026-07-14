@@ -8,15 +8,24 @@ import { formatArchiveTracks } from '@/lib/archive-track-format'
 import { matchArchiveTracksToSetlist } from '@/lib/archive-track-match'
 import type { ShowOfTheDayPayload } from '@/lib/show-of-the-day-types'
 
-// "The day" is server-local time, matching the /api/on-this-day convention.
+// "The day" is fixed to US/Eastern, matching the /api/on-this-day convention.
+// Deploy hosts run UTC, which rolls to the next date hours before US evening —
+// pin to a real TZ instead of the server's local clock.
 // The calendar date IS the cache key — rollover invalidates, no TTL needed.
 const DISK_CACHE_PATH = path.join(process.cwd(), '.cache', 'show-of-the-day.json')
 const INCOMPLETE_RETRY_MS = 10 * 60 * 1000
+const SHOW_DAY_TZ = 'America/New_York'
+
+const dateKeyFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: SHOW_DAY_TZ,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
 
 export function localDateKey(d = new Date()): string {
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${month}-${day}`
+  // en-CA formats as YYYY-MM-DD
+  return dateKeyFormatter.format(d)
 }
 
 export class ShowOfTheDayService {
@@ -157,10 +166,20 @@ const MIDNIGHT_OFFSET_MS = 5 * 60 * 1000 // fire at 00:05 to avoid racing the ro
 const WARM_RETRIES = 3
 const WARM_RETRY_DELAY_MS = 5 * 60 * 1000
 
+const timeOfDayFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: SHOW_DAY_TZ,
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+})
+
 function msUntilNextWarm(): number {
-  const next = new Date()
-  next.setHours(24, 0, 0, 0)
-  return next.getTime() - Date.now() + MIDNIGHT_OFFSET_MS
+  const now = new Date()
+  const parts = timeOfDayFormatter.formatToParts(now)
+  const get = (type: string) => Number(parts.find(p => p.type === type)?.value ?? 0)
+  const msSinceMidnight = ((get('hour') % 24) * 3600 + get('minute') * 60 + get('second')) * 1000 + now.getMilliseconds()
+  return (24 * 60 * 60 * 1000 - msSinceMidnight) + MIDNIGHT_OFFSET_MS
 }
 
 async function warmWithRetries(): Promise<void> {
