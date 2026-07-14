@@ -403,7 +403,7 @@ function MobileNowPlaying() {
 /* ============================================================ DECK SCREEN (player tab) */
 
 function DeckScreen({ onClose }: { onClose: () => void }) {
-  const { currentTrack, queue, selectTrack, removeFromQueue, clearQueue } = usePlayer()
+  const { currentTrack, queue, queueResolving, selectTrack, removeFromQueue, clearQueue } = usePlayer()
   const currentIdx = currentTrack ? queue.findIndex(t => t.id === currentTrack.id) : -1
 
   return (
@@ -415,12 +415,25 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
       </div>
       {!currentTrack ? (
         <div className="mv-preplay" style={{ minHeight: 260 }}>
-          <div style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', marginTop: 32, marginBottom: 8 }}>
-            The deck is empty.
-          </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-4)' }}>
-            Play a show or song to begin.
-          </div>
+          {queueResolving ? (
+            <>
+              <div style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', marginTop: 32, marginBottom: 8 }}>
+                Finding tracks on Archive.org…
+              </div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-4)' }}>
+                {queueResolving.done} / {queueResolving.total} checked
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', marginTop: 32, marginBottom: 8 }}>
+                The deck is empty.
+              </div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-4)' }}>
+                Play a show or song to begin.
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <>
@@ -428,7 +441,10 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
           <div className="mv-player-queue" style={{ paddingBottom: 24 }}>
             <div className="mv-queue-head">
               <span className="name">Queue</span>
-              <span className="meta">{queue.length} {queue.length === 1 ? 'track' : 'tracks'} · {formatQueueTime(queue)}</span>
+              <span className="meta">
+                {queue.length} {queue.length === 1 ? 'track' : 'tracks'} · {formatQueueTime(queue)}
+                {queueResolving ? ` · finding more (${queueResolving.done}/${queueResolving.total})…` : ''}
+              </span>
             </div>
             {queue.length === 0 ? (
               <div className="mv-queue-empty">The deck is empty. Cue a track to begin.</div>
@@ -575,15 +591,13 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
             {displayCity && <div className="mv-preplay-city">{displayCity}</div>}
             {venueTidbit && <div className="mv-preplay-tidbit">{venueTidbit}</div>}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {displayDate && (
-                <button
-                  className="mv-play-show-btn"
-                  onClick={handlePlay}
-                  disabled={archiveCoveredIndices === null}
-                  style={archiveCoveredIndices === null ? { opacity: 0.6, cursor: 'default' } : undefined}
-                >
-                  {archiveCoveredIndices === null ? 'Loading…' : '▶ Play Show'}
+              {displayDate && archiveCoveredIndices === null && (
+                <button className="mv-play-show-btn" disabled style={{ opacity: 0.6, cursor: 'default' }}>
+                  Loading…
                 </button>
+              )}
+              {displayDate && archiveCoveredIndices !== null && archiveCoveredIndices.size > 0 && (
+                <button className="mv-play-show-btn" onClick={handlePlay}>▶ Play Show</button>
               )}
               {displayDate && (
                 <Link href={`/show/${displayDate}`} className="mv-open-setlist-btn">Open Setlist ↗</Link>
@@ -1527,14 +1541,13 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
               <h2>{showDetail.venue}</h2>
               <div className="byline">{showDetail.city}{showDetail.state ? `, ${showDetail.state}` : ''} · {showDetail.totalSongs} songs</div>
             </div>
-            <button
-              className="mv-play-show-btn"
-              onClick={handlePlayAll}
-              disabled={archiveCoveredIndices === null}
-              style={archiveCoveredIndices === null ? { opacity: 0.6, cursor: 'default' } : undefined}
-            >
-              {archiveCoveredIndices === null ? 'Loading…' : '▶ Play Show'}
-            </button>
+            {archiveCoveredIndices === null ? (
+              <button className="mv-play-show-btn" disabled style={{ opacity: 0.6, cursor: 'default' }}>
+                Loading…
+              </button>
+            ) : archiveCoveredIndices.size > 0 ? (
+              <button className="mv-play-show-btn" onClick={handlePlayAll}>▶ Play Show</button>
+            ) : null}
           </div>
         ) : (
           <h2 style={{ fontSize: 22, color: 'var(--ink-3)' }}>Show not found.</h2>

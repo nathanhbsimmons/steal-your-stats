@@ -271,9 +271,15 @@ export function ShowDetailClient({ date, initialShow }: { date: string; initialS
         </div>
         <div className="toolbar">
           <span>{show.totalSongs} songs</span>
-          <button className="btn primary" onClick={() => handlePlayShow()} disabled={isEnqueuing || !archiveLoaded} style={(isEnqueuing || !archiveLoaded) ? { opacity: 0.7 } : undefined}>
-            <span className="play-tri">{isEnqueuing ? '…' : '▶'}</span> {isEnqueuing ? 'Loading…' : !archiveLoaded ? 'Loading…' : 'Play entire show'}
-          </button>
+          {!archiveLoaded ? (
+            <button className="btn primary" disabled style={{ opacity: 0.7 }}>
+              <span className="play-tri">…</span> Loading…
+            </button>
+          ) : archiveRecording && archiveRecording.tracks.length > 0 ? (
+            <button className="btn primary" onClick={() => handlePlayShow()} disabled={isEnqueuing} style={isEnqueuing ? { opacity: 0.7 } : undefined}>
+              <span className="play-tri">{isEnqueuing ? '…' : '▶'}</span> {isEnqueuing ? 'Loading…' : 'Play entire show'}
+            </button>
+          ) : null}
         </div>
       </div>
 

@@ -81,8 +81,6 @@ export default function SongPage() {
   const [shareLabel, setShareLabel] = useState<'Share' | 'Copied!'>('Share')
   const [playError, setPlayError] = useState<string | null>(null)
   const [playErrorDate, setPlayErrorDate] = useState<string | null>(null)
-  const [firstShowLoading, setFirstShowLoading] = useState(false)
-  const [lastShowLoading, setLastShowLoading] = useState(false)
   const [showAllOpener, setShowAllOpener] = useState(false)
   const [showAllCloser, setShowAllCloser] = useState(false)
   const [showAllSet1Closer, setShowAllSet1Closer] = useState(false)
@@ -158,9 +156,9 @@ export default function SongPage() {
   }
 
   const handlePlayLongest = () => {
-    if (!versData?.tracks?.length) return
-    const sorted = [...versData.tracks].sort((a, b) => (b.durationSec || 0) - (a.durationSec || 0))
-    handlePlayTrack(sorted[0])
+    const longest = versData?.extremes?.longest
+    if (!longest) return
+    handlePlayTrack(longest)
   }
 
   const handlePlayShowVersions = async (showRef: { date: string; venue: string; city: string }) => {
@@ -265,28 +263,16 @@ export default function SongPage() {
           )}
         </div>
         <div className="actions">
-          <button
-            className="btn"
-            disabled={firstShowLoading || isLoading}
-            onClick={async () => {
-              if (!data?.first) return
-              setFirstShowLoading(true)
-              try { await handlePlayShowVersions(data.first) } finally { setFirstShowLoading(false) }
-            }}
-          >
-            {firstShowLoading ? '⟵ Loading…' : '⟵ First show'}
-          </button>
-          <button
-            className="btn"
-            disabled={lastShowLoading || isLoading}
-            onClick={async () => {
-              if (!data?.last) return
-              setLastShowLoading(true)
-              try { await handlePlayShowVersions(data.last) } finally { setLastShowLoading(false) }
-            }}
-          >
-            {lastShowLoading ? 'Loading… ⟶' : 'Last show ⟶'}
-          </button>
+          {data?.first ? (
+            <Link className="btn" href={`/show/${data.first.date}`}>⟵ First show</Link>
+          ) : (
+            <span className="btn" aria-disabled="true" style={{ opacity: 0.5, cursor: 'default' }}>⟵ First show</span>
+          )}
+          {data?.last ? (
+            <Link className="btn" href={`/show/${data.last.date}`}>Last show ⟶</Link>
+          ) : (
+            <span className="btn" aria-disabled="true" style={{ opacity: 0.5, cursor: 'default' }}>Last show ⟶</span>
+          )}
           <button className="btn primary" onClick={handlePlayLongest}>
             <span className="play-tri">▶</span> Play longest version
           </button>
