@@ -23,10 +23,21 @@ describe('pickFeaturedShow', () => {
     expect(pickFeaturedShow([late, era])).toBe(era)
   })
 
-  it('tiebreaks toward 1977', () => {
+  it('tiebreak is deterministic for a given seed', () => {
     const a = show(1970, ['Dark Star'])
     const b = show(1978, ['Dark Star'])
-    expect(pickFeaturedShow([a, b])).toBe(b)
+    const first = pickFeaturedShow([a, b], '2026-07-13')
+    const second = pickFeaturedShow([a, b], '2026-07-13')
+    expect(first).toBe(second)
+  })
+
+  it('tiebreak varies across seeds instead of always favoring one year', () => {
+    const a = show(1970, ['Dark Star'])
+    const b = show(1978, ['Dark Star'])
+    const c = show(1985, ['Dark Star'])
+    const seeds = ['2026-01-01', '2026-02-14', '2026-03-09', '2026-04-20', '2026-05-08', '2026-06-01', '2026-07-13']
+    const yearsPicked = new Set(seeds.map(seed => pickFeaturedShow([a, b, c], seed)?.year))
+    expect(yearsPicked.size).toBeGreaterThan(1)
   })
 
   it('sortShowsForFeature does not mutate the input', () => {

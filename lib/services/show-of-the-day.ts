@@ -77,7 +77,7 @@ export class ShowOfTheDayService {
   private async compute(dateKey: string): Promise<ShowOfTheDayPayload> {
     const [, month, day] = dateKey.split('-')
     const shows = await realtimeSongFactsService.getShowsOnDate(month, day)
-    const featured = pickFeaturedShow(shows)
+    const featured = pickFeaturedShow(shows, dateKey)
 
     if (!featured) {
       return { dateKey, shows, featured: null, showDetail: null, archive: null, archiveMatch: null, complete: true, computedAt: Date.now() }
