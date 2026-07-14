@@ -257,17 +257,13 @@ function MobileMini({ onOpen }: { onOpen: () => void }) {
   if (!currentTrack) return null
   const dateStr = currentTrack.showDate ?? ''
   const venueStr = [currentTrack.venue, currentTrack.city].filter(Boolean).join(' · ').toUpperCase()
-  const releases = dateStr ? getOfficialReleasesForDate(dateStr) : []
   return (
     <div className={`mv-mini${!isPlaying ? ' paused' : ''}`} role="status" aria-live="polite">
       <div className="stamp" aria-hidden="true" />
       <button className="mv-mini-open" onClick={onOpen} aria-label="Open player">
         <div className="meta">
           <div className="title">{currentTrack.name}</div>
-          <div className="sub" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span>{dateStr}{venueStr ? ` · ${venueStr}` : ''}</span>
-            {releases.length > 0 && <ReleaseBadge releases={releases} size="xs" variant="icon" />}
-          </div>
+          <div className="sub">{dateStr}{venueStr ? ` · ${venueStr}` : ''}</div>
         </div>
       </button>
       <button className="next" onClick={next} aria-label="Skip to next track">▶▶</button>
