@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SetlistClientImpl, mapSetlistsToMemberShows } from '@/lib/clients/setlist'
+import { setlistClientImpl, mapSetlistsToMemberShows } from '@/lib/clients/setlist'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
   if (!year) return NextResponse.json({ error: 'year required' }, { status: 400 })
 
-  const client = new SetlistClientImpl()
+  const client = setlistClientImpl
   const result = await client.searchSetlistsByYear(year, page)
   const shows = mapSetlistsToMemberShows(result.setlists)
 

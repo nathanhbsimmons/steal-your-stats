@@ -250,3 +250,5 @@ export class SetlistClientImpl implements SetlistClient {
     }
   }
 }
+
+export const setlistClientImpl = new SetlistClientImpl()

@@ -1,4 +1,4 @@
-import { SetlistClientImpl } from '@/lib/clients/setlist'
+import { setlistClientImpl } from '@/lib/clients/setlist'
 import type { ShowDetail } from '@/lib/show-of-the-day-types'
 
 function fromSetlistDate(d: string): string {
@@ -14,8 +14,7 @@ function toSetlistDate(d: string): string {
 }
 
 export async function fetchShowDetail(date: string): Promise<ShowDetail | null> {
-  const client = new SetlistClientImpl()
-  const setlists = await client.getSetlistsByDate(toSetlistDate(date))
+  const setlists = await setlistClientImpl.getSetlistsByDate(toSetlistDate(date))
 
   if (setlists.length === 0) return null
 

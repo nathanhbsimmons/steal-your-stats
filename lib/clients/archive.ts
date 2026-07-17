@@ -564,3 +564,5 @@ export class ArchiveClientImpl implements ArchiveClient {
     return { identifier: sorted[0].identifier, mp3Count: sorted[0].mp3Count }
   }
 }
+
+export const archiveClientImpl = new ArchiveClientImpl()

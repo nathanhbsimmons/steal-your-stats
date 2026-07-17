@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { songIndexer } from '@/lib/indexer'
-import { SetlistClientImpl } from '@/lib/clients/setlist'
+import { setlistClientImpl } from '@/lib/clients/setlist'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`Starting targeted rebuild for song: ${songTitle}`)
     
-    const setlistClient = new SetlistClientImpl()
+    const setlistClient = setlistClientImpl
     let totalShows = 0
     let page = 1
     const maxPages = 10 // Limit to avoid too many API calls

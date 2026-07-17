@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ArchiveClientImpl } from '@/lib/clients/archive'
+import { archiveClientImpl } from '@/lib/clients/archive'
 import { parseArchiveSetlist } from '@/lib/parse-archive-setlist'
 
 export async function POST(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const archiveClient = new ArchiveClientImpl()
+    const archiveClient = archiveClientImpl
 
     // Fetch all candidates for the date (sorted by venue/city match score)
     const candidates = await archiveClient.listArchiveShowCandidates({ date, venue, city })

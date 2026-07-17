@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SetlistClientImpl, Setlist } from '@/lib/clients/setlist'
+import { setlistClientImpl, Setlist } from '@/lib/clients/setlist'
 
 function fromSetlistDate(d: string): string {
   const parts = d.split('-')
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   if (!name) return NextResponse.json({ shows: [], total: 0 })
 
   try {
-    const client = new SetlistClientImpl()
+    const client = setlistClientImpl
     const setlists = await client.searchSetlistsByVenue(name)
     const shows = setlists
       .map(setlistToResult)

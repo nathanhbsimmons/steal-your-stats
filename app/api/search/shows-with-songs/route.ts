@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SetlistClientImpl, Setlist } from '@/lib/clients/setlist'
+import { setlistClientImpl, Setlist } from '@/lib/clients/setlist'
 
 function fromSetlistDate(d: string): string {
   const parts = d.split('-')
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Provide at least one songs[] param' }, { status: 400 })
   }
 
-  const client = new SetlistClientImpl()
+  const client = setlistClientImpl
 
   if (songsParam.length === 1) {
     // Single song: return all shows containing it (up to 5 pages)

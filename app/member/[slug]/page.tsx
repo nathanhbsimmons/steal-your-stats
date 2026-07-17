@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
-import { SetlistClientImpl, mapSetlistsToMemberShows } from '@/lib/clients/setlist'
+import { setlistClientImpl, mapSetlistsToMemberShows } from '@/lib/clients/setlist'
 import { PlayShowButton } from '@/components/member/play-show-button'
 import { MemberShowBrowser } from '@/components/member/member-show-browser'
 
@@ -276,7 +276,7 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
 
   const [stats, browseResult] = await Promise.all([
     realtimeSongFactsService.getGlobalStats().catch(() => ({ showsPerYear: [] as YearCount[], leaderboard: [] })),
-    new SetlistClientImpl().searchSetlistsByYear(selectedYear, 1).catch(() => ({ setlists: [], total: 0, itemsPerPage: 20 })),
+    setlistClientImpl.searchSetlistsByYear(selectedYear, 1).catch(() => ({ setlists: [], total: 0, itemsPerPage: 20 })),
   ])
   const initialBrowseShows = mapSetlistsToMemberShows(browseResult.setlists)
   const era = ERA_INFO[member.eraId]
