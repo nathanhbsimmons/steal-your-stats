@@ -9,6 +9,7 @@ import type { ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
 export { formatArchiveTrackName } from '@/lib/utils'
 
 const QUEUE_STORAGE_KEY = 'steal-your-stats-audio-queue'
+const CURRENT_TRACK_STORAGE_KEY = 'steal-your-stats-audio-current-track'
 export const PLAY_LOG_KEY = 'steal-your-stats-play-log'
 
 export interface PlayLogEntry {
@@ -110,14 +111,25 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     if (currentTrack) prevTrackIdRef.current = currentTrack.id
   }, [currentTrack, isPlaying])
 
-  // Load queue from localStorage on mount
+  // Load queue + current track from localStorage on mount. Restored paused —
+  // the queue being non-empty must not imply the browser should start audio.
   useEffect(() => {
     try {
       const stored = localStorage.getItem(QUEUE_STORAGE_KEY)
-      if (stored) {
-        const parsedQueue = JSON.parse(stored)
-        if (Array.isArray(parsedQueue)) {
-          setQueue(parsedQueue)
+      const parsedQueue = stored ? JSON.parse(stored) : null
+      const restoredQueue = Array.isArray(parsedQueue) ? parsedQueue as Track[] : []
+      if (restoredQueue.length > 0) {
+        setQueue(restoredQueue)
+      }
+
+      const storedTrack = localStorage.getItem(CURRENT_TRACK_STORAGE_KEY)
+      if (storedTrack) {
+        const parsedTrack = JSON.parse(storedTrack)
+        if (parsedTrack?.id) {
+          // Prefer the live copy from the queue (in case it changed), fall back
+          // to the stored track itself if it's since fallen out of the queue.
+          const match = restoredQueue.find(t => t.id === parsedTrack.id)
+          setCurrentTrack(match || parsedTrack)
         }
       }
     } catch (error) {
@@ -125,22 +137,37 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     }
   }, [])
 
-  // Save queue to localStorage whenever it changes, debounced to collapse bursts
-  // (e.g. enqueueing many song versions in a loop) into a single write.
+  // Ref so the unmount flush can read the latest current track without a stale closure
+  const currentTrackRef = useRef<Track | null>(null)
+  useEffect(() => {
+    currentTrackRef.current = currentTrack
+  }, [currentTrack])
+
+  const writeQueueAndTrack = useCallback((q: Track[], track: Track | null) => {
+    try {
+      localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(q))
+      if (track) {
+        localStorage.setItem(CURRENT_TRACK_STORAGE_KEY, JSON.stringify(track))
+      } else {
+        localStorage.removeItem(CURRENT_TRACK_STORAGE_KEY)
+      }
+    } catch (error) {
+      console.error('Failed to save queue to localStorage:', error)
+    }
+  }, [])
+
+  // Save queue + current track to localStorage whenever either changes, debounced
+  // to collapse bursts (e.g. enqueueing many song versions in a loop) into one write.
   const writeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     if (writeTimeoutRef.current) clearTimeout(writeTimeoutRef.current)
     writeTimeoutRef.current = setTimeout(() => {
-      try {
-        localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue))
-      } catch (error) {
-        console.error('Failed to save queue to localStorage:', error)
-      }
+      writeQueueAndTrack(queue, currentTrack)
     }, 300)
     return () => {
       if (writeTimeoutRef.current) clearTimeout(writeTimeoutRef.current)
     }
-  }, [queue])
+  }, [queue, currentTrack, writeQueueAndTrack])
 
   // Flush a pending debounced write on unmount so navigating away mid-burst
   // doesn't drop the latest queue state.
@@ -148,12 +175,10 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     return () => {
       if (writeTimeoutRef.current) {
         clearTimeout(writeTimeoutRef.current)
-        try {
-          localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queueRef.current))
-        } catch {}
+        writeQueueAndTrack(queueRef.current, currentTrackRef.current)
       }
     }
-  }, [])
+  }, [writeQueueAndTrack])
 
   const play = useCallback(() => {
     if (currentTrack) {
