@@ -44,7 +44,7 @@ export function ReleaseBadge({
         width: 'max-content',
       }}
     >
-      <ReleaseIcon series={primary.series} size={size === 'xs' ? 9 : 10} />
+      <ReleaseIcon series={primary.series} size={size === 'xs' ? 11 : 12} />
       {label}
     </span>
   )

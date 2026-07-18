@@ -54,8 +54,8 @@ function Bolt({ size = 12 }: IconProps) {
 }
 
 const SERIES_ICON: Record<string, { Icon: React.FC<IconProps>; color: string }> = {
-  "Dick's Picks": { Icon: Square, color: 'var(--rust)' },
-  "Dave's Picks": { Icon: Ring, color: 'var(--ledger-blue)' },
+  "Dick's Picks": { Icon: Square, color: 'var(--ink-2)' },
+  "Dave's Picks": { Icon: Ring, color: 'var(--oxblood)' },
   'Road Trips': { Icon: Car, color: 'var(--forest)' },
   'Download Series': { Icon: ArrowDown, color: 'var(--ink-3)' },
   'From the Vault': { Icon: Keyhole, color: 'var(--ink-2)' },

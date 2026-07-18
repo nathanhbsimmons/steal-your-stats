@@ -11,6 +11,8 @@ import { getDateParts } from '@/lib/date-parts'
 import { formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import { fetcher, swrOpts } from '@/lib/swr-fetcher'
 import type { ArchiveSetlistMatch, ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
+import { getOfficialReleasesForDate } from '@/lib/official-releases'
+import { ReleaseBadge } from '@/components/ui/release-badge'
 
 interface ShowOnThisDay {
   date: string
@@ -195,6 +197,7 @@ export default function HomePage() {
     : ''
 
   const venueTidbit = featured ? getVenueTidbit(featured.venue, featured.city) : null
+  const releases = featured ? getOfficialReleasesForDate(featured.date) : []
 
   const totalSongs = showDetail?.totalSongs ?? featured?.songs?.length ?? 0
   const opener = showDetail?.sets?.[0]?.songs?.[0] ?? featured?.songs?.[0] ?? ''
@@ -240,8 +243,13 @@ export default function HomePage() {
                 </span>
               </h2>
 
-              <div className="venue-line">
-                <strong>{venue}</strong>{location ? ` · ${location}` : ''}
+              <div className="venue-line" style={{ display: 'flex', alignItems: 'baseline', gap: 18, flexWrap: 'wrap' }}>
+                <span><strong>{venue}</strong>{location ? ` · ${location}` : ''}</span>
+                {releases.length > 0 && (
+                  <span style={{ fontStyle: 'normal' }}>
+                    <ReleaseBadge releases={releases} />
+                  </span>
+                )}
               </div>
 
               {venueTidbit && (
