@@ -100,7 +100,7 @@ export class HttpClient {
           // Setlist.fm requires x-api-key; value comes from env loader.
           try {
             const { env } = await import('./env')
-            const apiKey = env.SETLISTFM_API_KEY || process.env.SETLISTFM_API_KEY || '120oRoOHMxXd7oeHxJ9FbIhPbOPuVrQ9ECzU'
+            const apiKey = env.SETLISTFM_API_KEY || process.env.SETLISTFM_API_KEY
             if (apiKey) {
               dynamicHeaders['x-api-key'] = apiKey
             } else {
@@ -108,8 +108,7 @@ export class HttpClient {
             }
           } catch (error) {
             console.warn('Failed to load environment variables:', error)
-            // Fallback to process.env directly or hardcoded key for testing
-            const apiKey = process.env.SETLISTFM_API_KEY || '120oRoOHMxXd7oeHxJ9FbIhPbOPuVrQ9ECzU'
+            const apiKey = process.env.SETLISTFM_API_KEY
             if (apiKey) {
               dynamicHeaders['x-api-key'] = apiKey
             }

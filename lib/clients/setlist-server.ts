@@ -55,10 +55,11 @@ export class SetlistClientServer implements SetlistClient {
 
   constructor() {
     // Use process.env directly for server-side usage
-    const apiKey = process.env.SETLISTFM_API_KEY || '120oRoOHMxXd7oeHxJ9FbIhPbOPuVrQ9ECzU'
+    const apiKey = process.env.SETLISTFM_API_KEY
+    if (!apiKey) console.warn('SETLISTFM_API_KEY not found in environment variables')
     this.http = new HttpClient('https://api.setlist.fm/rest/1.0', {
       'Accept': 'application/json',
-      'x-api-key': apiKey,
+      'x-api-key': apiKey ?? '',
     })
   }
 
