@@ -105,7 +105,8 @@ export function ShowsYearTable({ initialShows, audioDates, officialReleases }: {
                   {hasAudio && (
                     <span style={{
                       fontFamily: 'var(--mono)', fontSize: 9.5, letterSpacing: '0.1em',
-                      textTransform: 'uppercase', color: 'var(--rust)',
+                      textTransform: 'uppercase', color: 'var(--paper)',
+                      background: 'var(--rust)',
                       border: '1px solid var(--rust)', padding: '2px 5px',
                     }}>
                       ▶ audio
