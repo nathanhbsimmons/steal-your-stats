@@ -53,3 +53,6 @@ next-env.d.ts
 
 # claude code local settings (machine-specific, e.g. enabled MCP servers)
 .claude/settings.local.json
+
+# local-only notes, kept for personal reference, not for the repo
+/AGENT/local/
