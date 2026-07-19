@@ -1,11 +1,21 @@
 import type { Metadata } from "next";
 import { VaultShell } from "@/components/vault/vault-shell";
+import { SITE_URL } from "@/lib/site-config";
 import "./globals.css";
 import "./mobile.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "StealyourStats — Grateful Dead",
   description: "Song stats, setlist history, and in-browser audio for the Grateful Dead.",
+  openGraph: {
+    siteName: "StealyourStats",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

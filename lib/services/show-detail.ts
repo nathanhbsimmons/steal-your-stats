@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { setlistClientImpl } from '@/lib/clients/setlist'
 import type { ShowDetail } from '@/lib/show-of-the-day-types'
 
@@ -13,7 +14,7 @@ function toSetlistDate(d: string): string {
   return d
 }
 
-export async function fetchShowDetail(date: string): Promise<ShowDetail | null> {
+export const fetchShowDetail = cache(async function fetchShowDetail(date: string): Promise<ShowDetail | null> {
   const setlists = await setlistClientImpl.getSetlistsByDate(toSetlistDate(date))
 
   if (setlists.length === 0) return null
@@ -44,4 +45,4 @@ export async function fetchShowDetail(date: string): Promise<ShowDetail | null> 
     setlistUrl: setlist.url,
     totalSongs,
   }
-}
+})

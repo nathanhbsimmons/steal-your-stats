@@ -1,0 +1,22 @@
+# StealyourStats
+
+> Grateful Dead setlist statistics, song performance history, and in-browser Archive.org audio playback.
+
+StealyourStats indexes every known Grateful Dead setlist (via setlist.fm) and matches it against
+community-contributed live recordings on Archive.org, so each show and song has a stats page and,
+where a recording exists, playable audio.
+
+## Key sections
+
+- [Home](/): featured "on this day" show plus all-time song stats.
+- [Songs](/songs): full canonical song catalog, each with first/last performance, set-position
+  stats (opener/closer/encore), and all known recorded versions.
+- [Shows](/shows): every documented show by year, with full setlists.
+- [Venues](/venues): venues played, show counts, date ranges.
+- [Artists / Members](/artists): band member bios and eras.
+- [Eras](/eras): named stylistic eras of the band's touring history (1965-1995).
+
+## Data sources
+
+- Setlists: setlist.fm
+- Audio: Archive.org community tape archive
