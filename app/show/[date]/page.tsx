@@ -1,9 +1,10 @@
-import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { fetchShowDetail } from '@/lib/services/show-detail'
 import { getOfficialReleasesForDate } from '@/lib/official-releases'
+import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 import { ShowDetailClient } from '@/components/show/show-detail-client'
-import { JsonLd } from '@/components/seo/json-ld'
+import { JsonLd, BreadcrumbLd } from '@/components/seo/json-ld'
 import { SITE_URL } from '@/lib/site-config'
 
 export const revalidate = 86400
@@ -33,27 +34,11 @@ export default async function ShowPage({ params }: { params: Promise<{ date: str
   const show = await fetchShowDetail(date)
 
   if (!show) {
-    return (
-      <section className="col">
-        <div className="crumbs">
-          <Link href="/">Home</Link>
-          <span className="sep">/</span>
-          <span className="cur">{date}</span>
-        </div>
-        <div style={{ padding: '40px 0', textAlign: 'center', fontFamily: 'var(--serif-body)', fontStyle: 'italic', color: 'var(--ink-3)' }}>
-          <div style={{ fontFamily: 'var(--serif-display)', fontSize: 28, color: 'var(--ink)', marginBottom: 8 }}>
-            Show not found
-          </div>
-          No setlist data available for {date}.{' '}
-          <Link href="/" style={{ color: 'var(--rust)', textDecoration: 'underline' }}>
-            Go home
-          </Link>
-        </div>
-      </section>
-    )
+    notFound()
   }
 
   const officialReleases = getOfficialReleasesForDate(date)
+  const adjacentShows = await realtimeSongFactsService.getAdjacentShows(date).catch(() => ({ prev: null, next: null }))
 
   const musicEventLd = {
     '@context': 'https://schema.org',
@@ -74,10 +59,19 @@ export default async function ShowPage({ params }: { params: Promise<{ date: str
     url: `${SITE_URL}/show/${date}`,
   }
 
+  const year = date.slice(0, 4)
+  const breadcrumbItems = [
+    { name: 'Home', url: SITE_URL },
+    { name: 'Shows', url: `${SITE_URL}/shows` },
+    { name: year, url: `${SITE_URL}/shows/${year}` },
+    { name: date, url: `${SITE_URL}/show/${date}` },
+  ]
+
   return (
     <>
       <JsonLd data={musicEventLd} />
-      <ShowDetailClient date={date} initialShow={show} officialReleases={officialReleases} />
+      <BreadcrumbLd items={breadcrumbItems} />
+      <ShowDetailClient date={date} initialShow={show} officialReleases={officialReleases} adjacentShows={adjacentShows} />
     </>
   )
 }

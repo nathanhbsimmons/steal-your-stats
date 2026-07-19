@@ -570,6 +570,12 @@ export class RealtimeSongFactsService {
     return [...venueMap.values()].sort((a, b) => b.showCount - a.showCount)
   }
 
+  async getShowsAtVenue(venueName: string, city: string): Promise<ShowRef[]> {
+    const allSetlists = await this.getAllGDSetlists()
+    const matching = allSetlists.filter(s => s.venue.name === venueName && s.venue.city.name === city)
+    return matching.map(s => this.toShowRef(s)).sort((a, b) => a.date.localeCompare(b.date))
+  }
+
   async getSummaryStats(): Promise<SummaryStats> {
     const allSetlists = await this.getAllGDSetlists()
 
@@ -601,6 +607,18 @@ export class RealtimeSongFactsService {
     const start = (page - 1) * perPage
     const shows = filtered.slice(start, start + perPage).map(s => this.toShowRef(s))
     return { shows, total, page, perPage }
+  }
+
+  async getAdjacentShows(date: string): Promise<{ prev: ShowRef | null; next: ShowRef | null }> {
+    const allSetlists = await this.getAllGDSetlists()
+    const sorted = [...allSetlists].sort((a, b) => fromSetlistDate(a.eventDate).localeCompare(fromSetlistDate(b.eventDate)))
+    const index = sorted.findIndex(s => fromSetlistDate(s.eventDate) === date)
+    if (index === -1) return { prev: null, next: null }
+
+    return {
+      prev: index > 0 ? this.toShowRef(sorted[index - 1]) : null,
+      next: index < sorted.length - 1 ? this.toShowRef(sorted[index + 1]) : null,
+    }
   }
 
   async getTopSongsByYearRange(yearFrom: number, yearTo: number, limit = 20): Promise<{ name: string; count: number }[]> {

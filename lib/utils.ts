@@ -190,3 +190,10 @@ export function toTitleCase(str: string): string {
     return word.toLowerCase()
   }).join(' ')
 }
+
+export function slugifyVenue(name: string, city: string): string {
+  return `${name}-${city}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}

@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useEffect, useState, useMemo } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { slugifyVenue } from '@/lib/utils'
 
 export interface VenueStat {
   name: string
@@ -100,11 +102,13 @@ export function VenuesTable({ initialVenues, initialTotal }: { initialVenues: Ve
               key={v.name + v.city}
               className={i === 0 && !query ? 'hi' : ''}
               style={{ cursor: 'pointer' }}
-              onClick={() => router.push(`/search?q=${encodeURIComponent(v.name)}`)}
+              onClick={() => router.push(`/venues/${slugifyVenue(v.name, v.city)}`)}
             >
               <td className="num">{String(i + 1).padStart(2, '0')}</td>
               <td>
-                <span className="tbl-title">{v.name}</span>
+                <Link href={`/venues/${slugifyVenue(v.name, v.city)}`} className="tbl-title" onClick={e => e.stopPropagation()}>
+                  {v.name}
+                </Link>
                 {i === 0 && !query && <span className="tbl-sub">★ most played</span>}
               </td>
               <td>

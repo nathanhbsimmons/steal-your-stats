@@ -52,3 +52,7 @@ export const ERA_DEFS = [
 ]
 
 export const ERA_IDS = ERA_DEFS.map(era => era.id)
+
+export function getEraForYear(year: number) {
+  return ERA_DEFS.find(era => year >= era.startYear && year <= era.endYear)
+}

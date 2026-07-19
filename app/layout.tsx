@@ -1,8 +1,57 @@
 import type { Metadata } from "next";
+import { DM_Serif_Display, Bodoni_Moda, Crimson_Pro, JetBrains_Mono, UnifrakturMaguntia } from "next/font/google";
 import { VaultShell } from "@/components/vault/vault-shell";
 import { SITE_URL } from "@/lib/site-config";
 import "./globals.css";
 import "./mobile.css";
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-dm-serif-display",
+  display: "swap",
+});
+
+const bodoniModa = Bodoni_Moda({
+  subsets: ["latin"],
+  weight: "variable",
+  style: ["normal", "italic"],
+  variable: "--font-bodoni-moda",
+  display: "swap",
+});
+
+const crimsonPro = Crimson_Pro({
+  subsets: ["latin"],
+  weight: "variable",
+  style: ["normal", "italic"],
+  variable: "--font-crimson-pro",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: "variable",
+  style: ["normal", "italic"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
+
+const unifrakturMaguntia = UnifrakturMaguntia({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal"],
+  variable: "--font-unifraktur-maguntia",
+  display: "swap",
+});
+
+const fontVariables = [
+  dmSerifDisplay.variable,
+  bodoniModa.variable,
+  crimsonPro.variable,
+  jetbrainsMono.variable,
+  unifrakturMaguntia.variable,
+].join(" ");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -24,17 +73,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={fontVariables}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&family=UnifrakturMaguntia&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body suppressHydrationWarning>
         <VaultShell>

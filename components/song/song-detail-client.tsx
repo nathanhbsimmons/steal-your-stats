@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { Track } from '@/components/ui/audio-player-dock'
 import type { FirstLastFacts, PositionFacts, VersionsFacts, VersionTrack, ShowRef } from '@/lib/services/realtime-song-facts'
+import { getEraForYear } from '@/lib/eras'
 
 async function resolveArchiveShow(showRef: { date: string; venue: string; city: string }) {
   const r = await fetch('/api/archive/resolve-show', {
@@ -239,6 +240,26 @@ export function SongDetailClient({
             <div className="aliases">
               Also known as: {data.aliases.slice(0, 3).join(', ')}
             </div>
+          )}
+          {data?.first && (() => {
+            const firstEra = getEraForYear(parseInt(data.first.date.slice(0, 4), 10))
+            const lastEra = data?.last ? getEraForYear(parseInt(data.last.date.slice(0, 4), 10)) : null
+            if (!firstEra) return null
+            return (
+              <div className="aliases">
+                Era: <Link href={`/eras/${firstEra.id}`}>{firstEra.name}</Link>
+                {lastEra && lastEra.id !== firstEra.id && (
+                  <> – <Link href={`/eras/${lastEra.id}`}>{lastEra.name}</Link></>
+                )}
+              </div>
+            )
+          })()}
+          {data?.totalPerformances != null && data.totalPerformances > 0 && data.first && data.last && (
+            <p className="lede" style={{ marginTop: 10, maxWidth: 640 }}>
+              {songTitle} was performed {data.totalPerformances} time{data.totalPerformances !== 1 ? 's' : ''} by the
+              Grateful Dead, debuting on {formatDate(data.first.date)} at {data.first.venue} and last played on{' '}
+              {formatDate(data.last.date)} at {data.last.venue}.
+            </p>
           )}
         </div>
         <div className="actions">

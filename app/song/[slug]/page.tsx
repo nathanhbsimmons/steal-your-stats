@@ -1,14 +1,16 @@
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getSongPageData } from '@/lib/services/song-page-data'
 import { SongDetailClient } from '@/components/song/song-detail-client'
-import { JsonLd } from '@/components/seo/json-ld'
+import { JsonLd, BreadcrumbLd } from '@/components/seo/json-ld'
 import { SITE_URL } from '@/lib/site-config'
+import { resolveSong } from '@/lib/ids'
 
 export const revalidate = 86400
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const songTitle = decodeURIComponent(slug)
+  const songTitle = resolveSong({ title: decodeURIComponent(slug) }).displayTitle
   const { facts } = await getSongPageData(songTitle)
 
   const title = `${songTitle} — Grateful Dead Setlist Stats`
@@ -34,9 +36,21 @@ export default async function SongPage({
 }) {
   const { slug } = await params
   const { venue } = await searchParams
-  const songTitle = decodeURIComponent(slug)
+  const rawTitle = decodeURIComponent(slug)
+  const songTitle = resolveSong({ title: rawTitle }).displayTitle
+
+  // Alias/casing/punctuation variant of a canonical song — redirect to the one true URL
+  // instead of serving duplicate content at two addresses.
+  if (songTitle !== rawTitle) {
+    const canonicalUrl = `/song/${encodeURIComponent(songTitle)}${venue ? `?venue=${encodeURIComponent(venue)}` : ''}`
+    permanentRedirect(canonicalUrl)
+  }
 
   const { facts, positions, versions, timeline } = await getSongPageData(songTitle)
+
+  if (facts.totalPerformances === 0) {
+    notFound()
+  }
 
   const songLd = {
     '@context': 'https://schema.org',
@@ -53,9 +67,16 @@ export default async function SongPage({
     } : {}),
   }
 
+  const breadcrumbItems = [
+    { name: 'Home', url: SITE_URL },
+    { name: 'Songs', url: `${SITE_URL}/songs` },
+    { name: songTitle, url: `${SITE_URL}/song/${encodeURIComponent(songTitle)}` },
+  ]
+
   return (
     <>
       <JsonLd data={songLd} />
+      <BreadcrumbLd items={breadcrumbItems} />
       <SongDetailClient
         songTitle={songTitle}
         venueFilter={venue ?? null}

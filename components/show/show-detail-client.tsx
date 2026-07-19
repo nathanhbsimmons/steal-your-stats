@@ -5,10 +5,12 @@ import Link from 'next/link'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { TimelineStrip } from '@/components/ui/timeline-strip'
 import { formatArchiveTrackName } from '@/lib/hooks/use-audio-player'
-import { formatDuration } from '@/lib/utils'
+import { formatDuration, slugifyVenue } from '@/lib/utils'
+import { getEraForYear } from '@/lib/eras'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import type { ArchiveTrackPayload, ArchiveSetlistMatch, ShowDetail } from '@/lib/show-of-the-day-types'
 import type { OfficialRelease } from '@/lib/official-releases'
+import type { ShowRef } from '@/lib/services/realtime-song-facts'
 import { ReleaseBadge } from '@/components/ui/release-badge'
 
 function formatDateLong(isoDate: string): string {
@@ -27,7 +29,7 @@ function recordingTypeLabel(type: string): string {
   return '?'
 }
 
-export function ShowDetailClient({ date, initialShow, officialReleases = [] }: { date: string; initialShow: ShowDetail; officialReleases?: OfficialRelease[] }) {
+export function ShowDetailClient({ date, initialShow, officialReleases = [], adjacentShows = { prev: null, next: null } }: { date: string; initialShow: ShowDetail; officialReleases?: OfficialRelease[]; adjacentShows?: { prev: ShowRef | null; next: ShowRef | null } }) {
   const show = initialShow
 
   const { enqueueEntireShow, enqueueShowTrack, playShowTrack, pause, currentTrack, isPlaying, prependToQueue, selectTrack, addToQueue } = usePlayer()
@@ -248,6 +250,10 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [] }: {
       <div className="crumbs">
         <Link href="/">Home</Link>
         <span className="sep">/</span>
+        <Link href="/shows">Shows</Link>
+        <span className="sep">/</span>
+        <Link href={`/shows/${date.slice(0, 4)}`}>{date.slice(0, 4)}</Link>
+        <span className="sep">/</span>
         <span className="cur">{date}</span>
         {show.setlistUrl && (
           <>
@@ -262,14 +268,41 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [] }: {
       {/* Page head */}
       <div className="page-head">
         <div>
-          <div className="kicker">Show · Grateful Dead</div>
+          <div className="kicker">
+            Show · Grateful Dead
+            {(() => {
+              const era = getEraForYear(parseInt(date.slice(0, 4), 10))
+              return era ? (
+                <>
+                  {' · '}
+                  <Link href={`/eras/${era.id}`} style={{ color: 'inherit', textDecoration: 'underline' }}>{era.name}</Link>
+                </>
+              ) : null
+            })()}
+          </div>
           <h2 style={{ fontSize: 40, lineHeight: 1.05 }}>
             {formatDateLong(show.date)}
           </h2>
           <div className="lede" style={{ marginTop: 4 }}>
-            <strong style={{ fontStyle: 'normal', color: 'var(--ink)' }}>{show.venue}</strong>
+            <Link href={`/venues/${slugifyVenue(show.venue, show.city)}`} style={{ fontStyle: 'normal', color: 'var(--ink)', fontWeight: 'bold', textDecoration: 'underline' }}>
+              {show.venue}
+            </Link>
             {' · '}{location}
           </div>
+          {(() => {
+            const musicSets = show.sets.filter(s => !s.encore && s.songs.length > 0)
+            const encoreSet = show.sets.find(s => s.encore && s.songs.length > 0)
+            const opener = musicSets[0]?.songs[0]
+            const closer = musicSets[musicSets.length - 1]?.songs.slice(-1)[0]
+            if (!opener || !closer) return null
+            return (
+              <p className="lede" style={{ marginTop: 8, maxWidth: 640 }}>
+                The Grateful Dead played {show.totalSongs} songs across {musicSets.length} set{musicSets.length !== 1 ? 's' : ''} at{' '}
+                {show.venue} on {formatDateLong(show.date)}, opening with {opener} and closing with {closer}
+                {encoreSet?.songs[0] ? `, encoring with ${encoreSet.songs[0]}` : ''}.
+              </p>
+            )
+          })()}
           {officialReleases.length > 0 && (
             <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {officialReleases.map((r, i) => (
@@ -290,6 +323,42 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [] }: {
             </button>
           ) : null}
         </div>
+      </div>
+
+      {/* Prev/next adjacent show nav */}
+      <div className="show-pager">
+        {adjacentShows.prev ? (
+          <Link href={`/show/${adjacentShows.prev.date}`} className="pg">
+            <span className="arrow">⟵</span>
+            <span className="col">
+              <span className="lbl">previous show</span>
+              <span className="date">{adjacentShows.prev.date}</span>
+              <span className="venue">{adjacentShows.prev.venue}</span>
+            </span>
+          </Link>
+        ) : (
+          <span className="pg muted">
+            <span className="col">
+              <span className="lbl">start of run</span>
+            </span>
+          </span>
+        )}
+        {adjacentShows.next ? (
+          <Link href={`/show/${adjacentShows.next.date}`} className="pg right">
+            <span className="col" style={{ alignItems: 'flex-end' }}>
+              <span className="lbl">next show</span>
+              <span className="date">{adjacentShows.next.date}</span>
+              <span className="venue">{adjacentShows.next.venue}</span>
+            </span>
+            <span className="arrow">⟶</span>
+          </Link>
+        ) : (
+          <span className="pg right muted">
+            <span className="col">
+              <span className="lbl">end of run</span>
+            </span>
+          </span>
+        )}
       </div>
 
       {/* Recording mismatch warning — only when setlist songs are actually
