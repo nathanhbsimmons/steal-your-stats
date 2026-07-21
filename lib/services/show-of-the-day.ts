@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { ArchiveClientImpl } from '@/lib/clients/archive'
 import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
-import { fetchShowDetail } from '@/lib/services/show-detail'
+import { fetchShowDetail, mapSetlistToShowDetail } from '@/lib/services/show-detail'
 import { pickFeaturedShow } from '@/lib/featured-show'
 import { formatArchiveTracks } from '@/lib/archive-track-format'
 import { matchArchiveTracksToSetlist } from '@/lib/archive-track-match'
@@ -85,7 +85,11 @@ export class ShowOfTheDayService {
 
     let showDetail = null
     try {
-      showDetail = await fetchShowDetail(featured.date)
+      // Prefer the cached full-catalog setlist (no live setlist.fm call) —
+      // fetchShowDetail's live lookup competes with the rest of the app for a
+      // tight rate-limit budget and shouldn't be on this hot path.
+      const cachedSetlist = await realtimeSongFactsService.getSetlistForDate(featured.date)
+      showDetail = cachedSetlist ? mapSetlistToShowDetail(cachedSetlist) : await fetchShowDetail(featured.date)
     } catch (err) {
       console.warn('[show-of-the-day] setlist detail failed:', err)
     }

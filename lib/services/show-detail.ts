@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import { setlistClientImpl } from '@/lib/clients/setlist'
+import { setlistClientImpl, type Setlist } from '@/lib/clients/setlist'
 import type { ShowDetail } from '@/lib/show-of-the-day-types'
 
 function fromSetlistDate(d: string): string {
@@ -14,14 +14,7 @@ function toSetlistDate(d: string): string {
   return d
 }
 
-export const fetchShowDetail = cache(async function fetchShowDetail(date: string): Promise<ShowDetail | null> {
-  const setlists = await setlistClientImpl.getSetlistsByDate(toSetlistDate(date))
-
-  if (setlists.length === 0) return null
-
-  // Pick the first result (GD usually played one show per day)
-  const setlist = setlists[0]
-
+export function mapSetlistToShowDetail(setlist: Setlist): ShowDetail {
   const sets = setlist.sets.set.map((set, i) => {
     const filteredSongs = set.song.filter(s => s.name)
     return {
@@ -45,4 +38,15 @@ export const fetchShowDetail = cache(async function fetchShowDetail(date: string
     setlistUrl: setlist.url,
     totalSongs,
   }
+}
+
+// Live fallback — only hit when the date isn't in the cached full-catalog
+// setlist dump (lib/services/realtime-song-facts.ts getSetlistForDate).
+export const fetchShowDetail = cache(async function fetchShowDetail(date: string): Promise<ShowDetail | null> {
+  const setlists = await setlistClientImpl.getSetlistsByDate(toSetlistDate(date))
+
+  if (setlists.length === 0) return null
+
+  // Pick the first result (GD usually played one show per day)
+  return mapSetlistToShowDetail(setlists[0])
 })
