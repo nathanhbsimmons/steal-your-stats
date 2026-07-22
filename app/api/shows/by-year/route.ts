@@ -1,22 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { setlistClientImpl, Setlist } from '@/lib/clients/setlist'
-
-function fromSetlistDate(d: string): string {
-  const parts = d.split('-')
-  if (parts.length === 3 && parts[2].length === 4) return `${parts[2]}-${parts[1]}-${parts[0]}`
-  return d
-}
-
-function setlistToResult(s: Setlist) {
-  return {
-    date: fromSetlistDate(s.eventDate),
-    venue: s.venue.name,
-    city: s.venue.city.name,
-    state: s.venue.city.state,
-    country: s.venue.city.country.name,
-    songs: s.sets.set.flatMap(set => set.song.map(song => song.name)).filter(Boolean),
-  }
-}
+import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -28,11 +11,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const client = setlistClientImpl
-    const { setlists } = await client.searchSetlistsByYear(year)
-    const shows = setlists
-      .map(setlistToResult)
-      .sort((a, b) => a.date.localeCompare(b.date))
+    const shows = await realtimeSongFactsService.getShowsWithSongsForYear(year)
 
     return NextResponse.json(
       { shows, total: shows.length, year },

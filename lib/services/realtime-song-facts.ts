@@ -15,6 +15,7 @@ export interface ShowRef {
   country: string
   url: string
   source: 'setlist.fm'
+  songCount: number
 }
 
 export interface FirstLastFacts {
@@ -300,6 +301,7 @@ export class RealtimeSongFactsService {
       country: setlist.venue.city.country.name,
       url: setlist.url || `https://www.setlist.fm/setlist/${setlist.id}`,
       source: 'setlist.fm',
+      songCount: setlist.sets.set.reduce((n, set) => n + set.song.length, 0),
     }
   }
 
@@ -617,6 +619,21 @@ export class RealtimeSongFactsService {
     const start = (page - 1) * perPage
     const shows = filtered.slice(start, start + perPage).map(s => this.toShowRef(s))
     return { shows, total, page, perPage }
+  }
+
+  async getShowsWithSongsForYear(year: number): Promise<{ date: string; venue: string; city: string; state?: string; country: string; songs: string[] }[]> {
+    const allSetlists = await this.getAllGDSetlists()
+    return allSetlists
+      .filter(s => parseInt(fromSetlistDate(s.eventDate).split('-')[0]) === year)
+      .map(s => ({
+        date: fromSetlistDate(s.eventDate),
+        venue: s.venue.name,
+        city: s.venue.city.name,
+        state: s.venue.city.state,
+        country: s.venue.city.country.name,
+        songs: s.sets.set.flatMap(set => set.song.map(song => song.name)).filter(Boolean),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date))
   }
 
   async getAdjacentShows(date: string): Promise<{ prev: ShowRef | null; next: ShowRef | null }> {

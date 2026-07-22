@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { setlistClientImpl, mapSetlistsToMemberShows } from '@/lib/clients/setlist'
+import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
+
+const PER_PAGE = 20
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -8,16 +10,14 @@ export async function GET(request: NextRequest) {
 
   if (!year) return NextResponse.json({ error: 'year required' }, { status: 400 })
 
-  const client = setlistClientImpl
-  const result = await client.searchSetlistsByYear(year, page)
-  const shows = mapSetlistsToMemberShows(result.setlists)
+  const result = await realtimeSongFactsService.getShowsByYearRange(year, year, page, PER_PAGE)
 
   return NextResponse.json(
     {
-      shows,
+      shows: result.shows,
       total: result.total,
       page,
-      itemsPerPage: result.itemsPerPage,
+      itemsPerPage: PER_PAGE,
     },
     { headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=21600' } }
   )
