@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { setlistClientImpl, type Setlist } from '@/lib/clients/setlist'
+import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 import type { ShowDetail } from '@/lib/show-of-the-day-types'
 
 function fromSetlistDate(d: string): string {
@@ -40,9 +41,11 @@ export function mapSetlistToShowDetail(setlist: Setlist): ShowDetail {
   }
 }
 
-// Live fallback — only hit when the date isn't in the cached full-catalog
-// setlist dump (lib/services/realtime-song-facts.ts getSetlistForDate).
 export const fetchShowDetail = cache(async function fetchShowDetail(date: string): Promise<ShowDetail | null> {
+  const cachedSetlist = await realtimeSongFactsService.getSetlistForDate(date)
+  if (cachedSetlist) return mapSetlistToShowDetail(cachedSetlist)
+
+  // Live fallback — only hit when the date isn't in the cached full-catalog dump.
   const setlists = await setlistClientImpl.getSetlistsByDate(toSetlistDate(date))
 
   if (setlists.length === 0) return null
