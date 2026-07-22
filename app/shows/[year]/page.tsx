@@ -40,6 +40,8 @@ export default async function ShowsByYearPage({ params }: { params: Promise<{ ye
   const shows = showsResult.shows
   const total = showsResult.total
   const officialReleases = getOfficialReleasesForDates(shows.map(s => s.date))
+  const prevYear = year > 1965 ? year - 1 : null
+  const nextYear = year < 1995 ? year + 1 : null
 
   return (
     <section className="col">
@@ -60,6 +62,45 @@ export default async function ShowsByYearPage({ params }: { params: Promise<{ ye
           </div>
         </div>
         <ReleaseLegend releases={officialReleases} />
+      </div>
+
+      <div className="year-pager">
+        {prevYear ? (
+          <Link href={`/shows/${prevYear}`} className="pg">
+            <span className="arrow">⟵</span>
+            <span className="col">
+              <span className="lbl">previous year</span>
+              <span className="yr">{prevYear}</span>
+            </span>
+          </Link>
+        ) : (
+          <span className="pg muted">
+            <span className="col">
+              <span className="lbl">start of run</span>
+              <span className="yr">—</span>
+            </span>
+          </span>
+        )}
+        <span className="current-year">
+          <span className="lbl">viewing</span>
+          <span className="yr">{year}</span>
+        </span>
+        {nextYear ? (
+          <Link href={`/shows/${nextYear}`} className="pg right">
+            <span className="col">
+              <span className="lbl">next year</span>
+              <span className="yr">{nextYear}</span>
+            </span>
+            <span className="arrow">⟶</span>
+          </Link>
+        ) : (
+          <span className="pg right muted">
+            <span className="col">
+              <span className="lbl">end of run</span>
+              <span className="yr">—</span>
+            </span>
+          </span>
+        )}
       </div>
 
       {shows.length === 0 ? (
