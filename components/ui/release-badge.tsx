@@ -1,5 +1,5 @@
 import type { OfficialRelease } from '@/lib/official-releases'
-import { ReleaseIcon, releaseSeriesStyle } from '@/components/ui/release-icons'
+import { ReleaseIcon, releaseSeriesStyle, RELEASE_SERIES_ORDER } from '@/components/ui/release-icons'
 
 export function ReleaseBadge({
   releases,
@@ -47,5 +47,25 @@ export function ReleaseBadge({
       <ReleaseIcon series={primary.series} size={size === 'xs' ? 11 : 12} />
       {label}
     </span>
+  )
+}
+
+export function ReleaseLegend({ releases }: { releases: OfficialRelease[] }) {
+  const present = new Set(releases.map(r => r.series))
+  const series = RELEASE_SERIES_ORDER.filter(s => present.has(s))
+
+  if (series.length === 0) return null
+
+  return (
+    <div className="release-legend">
+      {series.map(s => {
+        const { color } = releaseSeriesStyle(s)
+        return (
+          <span key={s} style={{ color }}>
+            <ReleaseIcon series={s} size={11} /> - {s}
+          </span>
+        )
+      })}
+    </div>
   )
 }

@@ -62,6 +62,8 @@ const SERIES_ICON: Record<string, { Icon: React.FC<IconProps>; color: string }> 
   'Studio/Compilation': { Icon: Bolt, color: 'var(--amber)' },
 }
 
+export const RELEASE_SERIES_ORDER = Object.keys(SERIES_ICON)
+
 const DEFAULT_ICON = { Icon: Bolt, color: 'var(--ink-3)' }
 
 export function releaseSeriesStyle(series: string) {

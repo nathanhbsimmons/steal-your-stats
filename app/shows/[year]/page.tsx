@@ -3,6 +3,7 @@ import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 import { getDatesWithAudioForYear } from '@/lib/clients/archive-dates'
 import { getOfficialReleasesForDates } from '@/lib/official-releases'
 import { ShowsYearTable, type ShowRef } from '@/components/shows/shows-year-table'
+import { ReleaseLegend } from '@/components/ui/release-badge'
 
 const PER_PAGE = 200
 
@@ -58,6 +59,7 @@ export default async function ShowsByYearPage({ params }: { params: Promise<{ ye
             {total} show{total !== 1 ? 's' : ''} in {year}.
           </div>
         </div>
+        <ReleaseLegend releases={officialReleases} />
       </div>
 
       {shows.length === 0 ? (
