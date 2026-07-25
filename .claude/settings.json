@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/caveman-init.js 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
