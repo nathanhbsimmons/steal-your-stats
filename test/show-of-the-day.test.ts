@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const getShowsOnDate = vi.fn()
+const getSetlistForDate = vi.fn()
 const fetchShowDetailMock = vi.fn()
 const listCandidates = vi.fn()
 const selectBest = vi.fn()
@@ -13,6 +14,7 @@ const mkdirSync = vi.fn()
 vi.mock('@/lib/services/realtime-song-facts', () => ({
   realtimeSongFactsService: {
     getShowsOnDate: (...args: unknown[]) => getShowsOnDate(...args),
+    getSetlistForDate: (...args: unknown[]) => getSetlistForDate(...args),
   },
 }))
 
@@ -72,6 +74,8 @@ describe('ShowOfTheDayService', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-07-12T09:00:00'))
     readFileSync.mockImplementation(() => { throw new Error('no disk cache') })
+    // No cached full-catalog setlist by default — exercises the fetchShowDetail fallback path.
+    getSetlistForDate.mockResolvedValue(null)
   })
 
   afterEach(() => {
