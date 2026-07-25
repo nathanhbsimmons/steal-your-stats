@@ -65,6 +65,12 @@
   padding-bottom: 0;
   margin-bottom: 0;
 }
+/* ...but a couple of trailing elements still want a little breathing room
+   below them even when they end up being the last thing on the page. */
+.mv-scroll > .mv-load-more:last-child,
+.mv-scroll > .mv-shows-legend:last-child {
+  padding-bottom: 16px;
+}
 
 /* ---------------------------------------- TOP MAST */
 .mv-mast {
