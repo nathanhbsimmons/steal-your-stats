@@ -37,7 +37,6 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
   const [queuedSet, setQueuedSet] = useState<Set<number>>(new Set())
   const [flashIdx, setFlashIdx] = useState<number | null>(null)
   const [isEnqueuing, setIsEnqueuing] = useState(false)
-  const [showBonus, setShowBonus] = useState(false)
 
   interface ArchiveRecording {
     identifier: string
@@ -460,47 +459,36 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
 
       {/* Bonus tracks (soundcheck, banter, etc.) bundled in the recording but not part of the setlist */}
       {archiveMatch && archiveMatch.bonus.length > 0 && (
-        <div style={{ marginTop: 8 }}>
-          <button
-            onClick={() => setShowBonus(s => !s)}
-            style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
-              background: 'none', border: '2px solid var(--gray)', borderRadius: 12, padding: '10px 14px',
-              cursor: 'pointer', font: 'inherit', fontSize: 14,
-            }}
-          >
-            <span>+ {deriveBonusSectionLabel(archiveMatch.bonus, archiveRecording?.description)} ({archiveMatch.bonus.length} tracks)</span>
-            <span>{showBonus ? '▲' : '▼'}</span>
-          </button>
-          {showBonus && (
-            <div className="setlist" style={{ marginTop: 4 }}>
-              <div className="set-block">
-                {archiveMatch.bonus.map(track => {
-                  const displayName = formatBonusTrackTitle(track)
-                  const isCurrentBonus = currentTrack?.url === track.url
-                  return (
-                    <div
-                      key={track.id}
-                      className={`track${isCurrentBonus && isPlaying ? ' playing' : ''}`}
-                      onClick={() => { if (isCurrentBonus && isPlaying) { pause() } else { handlePlayBonusTrack(track) } }}
-                      data-queue-safe="true"
-                    >
-                      <span className="num" style={{ opacity: 0.35, fontSize: 13 }}>·</span>
-                      <span className="play-dot">{isCurrentBonus && isPlaying ? '❚❚' : '▶'}</span>
-                      <span className="title" style={{ fontStyle: 'italic', display: 'block' }}>{displayName}</span>
-                      <span className="chev" />
-                      <span className="dur">{track.duration ? formatDuration(track.duration) : ''}</span>
-                      <button
-                        className="add-q"
-                        title="Add to queue"
-                        onClick={e => handleAddBonusTrack(e, track)}
-                      >+</button>
-                    </div>
-                  )
-                })}
-              </div>
+        <div className="setlist" style={{ marginTop: 4 }}>
+          <div className="set-block">
+            <div className="set-head">
+              <h3><span className="roman">B.</span>{deriveBonusSectionLabel(archiveMatch.bonus, archiveRecording?.description)}</h3>
+              <div className="duration">{archiveMatch.bonus.length} tracks</div>
             </div>
-          )}
+            {archiveMatch.bonus.map(track => {
+              const displayName = formatBonusTrackTitle(track)
+              const isCurrentBonus = currentTrack?.url === track.url
+              return (
+                <div
+                  key={track.id}
+                  className={`track${isCurrentBonus && isPlaying ? ' playing' : ''}`}
+                  onClick={() => { if (isCurrentBonus && isPlaying) { pause() } else { handlePlayBonusTrack(track) } }}
+                  data-queue-safe="true"
+                >
+                  <span className="num" style={{ opacity: 0.35, fontSize: 13 }}>·</span>
+                  <span className="play-dot">{isCurrentBonus && isPlaying ? '❚❚' : '▶'}</span>
+                  <span className="title" style={{ fontStyle: 'italic', display: 'block' }}>{displayName}</span>
+                  <span className="chev" />
+                  <span className="dur">{track.duration ? formatDuration(track.duration) : ''}</span>
+                  <button
+                    className="add-q"
+                    title="Add to queue"
+                    onClick={e => handleAddBonusTrack(e, track)}
+                  >+</button>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 

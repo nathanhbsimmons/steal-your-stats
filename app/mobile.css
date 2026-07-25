@@ -59,6 +59,13 @@
 }
 .mv-scroll.no-mini { padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px)); }
 
+/* Trim trailing whitespace so every screen ends right at its last row —
+   the mini/tab bars already reserve their own space via padding-bottom above. */
+.mv-scroll > *:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
 /* ---------------------------------------- TOP MAST */
 .mv-mast {
   border-bottom: 3px double var(--ink);
@@ -427,14 +434,6 @@
 .mv-track.current {
   background: linear-gradient(to right, rgba(168, 57, 31, 0.08), transparent 88%);
 }
-.mv-track.current::before {
-  content: "▶";
-  position: absolute;
-  left: -2px;
-  top: 9px;
-  color: var(--rust);
-  font-size: 9px;
-}
 .mv-track.current .title { color: var(--rust-dark); font-style: italic; }
 .mv-track.pending {
   opacity: 0.45;
@@ -546,6 +545,12 @@
   display: block;
 }
 .mv-mini .meta { min-width: 0; }
+.mv-mini .title-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
 .mv-mini .title {
   font-family: var(--serif-body);
   font-size: 14.5px;
@@ -554,6 +559,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 .mv-mini .sub {
   font-family: var(--mono);
@@ -700,8 +706,10 @@
 
 /* ---------------------------------------- SONGS LIST */
 .mv-search {
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--rule);
+  margin: 12px 18px;
+  padding: 11px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
   display: grid;
   grid-template-columns: 18px 1fr auto;
   gap: 10px;
@@ -709,7 +717,7 @@
   font-family: var(--mono);
   color: var(--ink-3);
   font-size: 13px;
-  background: var(--paper);
+  background: var(--paper-2);
 }
 .mv-search input {
   border: none;
@@ -841,6 +849,26 @@
 .mv-kpi .val.small {
   font-size: 18px;
 }
+.mv-kpi .val.count { color: var(--rust); }
+.mv-kpi .val.date {
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+.mv-kpi-goto {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.mv-kpi-goto .goto {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rust);
+}
+.mv-kpi-goto:active .val { color: var(--rust); }
 
 /* ---------------------------------------- EXTREMES */
 .mv-extremes {
@@ -1135,17 +1163,6 @@
   color: var(--ink-2);
 }
 
-/* ---------------------------------------- DIVIDER */
-.mv-divider {
-  text-align: center;
-  margin: 18px 0;
-  font-family: var(--serif-body);
-  color: var(--ink-3);
-  font-size: 14px;
-  letter-spacing: 0.4em;
-}
-.mv-divider .glyph { color: var(--rust); }
-
 /* show-detail page on mobile */
 .mv-show-hero {
   padding: 22px 18px 14px;
@@ -1183,8 +1200,8 @@
 .mv-preplay-date {
   font-family: var(--serif-display);
   font-weight: 400;
-  font-size: 20px;
-  line-height: 1.2;
+  font-size: 26px;
+  line-height: 1.15;
   margin-bottom: 8px;
   letter-spacing: -0.01em;
   color: var(--ink);
@@ -1193,7 +1210,7 @@
 .mv-preplay-date .mv-date-year { color: var(--ink-3); font-style: italic; }
 .mv-preplay-venue {
   font-family: var(--serif-body);
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--ink);
   margin-bottom: 2px;
@@ -1217,12 +1234,12 @@
 }
 .mv-play-show-btn {
   display: inline-block;
-  padding: 13px 36px;
+  padding: 10px 22px;
   background: var(--rust);
   color: var(--paper);
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.18em;
+  font-size: 10px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   border: none;
   cursor: pointer;
@@ -1237,8 +1254,8 @@
 .mv-show-date-line {
   font-family: var(--serif-display);
   font-weight: 400;
-  font-size: 16px;
-  line-height: 1.3;
+  font-size: 19px;
+  line-height: 1.25;
   margin-bottom: 10px;
   color: var(--ink);
 }
@@ -1252,11 +1269,11 @@
 }
 .mv-show-venue-info { flex: 1; min-width: 0; }
 .mv-show-venue-row .mv-play-show-btn {
-  padding: 11px 18px;
+  padding: 9px 14px;
   flex-shrink: 0;
   white-space: nowrap;
   align-self: center;
-  font-size: 10px;
+  font-size: 9px;
 }
 
 /* ---------------------------------------- RECORDING PICKER */
@@ -1549,13 +1566,13 @@
 /* ---------------------------------------- OPEN SETLIST BUTTON */
 .mv-open-setlist-btn {
   display: inline-block;
-  padding: 13px 22px;
+  padding: 10px 16px;
   background: transparent;
   color: var(--ink);
   border: 1.5px solid var(--ink);
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
+  font-size: 10px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
@@ -1691,14 +1708,98 @@
 /* ---------------------------------------- SHOWS YEAR LIST ROWS */
 .mv-show-row {
   display: grid;
-  grid-template-columns: 44px 1fr 28px 18px;
-  gap: 10px;
+  grid-template-columns: 40px 1fr auto 12px;
+  gap: 8px;
   align-items: center;
-  padding: 12px 20px;
+  padding: 12px 12px 12px 20px;
   border-bottom: 1px dotted var(--rule-soft);
   cursor: pointer;
 }
 .mv-show-row:active { background: var(--hi); }
+.mv-srow-indicators {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.mv-srow-audio {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: var(--rust);
+  border: 1px solid var(--rust);
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------- YEAR PAGER (mobile) */
+.mv-year-pager {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  border-top: 3px double var(--ink);
+  border-bottom: 1px solid var(--rule);
+  padding: 10px 14px;
+  gap: 8px;
+}
+.mv-year-pager .pg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--ink-2);
+}
+.mv-year-pager .pg.right { justify-content: flex-end; }
+.mv-year-pager .pg .yr {
+  font-family: var(--serif-display);
+  font-size: 16px;
+  color: var(--ink);
+}
+.mv-year-pager .pg .arrow {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--ink-3);
+}
+.mv-year-pager .pg.muted { opacity: 0.35; }
+.mv-year-pager .current {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.mv-year-pager .current .lbl {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 2px;
+}
+.mv-year-pager .current .yr {
+  font-family: var(--serif-display);
+  font-size: 26px;
+  color: var(--rust);
+  font-weight: 400;
+}
+.mv-year-count {
+  padding: 6px 20px 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* ---------------------------------------- SHOWS-YEAR RELEASE LEGEND */
+.mv-shows-legend {
+  padding: 14px 20px 4px;
+}
+.mv-shows-legend .release-legend {
+  align-items: flex-start;
+}
 .mv-srow-date {
   font-family: var(--mono);
   font-size: 13px;
@@ -1726,6 +1827,7 @@
   font-size: 13px;
   color: var(--ink-4);
   text-align: right;
+  margin-left: 2px;
 }
 
 /* ---------------------------------------- SHOW DATE — BIGGER/BOLDER */
@@ -1746,6 +1848,7 @@
   padding: 10px 18px 4px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 .mv-deck-close {
   background: none;
@@ -1764,6 +1867,42 @@
   -webkit-tap-highlight-color: transparent;
 }
 .mv-deck-close:active { color: var(--ink); }
+.mv-go-to-show {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rust);
+  text-decoration: none;
+  padding: 6px 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.mv-go-to-show:active { opacity: 0.7; }
+
+/* ---------------------------------------- DECK EMPTY STATE */
+.mv-deck-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: calc(100dvh - 160px);
+  padding: 0 18px;
+}
+
+/* ---------------------------------------- CENTERED LOADING STATE */
+.mv-loading-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100dvh - 220px);
+  padding: 0 18px;
+  color: var(--ink-3);
+  font-style: italic;
+  font-family: var(--serif-body);
+  text-align: center;
+}
 
 /* ---------------------------------------- BACK TO TOP */
 .mv-back-to-top {

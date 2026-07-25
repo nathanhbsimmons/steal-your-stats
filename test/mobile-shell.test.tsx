@@ -418,26 +418,12 @@ describe('MobileShell', () => {
       expect(screen.getByLabelText('Next track')).toBeInTheDocument()
     })
 
-    it('shows "standby · no queue" when nothing is queued', () => {
-      setPlayer({ isPlaying: false, queue: [], currentTrack: mockTrack })
+    it('shows a "Go to Show" link pointing at the current track\'s show when queued', () => {
+      setPlayer({ isPlaying: false, queue: [mockTrack], currentTrack: mockTrack })
       render(<MobileShell />)
       activateDeck()
-      expect(screen.getByText(/standby · no queue/i)).toBeInTheDocument()
-    })
-
-    it('shows "cued · N tracks" when paused with multiple tracks queued', () => {
-      const queue = [mockTrack, { ...mockTrack, id: 'track-2', name: 'Truckin' }]
-      setPlayer({ isPlaying: false, queue, currentTrack: mockTrack })
-      render(<MobileShell />)
-      activateDeck()
-      expect(screen.getByText(/cued · 2 archive tracks/i)).toBeInTheDocument()
-    })
-
-    it('shows "playing · 1 track" when a single track is in the queue', () => {
-      setPlayer({ isPlaying: true, queue: [mockTrack], currentTrack: mockTrack })
-      render(<MobileShell />)
-      activateDeck()
-      expect(screen.getByText(/playing · 1 track/i)).toBeInTheDocument()
+      const link = screen.getByText(/go to show/i).closest('a')
+      expect(link).toHaveAttribute('href', `/show/${mockTrack.showDate}`)
     })
 
     it('does not say "entire show" when only one track is playing', () => {
@@ -445,14 +431,6 @@ describe('MobileShell', () => {
       render(<MobileShell />)
       activateDeck()
       expect(screen.queryByText(/entire show/i)).not.toBeInTheDocument()
-    })
-
-    it('shows "playing entire show · N tracks" when multiple tracks are queued', () => {
-      const queue = [mockTrack, { ...mockTrack, id: 'track-2', name: 'Truckin' }]
-      setPlayer({ isPlaying: true, queue, currentTrack: mockTrack })
-      render(<MobileShell />)
-      activateDeck()
-      expect(screen.getByText(/playing entire show · 2 tracks/i)).toBeInTheDocument()
     })
 
     it('renders the seek slider', () => {
@@ -682,14 +660,6 @@ describe('MobileShell', () => {
       })
     })
 
-    it('shows the song count badge', async () => {
-      mockFetch({
-        ...defaultFetch,
-        '/api/songs': { songs: [{ title: 'dark star', displayTitle: 'Dark Star', aliases: [] }] },
-      })
-      render(<MobileShell />)
-      await waitFor(() => expect(screen.getByText('1')).toBeInTheDocument())
-    })
   })
 
   /* ---------------------------------------------------------------- shows screen */
@@ -753,19 +723,11 @@ describe('MobileShell', () => {
       await waitFor(() => expect(screen.getByText('Barton Hall')).toBeInTheDocument())
     })
 
-    it('renders an add-to-queue button for each show row', async () => {
+    it('navigates to the show when a row is clicked', async () => {
       render(<MobileShell />)
       await waitFor(() => expect(screen.getByText('Barton Hall')).toBeInTheDocument())
-      expect(screen.getByLabelText(/add.*queue/i) || screen.getAllByRole('button').find(b => b.textContent === '+')).toBeTruthy()
-    })
-
-    it('calls enqueueEntireShow when the + button is clicked', async () => {
-      render(<MobileShell />)
-      await waitFor(() => expect(screen.getByText('Barton Hall')).toBeInTheDocument())
-      fireEvent.click(screen.getByLabelText('Add Barton Hall show to queue'))
-      await waitFor(() => expect(mockEnqueueEntireShow).toHaveBeenCalledWith(
-        expect.objectContaining({ date: '1977-05-08' }),
-      ))
+      fireEvent.click(screen.getByText('Barton Hall'))
+      expect(mockPush).toHaveBeenCalledWith('/show/1977-05-08')
     })
   })
 
@@ -1109,25 +1071,6 @@ describe('MobileShell', () => {
       expect(screen.queryByText(/Show all/i)).not.toBeInTheDocument()
     })
 
-    it('renders Shortest and Longest extremes when provided', async () => {
-      mockFetch({
-        ...defaultFetch,
-        '/api/song-facts': { totalPerformances: 2, first: null, last: null },
-        '/api/versions': {
-          songTitle: 'Dark Star',
-          tracks: [{ id: 'v1', showDate: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', durationSec: 420 }],
-          extremes: {
-            shortest: { id: 'v1', showDate: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', durationSec: 420 },
-            longest: { id: 'v2', showDate: '1969-02-11', venue: 'Fillmore', city: 'San Francisco', durationSec: 1200 },
-          },
-        },
-      })
-      render(<MobileShell />)
-      await waitFor(() => {
-        expect(screen.getByText('Shortest')).toBeInTheDocument()
-        expect(screen.getByText('Longest')).toBeInTheDocument()
-      })
-    })
   })
 
   /* ---------------------------------------------------------------- routing */

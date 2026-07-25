@@ -41,7 +41,6 @@ export function HomeClient({
   const [queuedSet, setQueuedSet] = useState<Set<number>>(new Set())
   const [flashIdx, setFlashIdx] = useState<number | null>(null)
   const [isEnqueuing, setIsEnqueuing] = useState(false)
-  const [showBonus, setShowBonus] = useState(false)
 
   // Archive match data is always resolved at first paint now (or absent if
   // the show has no matched recording) — no pending/shimmer state to track.
@@ -322,43 +321,31 @@ export function HomeClient({
 
         {/* Bonus tracks (soundcheck, banter, etc.) bundled in the recording but not part of the setlist */}
         {archiveMatch && archiveMatch.bonus.length > 0 && (
-          <div className="bonus-tracks" style={{ marginTop: 8 }}>
-            <button
-              className="bonus-toggle"
-              onClick={() => setShowBonus(s => !s)}
-              style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
-                background: 'none', border: '2px solid var(--gray)', borderRadius: 12, padding: '10px 14px',
-                cursor: 'pointer', font: 'inherit', fontSize: 14,
-              }}
-            >
-              <span>+ {deriveBonusSectionLabel(archiveMatch.bonus, archiveDescription)} ({archiveMatch.bonus.length} tracks)</span>
-              <span>{showBonus ? '▲' : '▼'}</span>
-            </button>
-            {showBonus && (
-              <div className="setlist" style={{ marginTop: 4 }}>
-                <div className="set-block">
-                  {archiveMatch.bonus.map(track => (
-                    <div
-                      key={track.id}
-                      className="track"
-                      onClick={() => handlePlayAncillaryTrack(track)}
-                    >
-                      <span className="num" style={{ opacity: 0.35, fontSize: 13 }}>·</span>
-                      <span className="play-dot">▶</span>
-                      <span className="title" style={{ fontStyle: 'italic', display: 'block' }}>{formatBonusTrackTitle(track)}</span>
-                      <span className="chev" />
-                      <span className="dur">{track.duration ? formatDuration(track.duration) : ''}</span>
-                      <button
-                        className="add-q"
-                        title="Add to queue"
-                        onClick={e => handleAddBonusTrack(e, track)}
-                      >+</button>
-                    </div>
-                  ))}
-                </div>
+          <div className="setlist" style={{ marginTop: 4 }}>
+            <div className="set-block">
+              <div className="set-head">
+                <h3><span className="roman">B.</span>{deriveBonusSectionLabel(archiveMatch.bonus, archiveDescription)}</h3>
+                <div className="duration">{archiveMatch.bonus.length} tracks</div>
               </div>
-            )}
+              {archiveMatch.bonus.map(track => (
+                <div
+                  key={track.id}
+                  className="track"
+                  onClick={() => handlePlayAncillaryTrack(track)}
+                >
+                  <span className="num" style={{ opacity: 0.35, fontSize: 13 }}>·</span>
+                  <span className="play-dot">▶</span>
+                  <span className="title" style={{ fontStyle: 'italic', display: 'block' }}>{formatBonusTrackTitle(track)}</span>
+                  <span className="chev" />
+                  <span className="dur">{track.duration ? formatDuration(track.duration) : ''}</span>
+                  <button
+                    className="add-q"
+                    title="Add to queue"
+                    onClick={e => handleAddBonusTrack(e, track)}
+                  >+</button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

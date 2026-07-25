@@ -6,8 +6,8 @@ import Link from 'next/link'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { getVenueTidbit } from '@/lib/venue-tidbits'
-import { getOfficialReleasesForDate } from '@/lib/official-releases'
-import { ReleaseBadge } from '@/components/ui/release-badge'
+import { getOfficialReleasesForDate, getOfficialReleasesForDates } from '@/lib/official-releases'
+import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 import { getDateParts } from '@/lib/date-parts'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import type { ArchiveSetlistMatch, ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
@@ -257,12 +257,16 @@ function MobileMini({ onOpen }: { onOpen: () => void }) {
   if (!currentTrack) return null
   const dateStr = currentTrack.showDate ?? ''
   const venueStr = [currentTrack.venue, currentTrack.city].filter(Boolean).join(' · ').toUpperCase()
+  const releases = currentTrack.showDate ? getOfficialReleasesForDate(currentTrack.showDate) : []
   return (
     <div className={`mv-mini${!isPlaying ? ' paused' : ''}`} role="status" aria-live="polite">
       <div className="stamp" aria-hidden="true" />
       <button className="mv-mini-open" onClick={onOpen} aria-label="Open player">
         <div className="meta">
-          <div className="title">{currentTrack.name}</div>
+          <div className="title-row">
+            <div className="title">{currentTrack.name}</div>
+            {releases.length > 0 && <ReleaseBadge releases={releases} variant="icon" size="xs" />}
+          </div>
           <div className="sub">{dateStr}{venueStr ? ` · ${venueStr}` : ''}</div>
         </div>
       </button>
@@ -278,7 +282,7 @@ function MobileMini({ onOpen }: { onOpen: () => void }) {
 /* --------------------------------------------------- shared now-playing */
 
 function MobileNowPlaying() {
-  const { currentTrack, isPlaying, queue, play, pause, next, previous } = usePlayer()
+  const { currentTrack, isPlaying, play, pause, next, previous } = usePlayer()
 
   const [audioTime, setAudioTime] = useState({ currentTime: 0, duration: 0 })
   useEffect(() => {
@@ -324,7 +328,6 @@ function MobileNowPlaying() {
     currentTrack.venue,
     currentTrack.city,
   ].filter(Boolean).join(' · ')
-  const totalTracks = queue.length
   const pct = audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0
 
   return (
@@ -340,6 +343,14 @@ function MobileNowPlaying() {
         </div>
         <div className="mv-now-title">{currentTrack.name}</div>
         <div className="mv-now-sub">{subLine}</div>
+        {currentTrack.showDate && (() => {
+          const releases = getOfficialReleasesForDate(currentTrack.showDate)
+          return releases.length > 0 ? (
+            <div style={{ textAlign: 'center', marginTop: 8 }}>
+              <ReleaseBadge releases={releases} />
+            </div>
+          ) : null
+        })()}
       </div>
 
       <div className="mv-transport">
@@ -381,23 +392,6 @@ function MobileNowPlaying() {
           <button className="mv-iconbtn ghost" onClick={next} aria-label="Next track">▶▶</button>
         </div>
       </div>
-
-      <div className="mv-status">
-        <span className="lit">
-          {isPlaying_ ? (
-            <><span className="dot" aria-hidden="true" />{totalTracks === 1 ? 'playing · 1 track' : `playing entire show · ${totalTracks} tracks`}</>
-          ) : totalTracks > 0 ? (
-            `cued · ${totalTracks} archive tracks`
-          ) : (
-            'standby · no queue'
-          )}
-        </span>
-        {currentTrack.showDate && (
-          <Link href={`/show/${currentTrack.showDate}`} style={{ color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: 9.5, letterSpacing: '0.1em', textTransform: 'uppercase', textDecoration: 'none' }}>
-            open setlist ↗
-          </Link>
-        )}
-      </div>
     </>
   )
 }
@@ -414,12 +408,17 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
         <button className="mv-deck-close" onClick={onClose} aria-label="Close deck">
           ← Close Deck
         </button>
+        {currentTrack?.showDate && (
+          <Link href={`/show/${currentTrack.showDate}`} className="mv-go-to-show">
+            Go to Show →
+          </Link>
+        )}
       </div>
       {!currentTrack ? (
-        <div className="mv-preplay" style={{ minHeight: 260 }}>
+        <div className="mv-deck-empty">
           {queueResolving ? (
             <>
-              <div style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', marginTop: 32, marginBottom: 8 }}>
+              <div style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', marginBottom: 8 }}>
                 Finding tracks on Archive.org…
               </div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-4)' }}>
@@ -428,7 +427,7 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
             </>
           ) : (
             <>
-              <div style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', marginTop: 32, marginBottom: 8 }}>
+              <div style={{ fontSize: 18, color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', marginBottom: 8 }}>
                 The deck is empty.
               </div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-4)' }}>
@@ -498,7 +497,6 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
   const [archiveMatch, setArchiveMatch] = useState<ArchiveSetlistMatch | null>(null)
   const [archiveIdentifier, setArchiveIdentifier] = useState<string | undefined>(undefined)
   const [archiveDescription, setArchiveDescription] = useState<string | null>(null)
-  const [showBonus, setShowBonus] = useState(false)
 
   const otherShows = shows.filter(s => s.date !== featured?.date)
 
@@ -592,6 +590,14 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
             {displayVenue && <div className="mv-preplay-venue">{displayVenue}</div>}
             {displayCity && <div className="mv-preplay-city">{displayCity}</div>}
             {venueTidbit && <div className="mv-preplay-tidbit">{venueTidbit}</div>}
+            {displayDate && (() => {
+              const releases = getOfficialReleasesForDate(displayDate)
+              return releases.length > 0 ? (
+                <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                  <ReleaseBadge releases={releases} />
+                </div>
+              ) : null
+            })()}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
               {displayDate && archiveCoveredIndices === null && (
                 <button className="mv-play-show-btn" disabled style={{ opacity: 0.6, cursor: 'default' }}>
@@ -678,19 +684,11 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
       {/* Bonus tracks (soundcheck, banter, etc.) bundled in the recording but not part of the setlist */}
       {archiveMatch && archiveMatch.bonus.length > 0 && (
         <div className="mv-setlist" style={{ paddingTop: 0 }}>
-          <button
-            className="mv-bonus-toggle"
-            onClick={() => setShowBonus(s => !s)}
-            style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
-              background: 'none', border: '2px solid var(--gray)', borderRadius: 12, padding: '10px 14px',
-              cursor: 'pointer', font: 'inherit', fontSize: 14, marginTop: 4,
-            }}
-          >
-            <span>+ {deriveBonusSectionLabel(archiveMatch.bonus, archiveDescription)} ({archiveMatch.bonus.length} tracks)</span>
-            <span>{showBonus ? '▲' : '▼'}</span>
-          </button>
-          {showBonus && archiveMatch.bonus.map(track => (
+          <div className="mv-set-head">
+            <span className="name"><span style={{ color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: 14, marginRight: 6 }}>B.</span>{deriveBonusSectionLabel(archiveMatch.bonus, archiveDescription)}</span>
+            <span className="meta">{archiveMatch.bonus.length} tracks</span>
+          </div>
+          {archiveMatch.bonus.map(track => (
             <div
               key={track.id}
               className="mv-track"
@@ -714,7 +712,6 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
       {/* Also on this day */}
       {otherShows.length > 0 && (
         <div className="mv-setlist" style={{ paddingTop: 0 }}>
-          <div className="mv-divider"><span className="glyph">❦</span></div>
           <div className="mv-set-head" style={{ marginBottom: 10 }}>
             <span className="name" style={{ fontSize: 18 }}>Also on this day</span>
             <span className="meta">{otherShows.length} shows</span>
@@ -735,13 +732,6 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
               </Link>
             ))}
           </div>
-          <div className="mv-divider"><span className="glyph">❦</span></div>
-        </div>
-      )}
-
-      {!otherShows.length && featured && (
-        <div className="mv-setlist" style={{ paddingTop: 0 }}>
-          <div className="mv-divider"><span className="glyph">❦</span></div>
         </div>
       )}
     </>
@@ -797,13 +787,11 @@ function SongsScreen() {
           placeholder="search songs…"
           aria-label="Search songs"
         />
-        <span className="kbd">{songs.length}</span>
       </div>
 
       {loading ? (
-        <div style={{ padding: '20px 18px', color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)' }}>
-          Loading catalog…
-        </div>
+        <div className="mv-loading-center">Loading catalog…</div>
+
       ) : query ? (
         songs.map(s => (
           <Link
@@ -820,13 +808,10 @@ function SongsScreen() {
       ) : (
         letters.map(letter => {
           const group = grouped.get(letter) ?? []
-          const first = group[0]?.displayTitle ?? ''
-          const last = group[group.length - 1]?.displayTitle ?? ''
           return (
             <div key={letter}>
               <div className="mv-alpha-head">
                 <span className="letter">{letter}</span>
-                <span className="count">{group.length} · {first} → {last}</span>
               </div>
               {group.map(s => (
                 <Link
@@ -844,7 +829,6 @@ function SongsScreen() {
           )
         })
       )}
-      <div className="mv-divider" style={{ paddingBottom: 8 }}><span className="glyph">❦</span></div>
     </>
   )
 }
@@ -874,8 +858,6 @@ function SongDetailScreen({ slug, onOpenPlayer }: { slug: string; onOpenPlayer: 
   }, [slug])
 
   const [showAllVersions, setShowAllVersions] = useState(false)
-  const shortest = versions?.extremes?.shortest
-  const longest = versions?.extremes?.longest
   const allVersions = versions?.tracks ?? []
   const VERSIONS_LIMIT = 12
   const displayedVersions = showAllVersions ? allVersions : allVersions.slice(0, VERSIONS_LIMIT)
@@ -905,48 +887,41 @@ function SongDetailScreen({ slug, onOpenPlayer }: { slug: string; onOpenPlayer: 
       <div className="mv-song-hero">
         <div className="kicker">CATALOG · {facts?.totalPerformances ? `${facts.totalPerformances} PERFORMANCES` : 'SONG DETAIL'}</div>
         <h2>{slug}</h2>
-        <div className="byline">
-          {loading ? 'Loading…' : facts?.first ? (
-            <>First played {fmtDate(facts.first.date)} · {facts.first.venue}, {facts.first.city}</>
-          ) : 'No performance data found.'}
-        </div>
+        {loading && <div className="byline">Loading…</div>}
+        {!loading && !facts?.first && <div className="byline">No performance data found.</div>}
       </div>
 
       {facts && (
         <div className="mv-kpi-row">
           <div className="mv-kpi">
             <div className="lab">Times Played</div>
-            <div className="val">{facts.totalPerformances}</div>
+            <div className="val count">{facts.totalPerformances}</div>
           </div>
           <div className="mv-kpi">
             <div className="lab">First</div>
-            <div className={`val${facts.first ? ' small' : ''}`}>
-              {facts.first ? fmtDate(facts.first.date.slice(0, 7)) : '—'}
-            </div>
+            {facts.first ? (
+              <Link href={`/show/${facts.first.date}`} className="mv-kpi-goto">
+                <div className="val date">{fmtDate(facts.first.date)}</div>
+                <span className="goto">go to show →</span>
+              </Link>
+            ) : (
+              <div className="val">—</div>
+            )}
           </div>
           <div className="mv-kpi">
             <div className="lab">Last</div>
-            <div className={`val${facts.last ? ' small' : ''}`}>
-              {facts.last ? fmtDate(facts.last.date.slice(0, 7)) : '—'}
-            </div>
+            {facts.last ? (
+              <Link href={`/show/${facts.last.date}`} className="mv-kpi-goto">
+                <div className="val date">{fmtDate(facts.last.date)}</div>
+                <span className="goto">go to show →</span>
+              </Link>
+            ) : (
+              <div className="val">—</div>
+            )}
           </div>
         </div>
       )}
 
-      {(shortest || longest) && (
-        <div className="mv-extremes">
-          <div className="mv-extreme">
-            <div className="lab">Shortest</div>
-            <div className="dur">{formatDur(shortest?.durationSec) || '—'}</div>
-            {shortest && <div className="when">{fmtDate(shortest.showDate)}</div>}
-          </div>
-          <div className="mv-extreme">
-            <div className="lab">Longest</div>
-            <div className="dur">{formatDur(longest?.durationSec) || '—'}</div>
-            {longest && <div className="when">{fmtDate(longest.showDate)}</div>}
-          </div>
-        </div>
-      )}
 
       {displayedVersions.length > 0 && (
         <>
@@ -1001,9 +976,6 @@ function SongDetailScreen({ slug, onOpenPlayer }: { slug: string; onOpenPlayer: 
         </>
       )}
 
-      <div className="mv-setlist" style={{ paddingTop: 8 }}>
-        <div className="mv-divider"><span className="glyph">❦</span></div>
-      </div>
     </>
   )
 }
@@ -1272,9 +1244,6 @@ function StatsScreen() {
         </div>
       </div>
 
-      <div className="mv-setlist" style={{ paddingTop: 8 }}>
-        <div className="mv-divider"><span className="glyph">❦</span></div>
-      </div>
     </>
   )
 }
@@ -1402,7 +1371,6 @@ function SearchScreen() {
         </div>
       )}
 
-      <div className="mv-divider" style={{ marginTop: 24 }}><span className="glyph">❦</span></div>
     </>
   )
 }
@@ -1420,7 +1388,6 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
   const [candidates, setCandidates] = useState<RecordingCandidate[]>([])
   const [selectedIdentifier, setSelectedIdentifier] = useState<string | null>(null)
   const [showRecordingPicker, setShowRecordingPicker] = useState(false)
-  const [showBonus, setShowBonus] = useState(false)
 
   const archiveCoveredIndices = archiveMatch
     ? new Set(archiveMatch.matched.filter(m => m.track).map(m => m.flatIdx))
@@ -1651,25 +1618,16 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
               </div>
             )
           })}
-          <div className="mv-divider"><span className="glyph">❦</span></div>
         </div>
       )}
 
       {archiveMatch && archiveMatch.bonus.length > 0 && (
         <div className="mv-setlist" style={{ paddingTop: 0 }}>
-          <button
-            className="mv-bonus-toggle"
-            onClick={() => setShowBonus(s => !s)}
-            style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
-              background: 'none', border: '2px solid var(--gray)', borderRadius: 12, padding: '10px 14px',
-              cursor: 'pointer', font: 'inherit', fontSize: 14, marginTop: 4,
-            }}
-          >
-            <span>+ {deriveBonusSectionLabel(archiveMatch.bonus, archiveDescription)} ({archiveMatch.bonus.length} tracks)</span>
-            <span>{showBonus ? '▲' : '▼'}</span>
-          </button>
-          {showBonus && archiveMatch.bonus.map(track => (
+          <div className="mv-set-head">
+            <span className="name"><span style={{ color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: 14, marginRight: 6 }}>B.</span>{deriveBonusSectionLabel(archiveMatch.bonus, archiveDescription)}</span>
+            <span className="meta">{archiveMatch.bonus.length} tracks</span>
+          </div>
+          {archiveMatch.bonus.map(track => (
             <div
               key={track.id}
               className="mv-track"
@@ -1730,16 +1688,15 @@ function ShowsDecadeGrid({ countByYear }: { countByYear: Map<number, number> }) 
           </div>
         </div>
       ))}
-      <div className="mv-divider" style={{ marginTop: 18 }}><span className="glyph">❦</span></div>
     </>
   )
 }
 
 function ShowsByYearMobile({ year }: { year: number }) {
   const router = useRouter()
-  const { enqueueEntireShow } = usePlayer()
   const [shows, setShows] = useState<Array<{ id: string; date: string; venue: string; city: string; state?: string }>>([])
   const [loading, setLoading] = useState(true)
+  const [audioDates, setAudioDates] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     setLoading(true)
@@ -1750,22 +1707,57 @@ function ShowsByYearMobile({ year }: { year: number }) {
       .finally(() => setLoading(false))
   }, [year])
 
+  useEffect(() => {
+    fetch(`/api/archive/dates-with-audio?year=${year}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setAudioDates(new Set<string>(d.dates ?? [])) })
+      .catch(() => {})
+  }, [year])
+
+  const prevYear = year > 1965 ? year - 1 : null
+  const nextYear = year < 1995 ? year + 1 : null
+  const officialReleases = React.useMemo(
+    () => getOfficialReleasesForDates(shows.map(s => s.date)),
+    [shows]
+  )
+
   return (
     <>
-      <div style={{ padding: '18px 18px 8px' }}>
-        <div style={{ fontFamily: 'var(--serif-display)', fontSize: 34, fontWeight: 400, lineHeight: 1, letterSpacing: '-0.02em' }}>{year}</div>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-3)', marginTop: 4 }}>
-          {loading ? 'Loading…' : `${shows.length} shows`}
+      <div className="mv-year-pager">
+        {prevYear ? (
+          <Link href={`/shows/${prevYear}`} className="pg">
+            <span className="arrow">‹</span>
+            <span className="yr">{prevYear}</span>
+          </Link>
+        ) : (
+          <span className="pg muted"><span className="yr">—</span></span>
+        )}
+        <div className="current">
+          <span className="lbl">viewing</span>
+          <span className="yr">{year}</span>
         </div>
+        {nextYear ? (
+          <Link href={`/shows/${nextYear}`} className="pg right">
+            <span className="yr">{nextYear}</span>
+            <span className="arrow">›</span>
+          </Link>
+        ) : (
+          <span className="pg right muted"><span className="yr">—</span></span>
+        )}
+      </div>
+      <div className="mv-year-count">
+        {loading ? 'Loading…' : `${shows.length} shows`}
       </div>
       {loading ? (
-        <div style={{ padding: '12px 18px', color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)' }}>Loading…</div>
+        <div className="mv-loading-center">Loading…</div>
       ) : shows.length === 0 ? (
         <div style={{ padding: '24px 18px', color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)' }}>No shows found for {year}.</div>
       ) : (
         shows.map((s, i) => {
           const [, mon, day] = s.date.split('-')
           const monthDay = `${mon}·${day}`
+          const releases = getOfficialReleasesForDate(s.date)
+          const hasAudio = audioDates.has(s.date)
           return (
             <div
               key={s.id || i}
@@ -1779,20 +1771,20 @@ function ShowsByYearMobile({ year }: { year: number }) {
                 {s.venue}
                 <span className="mv-srow-city">{s.city}{s.state ? `, ${s.state}` : ''}</span>
               </span>
-              <button
-                className="mv-addq"
-                aria-label={`Add ${s.venue} show to queue`}
-                onClick={e => {
-                  e.stopPropagation()
-                  void enqueueEntireShow({ date: s.date, venue: s.venue, city: s.city })
-                }}
-              >+</button>
+              <span className="mv-srow-indicators">
+                {releases.length > 0 && <ReleaseBadge releases={releases} variant="icon" />}
+                {hasAudio && <span className="mv-srow-audio">▶ audio</span>}
+              </span>
               <span className="mv-srow-arr">›</span>
             </div>
           )
         })
       )}
-      <div className="mv-divider" style={{ marginTop: 12 }}><span className="glyph">❦</span></div>
+      {officialReleases.length > 0 && (
+        <div className="mv-shows-legend">
+          <ReleaseLegend releases={officialReleases} />
+        </div>
+      )}
     </>
   )
 }
@@ -1822,6 +1814,7 @@ function ShowsScreen() {
 export function MobileShell() {
   const pathname = usePathname()
   const router = useRouter()
+  const { currentTrack } = usePlayer()
 
   // Tracks whether the player (deck) tab is active.
   // Both Home and Deck live at '/'; this distinguishes them.
@@ -1902,10 +1895,11 @@ export function MobileShell() {
   const showDate  = isShowDetail ? pathname.replace('/show/', '') : undefined
   const showMast  = activeTabId === 'home' && isAtRoot
   const isDeckTab = activeTabId === 'deck'
+  const hasMini = !isDeckTab && !!currentTrack
 
   return (
     <div className="mv" role="main">
-      <div ref={scrollRef} className={`mv-scroll${isDeckTab ? ' no-mini' : ''}`}>
+      <div ref={scrollRef} className={`mv-scroll${!hasMini ? ' no-mini' : ''}`}>
         {showMast && <MobileMast />}
         <MobileChapter tabId={activeTabId} pathname={pathname} songTitle={songSlug} />
 
