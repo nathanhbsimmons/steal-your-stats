@@ -7,7 +7,7 @@ interface VenueTidbit {
 const TIDBITS: VenueTidbit[] = [
   {
     venueMatch: ['fillmore auditorium'],
-    text: "Bill Graham's very first show as a promoter happened here on December 10, 1965, a benefit for the San Francisco Mime Troupe. It was also the first show the band played under its new name: the Grateful Dead.",
+    text: "Bill Graham's second Mime Troupe legal-defense benefit, on December 10, 1965, was the Fillmore Auditorium's first rock concert (his first benefit, a month earlier, was at the Calliope Warehouse). The show is widely cited as the first billed under the band's new name: the Grateful Dead.",
   },
   {
     venueMatch: ['carousel ballroom', 'fillmore west'],
@@ -15,11 +15,11 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['avalon ballroom'],
-    text: "The Fillmore's psychedelic rival, run by Chet Helms, the same guy who'd bankrolled Janis Joplin's bus ticket from Texas to San Francisco.",
+    text: "The Fillmore's psychedelic rival, run by Chet Helms, who'd hitchhiked to San Francisco with a young Janis Joplin in 1963.",
   },
   {
     venueMatch: ['winterland'],
-    text: 'The Dead played their final show here on New Year\'s Eve 1978, simulcast on local FM station KSAN and shown via closed-circuit TV in movie theaters, ending 12 years of Winterland shows that began in 1966.',
+    text: "The Dead played their final show here on New Year's Eve 1978, broadcast live on public TV station KQED with a simulcast on FM station KSAN, ending 12 years of Winterland shows that began in 1966.",
   },
   {
     venueMatch: ['cow palace'],
@@ -27,7 +27,7 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['warfield'],
-    text: "The 15-show acoustic/electric run here in September-October 1980, the longest stand of the band's touring career, fed into the live albums Reckoning and Dead Set, alongside shows from the same tour at Radio City Music Hall and New Orleans' Saenger Theatre.",
+    text: "The 15-show acoustic/electric run here in September-October 1980 fed into the live albums Reckoning and Dead Set, alongside shows from the same tour at Radio City Music Hall and New Orleans' Saenger Theatre.",
   },
   {
     venueMatch: ['greek theater', 'greek theatre'],
@@ -36,31 +36,27 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['berkeley community theater', 'berkeley community theatre'],
-    text: "Housed inside Berkeley High School, this was the site of a well-known 1994 benefit concert Phil Lesh organized for the school's music program, after budget cuts eliminated it. (Note: the venue's full run of Dead-related shows here, and any additional Rex Foundation benefits beyond this one, is worth double-checking against your own database. I could not independently confirm the '13 benefit shows in the 1980s' figure from the original draft.)",
+    text: "Located on the Berkeley High School campus, a few blocks from the Greek Theatre where the Dead played every summer.",
   },
   {
     venueMatch: ['oakland coliseum', 'oakland arena'],
-    text: 'Their single most-played indoor venue at 66 shows, and the site of their final Bay Area concert on February 26, 1995.',
+    text: 'Their single most-played indoor venue at 66 shows, and the site of their final Oakland show on February 26, 1995.',
   },
   {
-    venueMatch: ['henry j. kaiser', 'henry kaiser', 'kaiser auditorium'],
-    text: "With 58 shows, this civic hall hosted some of the Dead's most beloved New Year's Eve runs in the late 1970s and early 80s. Note: this is the same building as Oakland Civic Auditorium below, renamed in 1984 in honor of Henry J. Kaiser. If your data pulls both names as separate venues, that's worth merging.",
-  },
-  {
-    venueMatch: ['oakland civic auditorium'],
-    text: 'This is the same building that later became the Henry J. Kaiser Convention Center, renamed in 1984. Worth checking whether your venue database is counting it twice under two names.',
+    venueMatch: ['henry j. kaiser', 'henry kaiser', 'kaiser auditorium', 'oakland civic auditorium'],
+    text: "Originally the Oakland Civic Auditorium, renamed in 1984 in honor of Henry J. Kaiser. This civic hall hosted 58 Dead shows, including some of the band's most beloved New Year's Eve runs in the late 1970s and early 80s.",
   },
   {
     venueMatch: ['shoreline amphitheatre', 'shoreline amphitheater'],
-    text: 'Built on top of a landfill on the shores of San Francisco Bay, it became a multi-night Dead institution from the moment it opened in 1986.',
+    text: "Built on top of a landfill on the shores of San Francisco Bay, it opened in summer 1986 without the Dead, who were slated to play but pulled out after Garcia's coma. They played every year after that, 39 shows in all.",
   },
   {
     venueMatch: ['frost amphitheatre', 'frost amphitheater'],
-    text: 'This small Romanesque outdoor bowl on the Stanford campus became a beloved Dead stop starting in 1987, despite a capacity of only around 7,000.',
+    text: 'This small natural grassy bowl on the Stanford campus hosted the Dead 14 times between 1982 and 1989, despite a capacity of only around 7,000.',
   },
   {
     venueMatch: ['hollywood bowl'],
-    text: "The world's largest natural outdoor amphitheater, with the iconic band shell that the Dead played against — but they only played here a handful of times.",
+    text: "The world's largest natural outdoor amphitheater, with the iconic band shell that the Dead played against, but they only played here a handful of times.",
   },
   {
     venueMatch: ['the forum', 'great western forum'],
@@ -69,7 +65,7 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['irvine meadows'],
-    text: 'A warm-weather hillside venue in Orange County that the Dead played almost every summer tour in the 1980s, often drawing Deadheads from across Southern California and Mexico.',
+    text: 'A warm-weather hillside venue in Orange County that the Dead played almost every summer tour in the 1980s, often drawing Deadheads from across Southern California.',
   },
   {
     venueMatch: ['cal expo', 'california exposition'],
@@ -77,11 +73,11 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['fillmore east'],
-    text: "Bill Graham's East Coast twin to the Fillmore West, and the venue where Jimi Hendrix recorded Band of Gypsys on New Year's Eve 1969/70, just months before the Dead made it their own.",
+    text: "Bill Graham's East Coast twin to the Fillmore West; the Dead had been playing here since 1968, and Jimi Hendrix recorded Band of Gypsys live at the venue on New Year's Eve 1969/70.",
   },
   {
     venueMatch: ['madison square garden'],
-    text: 'The Dead played 52 shows here, grossing over a million dollars in ticket sales at MSG alone in 1977 — extraordinary for that era.',
+    text: 'The Dead played 52 shows in the arena, starting January 7, 1979; their 1987 five-show run alone grossed about $1.7 million.',
   },
   {
     venueMatch: ['barton hall'],
@@ -95,7 +91,7 @@ const TIDBITS: VenueTidbit[] = [
   {
     venueMatch: ['capitol theatre', 'capitol theater'],
     city: ['passaic'],
-    text: "A different building from the Port Chester Capitol Theatre above, despite the shared name. This one hosted the April 25, 1977 show that became one of the band's most celebrated official live releases, first as part of the 30 Trips Around the Sun box set, then as its own Record Store Day vinyl release.",
+    text: "This Passaic, New Jersey venue (a different building from the same-named theater in Port Chester) hosted the April 25, 1977 show that became one of the band's most celebrated official live releases, first as part of the 30 Trips Around the Sun box set, then as its own Record Store Day vinyl release.",
   },
   {
     venueMatch: ['nassau coliseum'],
@@ -103,7 +99,7 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['watkins glen'],
-    text: 'The 1973 Summer Jam here drew an estimated 600,000 people — more than twice Woodstock\'s attendance — making it one of the largest concerts in American history.',
+    text: "The 1973 Summer Jam here drew an estimated 600,000 people — about 50 percent more than Woodstock's estimated 400,000 — making it one of the largest concerts in American history.",
   },
   {
     venueMatch: ['raceway park', 'englishtown'],
@@ -114,18 +110,14 @@ const TIDBITS: VenueTidbit[] = [
     text: 'The Dead co-headlined here with Bob Dylan in 1987 as part of the "Dylan & the Dead" tour, a pairing that produced one of the most divisive live albums in either artist\'s catalog.',
   },
   {
-    venueMatch: ['the spectrum'],
+    venueMatch: ['the spectrum', 'corestates spectrum'],
     city: ['philadelphia'],
-    text: "The Dead's second-most played arena, and a venue where ticket sales alone topped $1 million in 1977. Later renamed CoreStates Spectrum, still the same building. Worth checking whether your database counts the two names as separate venues.",
-  },
-  {
-    venueMatch: ['corestates spectrum'],
-    text: 'Same arena as the Spectrum above, renamed after a naming-rights deal in the 1990s. Worth merging in your venue data if it currently shows up separately.',
+    text: 'A frequent Philadelphia stop for the Dead, renamed CoreStates Spectrum after a 1990s naming-rights deal, still the same building.',
   },
   {
     venueMatch: ['capitol centre', 'capital centre', 'capitol center', 'capital center'],
     city: ['landover'],
-    text: 'The Dead played 29 shows here, including what many historians consider among the finest performances of their 1974 "Wall of Sound" era.',
+    text: 'The Dead played 29 shows here over the years, a regular stop on their East Coast circuit.',
   },
   {
     venueMatch: ['merriweather'],
@@ -141,7 +133,7 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['hartford civic center'],
-    text: "A primary stop on nearly every East Coast tour, and the city where the Dead performed some of their most celebrated 1970s multi-night runs.",
+    text: "A primary stop on nearly every East Coast tour, especially after the arena reopened in 1980 following a roof collapse two years earlier.",
   },
   {
     venueMatch: ['providence civic center'],
@@ -153,7 +145,7 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['cumberland county civic center'],
-    text: 'The northernmost arena on the regular Dead touring circuit, a consistent stop during their fall New England runs throughout the 1970s and 1980s.',
+    text: "The northernmost regular stop in the Northeast on the Dead's touring circuit, a consistent stop during their fall New England runs throughout the 1970s and 1980s.",
   },
   {
     venueMatch: ['hampton coliseum'],
@@ -162,7 +154,7 @@ const TIDBITS: VenueTidbit[] = [
   {
     venueMatch: ['the omni', 'omni coliseum'],
     city: ['atlanta'],
-    text: 'Before it housed Dead shows, this arena was primarily known as the home turf of Ric Flair, Dusty Rhodes, and the NWA wrestling circuit.',
+    text: 'Also home to the Atlanta Hawks and Flames, and to Ric Flair, Dusty Rhodes, and the NWA wrestling circuit.',
   },
   {
     venueMatch: ['fox theatre', 'fox theater'],
@@ -171,11 +163,11 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['soldier field'],
-    text: "The site of the Fare Thee Well concerts in July 2015, the Dead's final performances together, pulling 70,000+ fans per night across three shows.",
+    text: "The site of both the band's final show with Garcia, July 9, 1995, and the Fare Thee Well concerts in July 2015, the surviving members' farewell performances together, pulling 70,000+ fans per night across three shows.",
   },
   {
     venueMatch: ['rosemont horizon', 'allstate arena'],
-    text: "The Dead's go-to Chicago-area arena in the late 1980s and 90s; it was later rebranded so many times that locals often forgot its original name.",
+    text: "The Dead's go-to Chicago-area arena in the late 1980s and 90s; it was renamed Allstate Arena in 1999.",
   },
   {
     venueMatch: ['richfield coliseum'],
@@ -191,7 +183,7 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['red rocks'],
-    text: 'Garcia called it "a sacred place," likening it to Stonehenge and the pyramids of Egypt, and after 20 shows the Dead grew too popular to fit its 9,500 seats.',
+    text: 'After 20 shows, the Dead grew too popular to fit its 9,500 seats, moving future Denver-area dates to indoor arenas.',
   },
   {
     venueMatch: ['mcnichols'],
@@ -199,7 +191,7 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['renaissance faire', 'veneta'],
-    text: "The Dead played this rural field in 1972 as a benefit for Ken Kesey's Springfield Creamery (makers of Nancy's Yogurt), captured in the concert film Sunshine Daydream.",
+    text: "The Dead played this rural field in 1972 as a benefit for the Kesey family's Springfield Creamery (makers of Nancy's Yogurt), captured in the concert film Sunshine Daydream.",
   },
   {
     venueMatch: ['autzen stadium'],
@@ -208,7 +200,7 @@ const TIDBITS: VenueTidbit[] = [
   {
     venueMatch: ['silva concert hall'],
     city: ['eugene'],
-    text: "Part of Eugene's Hult Center for the Performing Arts, a much smaller and more formal room than nearby Autzen Stadium. I did not find a distinctive, well-documented Dead-specific story for this one beyond it being an occasional stop; worth flagging if you'd like me to dig further.",
+    text: "Part of Eugene's Hult Center for the Performing Arts, a much smaller and more formal room than nearby Autzen Stadium.",
   },
   {
     venueMatch: ['west high school auditorium'],
@@ -227,7 +219,7 @@ const TIDBITS: VenueTidbit[] = [
   {
     venueMatch: ['rainbow theatre'],
     city: ['london'],
-    text: "I did not find a distinctive, well-documented Dead-specific story for the Rainbow Theatre beyond it being a London tour stop; worth flagging if you'd like me to dig further, since the venue itself (formerly the Astoria/Finsbury Park Astoria) has a rich history with other 60s/70s acts.",
+    text: "The Dead played the Rainbow Theatre eight times in 1981, four nights in March and four in October; the March 20 and 21 shows were released as Dave's Picks Volume 56 in October 2025.",
   },
   {
     venueMatch: ['wembley empire pool', 'ovo arena'],
@@ -240,11 +232,11 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['rheinhalle'],
-    text: 'A striking Art Deco hall on the Rhine riverfront that hosted the Dead for three nights in April 1972; the recordings from this run are considered some of the finest of the entire European tour.',
+    text: "A former 1926 planetarium on the Rhine riverfront that hosted the Dead for one night, April 24, 1972 — one of only two Europe '72 shows to run three complete sets.",
   },
   {
     venueMatch: ['jahrhunderthalle'],
-    text: 'This "century hall" was built in 1963 for trade shows and industry exhibitions — about as far from a hippie ballroom as you can get, yet the Dead made it work.',
+    text: 'This "century hall" was built in 1963 for trade shows and industry exhibitions...about as far from a hippie ballroom as you can get, yet the Dead made it work.',
   },
   {
     venueMatch: ['musikhalle'],
@@ -269,11 +261,11 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['market square arena'],
-    text: "A round arena that became the Dead's primary Indiana stop through the 1980s, notable for being demolished via implosion in 2001 — a very un-Dead exit.",
+    text: "A round arena that became the Dead's primary Indiana stop through the 1980s, notable for being demolished via implosion in 2001...a very un-Dead exit.",
   },
   {
     venueMatch: ['kiel auditorium'],
-    text: 'A grand Beaux-Arts municipal hall in St. Louis that hosted the Dead during Midwest runs; the building still stands today as the Peabody Opera House.',
+    text: "An Art Deco municipal hall in St. Louis where the Dead played seven shows between 1969 and 1982. The auditorium itself was demolished in 1992 and replaced by what's now Enterprise Center; the adjoining Kiel Opera House survives as the Stifel Theatre.",
   },
   {
     venueMatch: ['starlight theatre', 'starlight theater'],
@@ -283,7 +275,7 @@ const TIDBITS: VenueTidbit[] = [
   {
     venueMatch: ['memorial hall'],
     city: ['kansas city'],
-    text: "A different, indoor venue from Starlight Theatre above, this one across the state line in Kansas City, Kansas. I did not find a distinctive, well-documented Dead-specific story here beyond it being a routine stop; worth flagging if you'd like me to dig further.",
+    text: "An indoor venue across the state line in Kansas City, Kansas, distinct from the outdoor Starlight Theatre in Missouri.",
   },
   {
     venueMatch: ['uptown theater', 'uptown theatre'],
@@ -305,7 +297,7 @@ const TIDBITS: VenueTidbit[] = [
   },
   {
     venueMatch: ['deer creek music center'],
-    text: "The site of the July 2, 1995 fence-crashing incident, where ticketless fans stormed the lawn and forced the band to stop mid-song. The next night's show was canceled, the first time in the band's history a Dead show was called off because of crowd behavior. It happened less than a month before Garcia's death and marked the Dead's last-ever shows at this venue.",
+    text: "The site of the July 2, 1995 fence-crashing incident, where ticketless fans stormed the lawn and forced the band to stop mid-song. The next night's show was canceled, the first time in the band's history a Dead show was called off because of crowd behavior. It happened five weeks before Garcia's death and marked the Dead's last-ever shows at this venue.",
   },
   {
     venueMatch: ['cafe au go go', 'cafe au go-go', "caf' au go-go"],
@@ -317,87 +309,30 @@ const TIDBITS: VenueTidbit[] = [
     text: "A converted pizza parlor with a 100-person capacity, opened in 1965 as Jefferson Airplane's home base. The Dead played intimate shows here in the mid-to-late 60s, including some of Mickey Hart's earliest Hartbeats side-project jams.",
   },
   {
-    venueMatch: ['knickerbocker arena'],
-    city: ['albany'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story for Knickerbocker Arena beyond it being a regular upstate New York stop; worth flagging if you'd like me to dig further.",
-  },
-  {
     venueMatch: ['long beach arena'],
-    text: "A steady West Coast tour stop from 1981 through 1988. I did not find anything particularly distinctive about the Dead's history here beyond a solid run of shows; happy to keep digging if you want something more specific.",
-  },
-  {
-    venueMatch: ['charlotte coliseum'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story for Charlotte Coliseum beyond it being a regular Southeast tour stop; worth flagging if you'd like me to dig further.",
-  },
-  {
-    venueMatch: ['centrum in worcester', 'the centrum', 'centrum'],
-    city: ['worcester'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story for the Centrum beyond it being a regular New England stop; worth flagging if you'd like me to dig further.",
+    text: "A steady West Coast tour stop from 1981 through 1988.",
   },
   {
     venueMatch: ['san francisco civic auditorium'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story for this one beyond routine shows there in the band's earlier years; worth flagging if you'd like me to dig further, since the building (now Bill Graham Civic Auditorium) has real history with other acts.",
-  },
-  {
-    venueMatch: ['ventura county fairgrounds'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a fairgrounds tour stop; worth flagging if you'd like me to dig further.",
-  },
-  {
-    venueMatch: ['new haven veterans memorial coliseum', 'new haven coliseum'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a regular Connecticut stop; worth flagging if you'd like me to dig further.",
-  },
-  {
-    venueMatch: ['rochester community war memorial'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a regular upstate New York stop; worth flagging if you'd like me to dig further.",
-  },
-  {
-    venueMatch: ['springfield civic center'],
-    city: ['springfield'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a regular New England stop; worth flagging if you'd like me to dig further.",
+    text: "Now known as Bill Graham Civic Auditorium, this hosted routine Dead shows in the band's earlier years.",
   },
   {
     venueMatch: ['auditorium theatre'],
     city: ['chicago'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond routine shows, though the building itself, a landmark 1889 Adler & Sullivan design, has a notable architectural history worth exploring if you want that angle instead.",
+    text: "The building itself is a landmark 1889 Adler & Sullivan design with a notable architectural history.",
   },
   {
-    venueMatch: ['the palace of auburn hills', 'palace of auburn hills'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a regular Detroit-area stop in the late 80s and early 90s; worth flagging if you'd like me to dig further.",
-  },
-  {
-    venueMatch: ['sam boyd silver bowl'],
-    text: 'This is the same venue as Sam Boyd Stadium below, renamed in 1994. Worth checking whether your data currently splits it into two entries by name.',
-  },
-  {
-    venueMatch: ['sam boyd stadium'],
-    text: 'Originally opened in 1971 as Las Vegas Stadium, then the Las Vegas Silver Bowl, then Sam Boyd Silver Bowl, before taking its current name in 1994. Same building as the Silver Bowl entry above; worth merging if your data shows them separately.',
-  },
-  {
-    venueMatch: ['golden hall'],
-    city: ['san diego'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a San Diego stop; worth flagging if you'd like me to dig further.",
+    venueMatch: ['sam boyd silver bowl', 'sam boyd stadium'],
+    text: 'Originally opened in 1971 as Las Vegas Stadium, then the Las Vegas Silver Bowl, then Sam Boyd Silver Bowl, before taking its current name, Sam Boyd Stadium, in 1994.',
   },
   {
     venueMatch: ['radio city music hall'],
-    text: 'The Dead played eight shows here in October 1980 as part of their acoustic/electric tour; the final two nights, on Halloween, were filmed and released as the concert movie Dead Ahead.',
+    text: 'The Dead played eight shows here in October 1980 as part of their acoustic/electric tour; the Halloween night show, October 31, was filmed and released as the concert movie Dead Ahead.',
   },
   {
     venueMatch: ['kinetic playground'],
     city: ['chicago'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here; worth flagging if you'd like me to dig further, since this short-lived late-60s Chicago psychedelic ballroom (also known as the Electric Theater) hosted a number of notable acts of the era.",
-  },
-  {
-    venueMatch: ['shrine exposition hall', 'shrine auditorium'],
-    city: ['los angeles'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being an early LA stop; worth flagging if you'd like me to dig further.",
-  },
-  {
-    venueMatch: ['los angeles sports arena'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a regular LA-area stop; worth flagging if you'd like me to dig further.",
-  },
-  {
-    venueMatch: ['greensboro coliseum'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a regular North Carolina stop; worth flagging if you'd like me to dig further.",
+    text: "This short-lived late-60s Chicago psychedelic ballroom, also known as the Electric Theater, hosted a number of notable acts of the era.",
   },
   {
     venueMatch: ['academy of music'],
@@ -405,30 +340,13 @@ const TIDBITS: VenueTidbit[] = [
     text: "The Dead's March 1972 run here came just weeks before they left for the legendary Europe '72 tour, and several songs previewed here would soon appear on that tour's setlists. Later released as Dick's Picks Vol. 30.",
   },
   {
-    venueMatch: ['honolulu civic auditorium'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being one of the band's rare Hawaii stops; worth flagging if you'd like me to dig further.",
-  },
-  {
     venueMatch: ["longshoremen's hall", 'longshoremens hall'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here, though this was the site of the January 1966 Trips Festival, an early landmark event in San Francisco's psychedelic scene that the Dead took part in; worth flagging if you'd like me to dig further and confirm the connection.",
-  },
-  {
-    venueMatch: ['kings beach bowl'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a small, early-career Lake Tahoe-area stop; worth flagging if you'd like me to dig further.",
+    text: "This was the site of the January 1966 Trips Festival, an early landmark event in San Francisco's psychedelic scene that the Dead took part in.",
   },
   {
     venueMatch: ["o'keefe centre", 'okeefe centre'],
     city: ['toronto'],
     text: 'A six-night run here with Jefferson Airplane in summer 1967, billed as "The San Francisco Scene in Toronto" and financed by Bill Graham, was one of the Dead\'s earliest trips outside the US.',
-  },
-  {
-    venueMatch: ['the in room'],
-    city: ['belmont'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a very early, small-club stop; worth flagging if you'd like me to dig further.",
-  },
-  {
-    venueMatch: ['miami arena'],
-    text: "I did not turn up a distinctive, well-documented Dead-specific story here beyond it being a regular South Florida stop in the late 80s and early 90s; worth flagging if you'd like me to dig further.",
   },
   {
     venueMatch: ['golden gate park'],
