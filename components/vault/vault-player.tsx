@@ -14,6 +14,11 @@ function formatTime(secs: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+// Survives a same-tab reload (sessionStorage), dies on real tab close/new session —
+// so it only kicks in for the involuntary hard-reload Next.js does when a tab's
+// build manifest goes stale after a fresh deploy, never for a genuine fresh visit.
+const RESUME_KEY = 'steal-your-stats-resume-playback'
+
 function formatQueueTime(tracks: Array<{ duration?: number }>): string {
   const total = tracks.reduce((s, t) => s + (t.duration ?? 0), 0)
   const h = Math.floor(total / 3600)
@@ -43,6 +48,51 @@ export function VaultPlayer() {
     audio.src = currentTrack?.url ?? ''
     if (currentTrack?.url) audio.load()
   }, [currentTrack?.url])
+
+  // Snapshot playback position right before an unload. Only matters for the
+  // involuntary reload Next.js triggers on a stale build after a deploy — a
+  // real navigation-away doesn't need this since the audio just keeps playing.
+  useEffect(() => {
+    const handleUnload = () => {
+      const audio = audioRef.current
+      if (!audio || !isPlaying || !currentTrack) return
+      try {
+        sessionStorage.setItem(RESUME_KEY, JSON.stringify({
+          trackId: currentTrack.id, time: audio.currentTime, ts: Date.now(),
+        }))
+      } catch {}
+    }
+    window.addEventListener('pagehide', handleUnload)
+    window.addEventListener('beforeunload', handleUnload)
+    return () => {
+      window.removeEventListener('pagehide', handleUnload)
+      window.removeEventListener('beforeunload', handleUnload)
+    }
+  }, [isPlaying, currentTrack])
+
+  // Resume across that reload: restore position and continue playing if the
+  // snapshot is fresh and still points at the same track.
+  const resumedRef = useRef(false)
+  useEffect(() => {
+    if (resumedRef.current || !currentTrack) return
+    const audio = audioRef.current
+    if (!audio) return
+    let raw: string | null
+    try {
+      raw = sessionStorage.getItem(RESUME_KEY)
+    } catch { return }
+    if (!raw) return
+    resumedRef.current = true
+    try { sessionStorage.removeItem(RESUME_KEY) } catch {}
+    const { trackId, time, ts } = JSON.parse(raw)
+    if (trackId !== currentTrack.id || Date.now() - ts > 15000) return
+    const onLoaded = () => {
+      audio.currentTime = time
+      play()
+      audio.removeEventListener('loadedmetadata', onLoaded)
+    }
+    audio.addEventListener('loadedmetadata', onLoaded)
+  }, [currentTrack, play])
 
   // Attach time/duration/ended listeners (stable — ref never changes)
   useEffect(() => {
