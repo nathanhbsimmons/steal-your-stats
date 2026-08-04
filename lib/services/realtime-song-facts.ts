@@ -515,6 +515,10 @@ export class RealtimeSongFactsService {
   // Looks up a single date in the cached full-catalog dump — no live setlist.fm
   // call. Returns null if the date isn't in the cache (fresh disk cache should
   // always have it; caller falls back to a live fetch on miss).
+  async getAllSetlists(): Promise<Setlist[]> {
+    return this.getAllGDSetlists()
+  }
+
   async getSetlistForDate(isoDate: string): Promise<Setlist | null> {
     const allSetlists = await this.getAllGDSetlists()
     const [y, m, d] = isoDate.split('-')

@@ -14,12 +14,14 @@ Steal Your Stats — Grateful Dead stats + audio player web app. Song lookup, pe
 
 ## Design System
 
-Monochrome, retro, high contrast:
-- **Colors**: ink (#111), paper (#f5f5f2), gray (#bfbfb7)
-- **Borders**: 2px solid everywhere
-- **Radii**: 12px (small), 24px (large)
-- **Shadows**: Offset retro style (e.g., `6px 6px 0`)
-- **Typography**: Playfair Display (headings), Inter (body), IBM Plex Mono (meta)
+Vintage ledger/archive theme, high contrast:
+- **Colors**: paper (#f1e6cf), ink (#1a140c), plus accents — forest (#1f3a2c), rust (#a8391f), ledger-blue (#2c4a6a), amber (#b6702c), oxblood (#653b37)
+- **Borders**: solid, tokenized via `--rule` / `--rule-soft` / `--rule-faint`
+- **Radii**: sharp — 0-4px (`--r-xs` 0 to `--r-lg` 4px), `--r-full` 99px for pills
+- **Shadows**: offset retro style, `3px 3px 0` (`--shadow-card`)
+- **Typography**: DM Serif Display + Bodoni Moda (headings/numerals), Crimson Pro (body), JetBrains Mono (meta), UnifrakturMaguntia (blackletter accents)
+
+Tokens defined in `app/globals.css`. Mobile layout has its own stylesheet, `app/mobile.css`.
 
 ## Development Workflow
 

@@ -13,6 +13,9 @@ export interface Setlist {
   id: string
   eventDate: string
   url?: string
+  tour?: {
+    name: string
+  }
   venue: {
     id: string
     name: string

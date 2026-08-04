@@ -116,6 +116,10 @@ const defaultFetch: Record<string, unknown> = {
     sets: [], totalSongs: 0,
   },
   '/api/songs': { songs: [] },
+  '/api/search': {
+    tokens: [], text: '', songs: [], venues: [], releases: [], shows: [], facets: {},
+    totals: { songs: 0, venues: 0, releases: 0, shows: 0 }, page: 1, pageSize: 20,
+  },
   '/api/stats': { leaderboard: [], showsPerYear: [] },
   '/api/stats/summary': { totalShows: 2333, uniqueSongs: 442, hoursArchived: 6422 },
   '/api/song-facts': { totalPerformances: 0, first: null, last: null },
@@ -791,38 +795,43 @@ describe('MobileShell', () => {
       expect(screen.getByText(/Start typing to search/i)).toBeInTheDocument()
     })
 
-    it('fetches songs when a query is typed', async () => {
+    const emptySearch = {
+      tokens: [], text: '', songs: [], venues: [], releases: [], shows: [], facets: {},
+      totals: { songs: 0, venues: 0, releases: 0, shows: 0 }, page: 1, pageSize: 20,
+    }
+
+    it('fetches from /api/search when a query is typed', async () => {
       render(<MobileShell />)
       await typeAndFlush('dark')
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/songs'))
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/search?q=dark'))
     })
 
-    it('fetches venues when a query is typed', async () => {
-      render(<MobileShell />)
-      await typeAndFlush('Barton')
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/shows/by-venue'))
-    })
-
-    it('renders "Shows at venue" section when venue API returns results', async () => {
+    it('renders a Venues section when venue results come back', async () => {
       mockFetch({
         ...defaultFetch,
-        '/api/songs': { songs: [] },
-        '/api/shows/by-venue': {
-          shows: [{ date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', songs: [] }],
+        '/api/search': {
+          ...emptySearch,
+          venues: [{ name: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US', showCount: 1, firstYear: 1977, lastYear: 1977 }],
+          totals: { ...emptySearch.totals, venues: 1 },
         },
       })
       render(<MobileShell />)
       await typeAndFlush('Barton')
-      expect(screen.getByText('Shows at venue')).toBeInTheDocument()
+      expect(screen.getByText('Venues')).toBeInTheDocument()
       expect(screen.getByText('Barton Hall')).toBeInTheDocument()
     })
 
-    it('renders a link to the show page for each venue result', async () => {
+    it('renders a link to the show page for each show result', async () => {
       mockFetch({
         ...defaultFetch,
-        '/api/songs': { songs: [] },
-        '/api/shows/by-venue': {
-          shows: [{ date: '1977-05-08', venue: 'Barton Hall', city: 'Ithaca', state: 'NY', songs: [] }],
+        '/api/search': {
+          ...emptySearch,
+          shows: [{
+            date: '1977-05-08', year: 1977, month: 5, day: 8, venue: 'Barton Hall', venueSlug: 'barton-hall',
+            city: 'Ithaca', state: 'NY', country: 'US', songs: [], songCount: 0,
+            hasAudio: false, releases: [], hasRelease: false, releaseSeries: [], haystack: '',
+          }],
+          totals: { ...emptySearch.totals, shows: 1 },
         },
       })
       render(<MobileShell />)
@@ -832,18 +841,21 @@ describe('MobileShell', () => {
       expect(link).toHaveAttribute('href', '/show/1977-05-08')
     })
 
-    it('does NOT render the venue section when venue API returns no results', async () => {
-      mockFetch({ ...defaultFetch, '/api/songs': { songs: [] }, '/api/shows/by-venue': { shows: [] } })
+    it('does NOT render the Venues section when no venues match', async () => {
+      mockFetch({ ...defaultFetch, '/api/search': emptySearch })
       render(<MobileShell />)
       await typeAndFlush('xyz')
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/shows/by-venue'))
-      expect(screen.queryByText('Shows at venue')).not.toBeInTheDocument()
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/search?q=xyz'))
+      expect(screen.queryByText('Venues')).not.toBeInTheDocument()
     })
 
     it('shows the Songs results section when songs are found', async () => {
       mockFetch({
         ...defaultFetch,
-        '/api/songs': { songs: [{ title: 'dark star', displayTitle: 'Dark Star', aliases: [] }] },
+        '/api/search': {
+          ...emptySearch,
+          songs: [{ title: 'dark star', displayTitle: 'Dark Star', aliases: [], score: 0 }],
+        },
       })
       render(<MobileShell />)
       await typeAndFlush('dark')
