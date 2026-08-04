@@ -1,164 +1,26 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react'
-import Link from 'next/link'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { usePlayer } from '@/lib/contexts/player-context'
+import React, { useRef, useEffect, Suspense } from 'react'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
-import { getOfficialReleasesForDate } from '@/lib/official-releases'
-import { ReleaseBadge } from '@/components/ui/release-badge'
-
-interface SongResult {
-  title: string
-  displayTitle: string
-  aliases: string[]
-}
-
-interface ShowResult {
-  date: string
-  venue: string
-  city: string
-  state?: string
-  country: string
-  songs: string[]
-}
-
-interface VenueSong {
-  name: string
-  count: number
-}
-
-function useDebounce<T>(value: T, ms: number): T {
-  const [v, setV] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setV(value), ms)
-    return () => clearTimeout(t)
-  }, [value, ms])
-  return v
-}
+import { parseQuery } from '@/lib/search/query-parser'
+import { useSearchState } from '@/components/search/use-search-state'
+import { useSearchResults } from '@/components/search/use-search-results'
+import { ActiveChips } from '@/components/search/active-chips'
+import { FilterRail } from '@/components/search/filter-rail'
+import { SongsSection, VenuesSection, ReleasesSection, ShowsSection } from '@/components/search/result-sections'
 
 function SearchContent() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
+  const {
+    q, setQ, dq, filters, page, setPage,
+    toggleBoolean, setRecordingType, toggleArrayField, setSingle, setFields, setYearRange, clearField,
+    removeToken, clearAll,
+  } = useSearchState()
 
-  const [query, setQuery] = useState(searchParams.get('q') ?? '')
-  const [songs, setSongs] = useState<SongResult[]>([])
-  const [songTotal, setSongTotal] = useState(0)
-  const [songsLoading, setSongsLoading] = useState(false)
-  const [shows, setShows] = useState<ShowResult[]>([])
-  const [showsLoading, setShowsLoading] = useState(false)
-  const [venueShows, setVenueShows] = useState<ShowResult[]>([])
-  const [venueShowsLoading, setVenueShowsLoading] = useState(false)
-  const [venueLabel, setVenueLabel] = useState('')
-  const [venueSongs, setVenueSongs] = useState<VenueSong[]>([])
-  const [venueSongsLoading, setVenueSongsLoading] = useState(false)
-  const [yearShows, setYearShows] = useState<ShowResult[]>([])
-  const [yearShowsLoading, setYearShowsLoading] = useState(false)
-  const [yearLabel, setYearLabel] = useState('')
-  const dq = useDebounce(query, 250)
-  const { playShowTrack } = usePlayer()
-
-  const isYear = (q: string) => /^\d{4}$/.test(q) && parseInt(q) >= 1965 && parseInt(q) <= 1995
-  const isDate = (q: string) => /^\d{4}-\d{2}-\d{2}$/.test(q)
+  const { data, loading, loadingMore, active } = useSearchResults(dq, filters, page)
+  const { tokens } = parseQuery(dq)
 
   useEffect(() => { inputRef.current?.focus() }, [])
-
-  useEffect(() => {
-    setQuery(searchParams.get('q') ?? '')
-  }, [searchParams])
-
-  useEffect(() => {
-    if (!dq) {
-      setSongs([]); setSongTotal(0)
-      setShows([]); setVenueShows([]); setVenueSongs([])
-      setYearShows([]); setYearLabel('')
-      return
-    }
-
-    // Date search: navigate directly to the show page
-    if (isDate(dq)) {
-      router.push(`/show/${dq}`)
-      return
-    }
-
-    // Year search: show all GD shows from that year
-    if (isYear(dq)) {
-      setSongs([]); setSongTotal(0); setShows([])
-      setVenueShows([]); setVenueSongs([])
-      setYearShowsLoading(true)
-      setYearLabel(dq)
-      fetch(`/api/shows/by-year?year=${encodeURIComponent(dq)}`)
-        .then(r => r.json())
-        .then(d => setYearShows((d.shows ?? []).slice(0, 40)))
-        .catch(() => setYearShows([]))
-        .finally(() => setYearShowsLoading(false))
-      return
-    }
-
-    setYearShows([]); setYearLabel('')
-    setSongsLoading(true)
-    fetch(`/api/songs?q=${encodeURIComponent(dq)}`)
-      .then(r => r.json())
-      .then(d => {
-        const found: SongResult[] = d.songs ?? []
-        setSongs(found)
-        setSongTotal(d.total ?? 0)
-        if (found.length > 0) {
-          // Song mode: fetch shows featuring the top result
-          setVenueShows([]); setVenueSongs([])
-          setShowsLoading(true)
-          fetch(`/api/search/shows-with-songs?songs[]=${encodeURIComponent(found[0].displayTitle)}`)
-            .then(r => r.json())
-            .then(d2 => setShows((d2.shows ?? []).slice(0, 10)))
-            .catch(() => {})
-            .finally(() => setShowsLoading(false))
-        } else {
-          // Venue mode: no song matched, treat query as venue name
-          setShows([])
-          setVenueShowsLoading(true)
-          setVenueSongsLoading(true)
-          setVenueLabel(dq)
-          fetch(`/api/shows/by-venue?name=${encodeURIComponent(dq)}`)
-            .then(r => r.json())
-            .then(d2 => setVenueShows((d2.shows ?? []).slice(0, 12)))
-            .catch(() => setVenueShows([]))
-            .finally(() => setVenueShowsLoading(false))
-          fetch(`/api/venues/songs?venue=${encodeURIComponent(dq)}`)
-            .then(r => r.json())
-            .then(d2 => setVenueSongs(d2.songs ?? []))
-            .catch(() => setVenueSongs([]))
-            .finally(() => setVenueSongsLoading(false))
-        }
-      })
-      .catch(() => {})
-      .finally(() => setSongsLoading(false))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dq])
-
-  const isVenueMode = venueShows.length > 0 || venueShowsLoading
-  const isYearMode = yearShows.length > 0 || yearShowsLoading || yearLabel !== ''
-  const leaderMax = venueSongs[0]?.count ?? 1
-
-  const handlePlayVenueSong = useCallback(async (songName: string) => {
-    const matchingShow = venueShows.find(show =>
-      show.songs.some(s => s.toLowerCase() === songName.toLowerCase())
-    )
-    if (!matchingShow) {
-      router.push(`/song/${encodeURIComponent(songName)}?venue=${encodeURIComponent(venueLabel)}`)
-      return
-    }
-    const songIdx = matchingShow.songs.findIndex(s => s.toLowerCase() === songName.toLowerCase())
-    try {
-      await playShowTrack(
-        { date: matchingShow.date, venue: matchingShow.venue, city: matchingShow.city },
-        songIdx,
-        matchingShow.songs
-      )
-    } catch {
-      router.push(`/song/${encodeURIComponent(songName)}?venue=${encodeURIComponent(venueLabel)}`)
-    }
-  }, [venueShows, venueLabel, playShowTrack, router])
 
   return (
     <section className="col">
@@ -172,186 +34,72 @@ function SearchContent() {
         </div>
       </div>
 
-      <div className="search-big">
-        <span style={{ color: 'var(--ink-3)' }}>⌕</span>
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter' && query.trim()) router.push(`/search?q=${encodeURIComponent(query.trim())}`)
-          }}
-          placeholder="search songs, shows, venues…"
+      <div className="fx-bar">
+        <div className="fx-search">
+          <span className="gl">⌕</span>
+          <input
+            ref={inputRef}
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            placeholder="song, show, venue, date…"
+          />
+          {q && (
+            <button className="clear" onClick={() => { setQ(''); inputRef.current?.focus() }}>
+              clear
+            </button>
+          )}
+          <span className="kbd">⌘K</span>
+        </div>
+
+        <FilterRail
+          filters={filters}
+          facets={data?.facets ?? {}}
+          toggleBoolean={toggleBoolean}
+          setRecordingType={setRecordingType}
+          toggleArrayField={toggleArrayField}
+          setSingle={setSingle}
+          setFields={setFields}
+          clearField={clearField}
+          setYearRange={setYearRange}
+          resultCount={active ? (data?.totals.shows ?? 0) : undefined}
+          tokens={tokens}
         />
-        {query && (
-          <button
-            onClick={() => { setQuery(''); inputRef.current?.focus() }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: 11 }}
-          >
-            clear
-          </button>
-        )}
-        <span className="kbd">⌘K</span>
+
+        <div className="fx-line">
+          <div className="fx-chips" role="group" aria-label="Active filters">
+            <ActiveChips
+              tokens={tokens}
+              filters={filters}
+              removeToken={removeToken}
+              toggleBoolean={toggleBoolean}
+              setRecordingType={setRecordingType}
+              toggleArrayField={toggleArrayField}
+              clearField={clearField}
+              setYearRange={setYearRange}
+              clearAll={clearAll}
+            />
+          </div>
+        </div>
       </div>
 
-      {!query && (
+      {!active && (
         <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 17 }}>
           Start typing to search the archive — 2,333 shows, {CANONICAL_SONG_COUNT} songs.
         </div>
       )}
 
-      {query && isYearMode && (
+      {active && (
         <div className="results-cols">
-          <div className="result-col" style={{ gridColumn: '1 / -1' }}>
-            <h4>Shows in {yearLabel}</h4>
-            {yearShowsLoading
-              ? Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="skeleton-vault" style={{ height: 40, marginBottom: 4 }} />
-                ))
-              : yearShows.length === 0
-                ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>No shows found for {yearLabel}.</div>
-                : yearShows.map(s => (
-                    <Link
-                      key={s.date}
-                      href={`/show/${s.date}`}
-                      className="row"
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <span className="t">{s.venue}</span>
-                      <span className="s">{s.date} · {s.city}{s.state ? `, ${s.state}` : ''}</span>
-                    </Link>
-                  ))
-            }
-          </div>
-        </div>
-      )}
-
-      {query && !isYearMode && (
-        <div className="results-cols">
-          {/* Songs column */}
-          <div className="result-col">
-            {isVenueMode ? (
-              <>
-                <h4>Songs · {venueLabel}</h4>
-                {venueSongsLoading
-                  ? Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="skeleton-vault" style={{ height: 36, marginBottom: 4 }} />
-                    ))
-                  : venueSongs.length === 0
-                    ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>No song data for this venue.</div>
-                    : (
-                      <ul className="toptable">
-                        {venueSongs.map((entry, i) => (
-                          <li key={entry.name}>
-                            <div
-                              style={{ textDecoration: 'none', display: 'block', cursor: 'pointer' }}
-                              onClick={() => handlePlayVenueSong(entry.name)}
-                            >
-                              <div className="row1">
-                                <span className="rank">{i + 1}.</span>
-                                <span style={{ fontFamily: 'var(--serif-display)', fontSize: 16 }}>{entry.name}</span>
-                                <span className="plays">{entry.count}</span>
-                                <Link
-                                  href={`/song/${encodeURIComponent(entry.name)}?venue=${encodeURIComponent(venueLabel)}`}
-                                  onClick={e => e.stopPropagation()}
-                                  style={{ textDecoration: 'none', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)', letterSpacing: '0.04em', padding: '0 2px', whiteSpace: 'nowrap' }}
-                                  onMouseOver={e => (e.currentTarget.style.color = 'var(--rust)')}
-                                  onMouseOut={e => (e.currentTarget.style.color = 'var(--ink-3)')}
-                                >go to song ↗</Link>
-                              </div>
-                              <div className="bar">
-                                <div className="fill" style={{ width: `${(entry.count / leaderMax) * 100}%` }} />
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )
-                }
-              </>
-            ) : (
-              <>
-                <h4>Songs {songTotal > 0 ? `· ${songTotal}` : ''}</h4>
-                {songsLoading
-                  ? Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="skeleton-vault" style={{ height: 40, marginBottom: 4 }} />
-                    ))
-                  : songs.length === 0
-                    ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>No songs found.</div>
-                    : songs.slice(0, 12).map((s) => (
-                        <Link
-                          key={s.title}
-                          href={`/song/${encodeURIComponent(s.displayTitle)}`}
-                          className="row"
-                          style={{ textDecoration: 'none' }}
-                        >
-                          <span className="t">{s.displayTitle}</span>
-                          {s.aliases.length > 0 && (
-                            <span className="s">{s.aliases.slice(0, 1).join(', ')}</span>
-                          )}
-                        </Link>
-                      ))
-                }
-              </>
-            )}
-          </div>
-
-          {/* Shows column */}
-          <div className="result-col">
-            {isVenueMode ? (
-              <>
-                <h4>Shows at {venueLabel}</h4>
-                {venueShowsLoading
-                  ? Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="skeleton-vault" style={{ height: 40, marginBottom: 4 }} />
-                    ))
-                  : venueShows.length === 0
-                    ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>No shows found at this venue.</div>
-                    : venueShows.map(s => {
-                        const releases = getOfficialReleasesForDate(s.date)
-                        return (
-                          <Link
-                            key={s.date}
-                            href={`/show/${s.date}`}
-                            className="row"
-                            style={{ textDecoration: 'none' }}
-                          >
-                            <span className="t" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              {s.venue}
-                              {releases.length > 0 && <ReleaseBadge releases={releases} size="xs" />}
-                            </span>
-                            <span className="s">{s.date} · {s.city}{s.state ? `, ${s.state}` : ''}</span>
-                          </Link>
-                        )
-                      })
-                }
-              </>
-            ) : (
-              <>
-                <h4>Shows {shows.length > 0 ? `featuring ${songs[0]?.displayTitle ?? ''}` : ''}</h4>
-                {showsLoading
-                  ? Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="skeleton-vault" style={{ height: 40, marginBottom: 4 }} />
-                    ))
-                  : shows.length === 0
-                    ? <div style={{ padding: '20px 0', color: 'var(--ink-3)', fontStyle: 'italic' }}>
-                        {songs.length === 0 ? 'Search for a song to find shows.' : 'No shows found.'}
-                      </div>
-                    : shows.map(s => (
-                        <Link
-                          key={s.date}
-                          href={`/show/${s.date}`}
-                          className="row"
-                          style={{ textDecoration: 'none' }}
-                        >
-                          <span className="t">{s.venue}</span>
-                          <span className="s">{s.date} · {s.city}{s.state ? `, ${s.state}` : ''}</span>
-                        </Link>
-                      ))
-                }
-              </>
-            )}
-          </div>
+          <ShowsSection
+            shows={data?.shows ?? []}
+            total={data?.totals.shows ?? 0}
+            loading={loading}
+            loadingMore={loadingMore}
+            onLoadMore={() => setPage(page + 1)}
+          />
+          <SongsSection songs={data?.songs ?? []} loading={loading} />
+          <VenuesSection venues={data?.venues ?? []} loading={loading} />
+          <ReleasesSection releases={data?.releases ?? []} loading={loading} />
         </div>
       )}
     </section>

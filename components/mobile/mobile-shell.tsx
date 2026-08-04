@@ -11,6 +11,12 @@ import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 import { getDateParts } from '@/lib/date-parts'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import type { ArchiveSetlistMatch, ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
+import { parseQuery } from '@/lib/search/query-parser'
+import { useDebounce, activeRailCount, type RailFilters } from '@/components/search/use-search-state'
+import { useSearchResults } from '@/components/search/use-search-results'
+import { ActiveChips, buildActiveChips } from '@/components/search/active-chips'
+import { FilterSheet } from '@/components/search/filter-sheet'
+import { deriveEffectiveFilters } from '@/components/search/categories'
 
 /* ------------------------------------------------------------------ types */
 
@@ -1250,88 +1256,176 @@ function StatsScreen() {
 
 /* ============================================================ SEARCH SCREEN */
 
-function useDebounce<T>(value: T, ms: number): T {
-  const [v, setV] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setV(value), ms)
-    return () => clearTimeout(t)
-  }, [value, ms])
-  return v
-}
+const MULTI_SELECT_FIELDS = new Set<keyof RailFilters>(['series', 'decade', 'era', 'country', 'state'])
 
 function SearchScreen() {
   const [query, setQuery] = useState('')
-  const [songs, setSongs] = useState<SongEntry[]>([])
-  const [shows, setShows] = useState<{ date: string; venue: string; city: string; state?: string; songs: string[] }[]>([])
-  const [venues, setVenues] = useState<{ date: string; venue: string; city: string; state?: string; songs: string[] }[]>([])
-  const [songsLoading, setSongsLoading] = useState(false)
+  const [filters, setFilters] = useState<RailFilters>({ audio: false, release: false, series: [], decade: [], era: [], country: [], state: [] })
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [page, setPage] = useState(1)
   const dq = useDebounce(query, 280)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const { data, loading, loadingMore, active } = useSearchResults(dq, filters, page)
+  const { tokens } = parseQuery(dq)
+
+  // Any new search (new debounced text or a filter change) starts back at page 1 —
+  // only the "load more" button should ever advance it.
+  useEffect(() => { setPage(1) }, [dq, filters])
+
   useEffect(() => { inputRef.current?.focus() }, [])
 
-  useEffect(() => {
-    if (!dq) { setSongs([]); setShows([]); setVenues([]); return }
-    setSongsLoading(true)
-    fetch(`/api/songs?q=${encodeURIComponent(dq)}`)
-      .then(r => r.json())
-      .then(d => { setSongs(d.songs ?? []) })
-      .catch(() => {})
-      .finally(() => setSongsLoading(false))
-  }, [dq])
+  const toggleBoolean = useCallback((key: 'audio' | 'release') => {
+    setFilters(f => ({ ...f, [key]: !f[key] }))
+  }, [])
+  const setRecordingType = useCallback((value?: string) => {
+    setFilters(f => ({ ...f, rec: value }))
+  }, [])
+  const toggleArrayField = useCallback((key: 'series' | 'decade' | 'era' | 'country' | 'state', value: string) => {
+    setFilters(f => ({ ...f, [key]: f[key].includes(value) ? f[key].filter(v => v !== value) : [...f[key], value] }))
+  }, [])
+  const setSingle = useCallback((key: 'year' | 'city' | 'tour', value?: string) => {
+    setFilters(f => ({ ...f, [key]: value }))
+  }, [])
+  const setFields = useCallback((fields: Partial<RailFilters>) => {
+    setFilters(f => ({ ...f, ...fields }))
+  }, [])
+  const setYearRange = useCallback((from?: string, to?: string) => {
+    setFilters(f => ({ ...f, yearFrom: from, yearTo: to }))
+  }, [])
+  const clearField = useCallback((key: keyof RailFilters) => {
+    setFilters(f => ({ ...f, [key]: MULTI_SELECT_FIELDS.has(key) ? [] : undefined }))
+  }, [])
+  const removeToken = useCallback((raw: string) => {
+    setQuery(prev => prev.replace(raw, '').replace(/\s+/g, ' ').trim())
+  }, [])
+  const clearAll = useCallback(() => {
+    setQuery('')
+    setFilters({ audio: false, release: false, series: [], decade: [], era: [], country: [], state: [] })
+  }, [])
 
-  useEffect(() => {
-    if (!dq || songs.length === 0) { setShows([]); return }
-    fetch(`/api/search/shows-with-songs?songs[]=${encodeURIComponent(songs[0]?.displayTitle ?? dq)}`)
-      .then(r => r.json())
-      .then(d => setShows((d.shows ?? []).slice(0, 8)))
-      .catch(() => setShows([]))
-  }, [dq, songs])
-
-  useEffect(() => {
-    if (!dq) { setVenues([]); return }
-    fetch(`/api/shows/by-venue?name=${encodeURIComponent(dq)}`)
-      .then(r => r.json())
-      .then(d => setVenues((d.shows ?? []).slice(0, 8)))
-      .catch(() => setVenues([]))
-  }, [dq])
+  // Rail-only would undercount: a typed token (e.g. "70s") shows as a chip and a checked
+  // box in the sheet via the same effective merge (see categories.ts), so the badge must
+  // count it too or it reads as fewer filters than are visibly active.
+  const filterCount = activeRailCount(deriveEffectiveFilters(filters, tokens))
+  const chipCount = buildActiveChips(tokens, filters, {
+    removeToken, toggleBoolean, setRecordingType, toggleArrayField, clearField, setYearRange,
+  }).length
 
   return (
-    <>
-      <div className="mv-search">
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--ink-3)' }}>⌕</span>
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="search songs, venues…"
-          aria-label="Search the catalog"
-        />
-        {query && (
-          <button onClick={() => setQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)', fontFamily: 'var(--mono)', fontSize: 11, padding: '0 2px' }}>
-            clear
+    <div className="mfx">
+      <div className="mfx-bar">
+        <div className="fx-search">
+          <span className="gl">⌕</span>
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="search the vault…"
+            aria-label="Search the catalog"
+          />
+          {query && (
+            <button className="clear" onClick={() => setQuery('')}>clear</button>
+          )}
+        </div>
+        <div className="mfx-chiprow">
+          <button
+            className="mfx-open"
+            onClick={() => setSheetOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={sheetOpen}
+          >
+            Filters{filterCount > 0 ? <span className="n">{filterCount}</span> : null} <span>▾</span>
           </button>
-        )}
+          <ActiveChips
+            tokens={tokens}
+            filters={filters}
+            removeToken={removeToken}
+            toggleBoolean={toggleBoolean}
+            setRecordingType={setRecordingType}
+            toggleArrayField={toggleArrayField}
+            clearField={clearField}
+            setYearRange={setYearRange}
+            clearAll={clearAll}
+            emptyState={false}
+            showClearAll={false}
+          />
+          {/* margin-left: auto (see .mfx-clear-pin) keeps this last-and-right on
+              whichever wrapped line it ends up on, however many chips accumulate. */}
+          {chipCount > 0 && (
+            <button type="button" className="mfx-clear-pin" onClick={clearAll}>clear all</button>
+          )}
+        </div>
       </div>
 
-      {!query && (
+      {active && (
+        <div className="mfx-meta">
+          <span className="fx-count" aria-live="polite">shows · <b>{data?.totals.shows ?? 0}</b></span>
+          <span className="fx-count">sorted by date</span>
+        </div>
+      )}
+
+      <FilterSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        filters={filters}
+        facets={data?.facets ?? {}}
+        resultCount={data?.totals.shows ?? 0}
+        clearAll={clearAll}
+        toggleBoolean={toggleBoolean}
+        setRecordingType={setRecordingType}
+        toggleArrayField={toggleArrayField}
+        setSingle={setSingle}
+        setFields={setFields}
+        clearField={clearField}
+        setYearRange={setYearRange}
+        tokens={tokens}
+      />
+
+      {!active && (
         <div style={{ padding: '40px 18px', color: 'var(--ink-3)', fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 16, lineHeight: 1.5 }}>
           Start typing to search 2,333 shows and {CANONICAL_SONG_COUNT} songs.
         </div>
       )}
 
-      {query && (
+      {active && (
         <div className="mv-results-section">
           <div className="mv-sec" style={{ marginTop: 8 }}>
-            <span className="name">Songs</span>
-            <span className="more">{songs.length > 0 ? `${songs.length} found` : songsLoading ? '…' : 'none'}</span>
+            <span className="name">Shows</span>
+            <span className="more">{data?.totals.shows ?? 0}</span>
           </div>
-          {songsLoading ? (
+          {!loading && !data?.shows.length ? (
+            <div style={{ padding: '12px 18px', color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', fontSize: 14 }}>No shows found.</div>
+          ) : (
+            <>
+              {data?.shows.map(show => (
+                <Link key={show.id} href={`/show/${show.date}`} className="mv-result-row" style={{ display: 'grid' }}>
+                  <span className="t">
+                    {show.hasAudio && <span style={{ color: 'var(--forest)', marginRight: 6, fontSize: 11 }}>▶</span>}
+                    {show.venue}
+                    {show.releases.length > 0 && <ReleaseBadge releases={show.releases} size="xs" />}
+                  </span>
+                  <span className="s">{fmtDate(show.date)} · {show.city}{show.state ? `, ${show.state}` : ''}</span>
+                </Link>
+              ))}
+              {!loading && (data?.shows.length ?? 0) < (data?.totals.shows ?? 0) && (
+                <button className="mv-load-more" onClick={() => setPage(p => p + 1)} disabled={loadingMore}>
+                  {loadingMore ? 'Loading…' : `Load more (${(data?.totals.shows ?? 0) - (data?.shows.length ?? 0)} remaining)`}
+                </button>
+              )}
+            </>
+          )}
+
+          <div className="mv-sec">
+            <span className="name">Songs</span>
+            <span className="more">{data?.songs.length ? `${data.songs.length} found` : loading ? '…' : 'none'}</span>
+          </div>
+          {loading ? (
             <div style={{ padding: '12px 18px', color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', fontSize: 14 }}>Searching…</div>
-          ) : songs.length === 0 ? (
+          ) : !data?.songs.length ? (
             <div style={{ padding: '12px 18px', color: 'var(--ink-3)', fontStyle: 'italic', fontFamily: 'var(--serif-body)', fontSize: 14 }}>No songs found.</div>
           ) : (
-            songs.slice(0, 8).map(s => (
+            data.songs.map(s => (
               <Link key={s.title} href={`/song/${encodeURIComponent(s.displayTitle)}`} className="mv-result-row" style={{ display: 'grid' }}>
                 <span className="t">{s.displayTitle}</span>
                 {s.aliases.length > 0 && <span className="s">{s.aliases[0]}</span>}
@@ -1339,31 +1433,31 @@ function SearchScreen() {
             ))
           )}
 
-          {shows.length > 0 && (
+          {(data?.venues.length ?? 0) > 0 && (
             <>
               <div className="mv-sec">
-                <span className="name">Shows featuring {songs[0]?.displayTitle ?? query}</span>
-                <span className="more">{shows.length}</span>
+                <span className="name">Venues</span>
+                <span className="more">{data!.venues.length}</span>
               </div>
-              {shows.map(show => (
-                <Link key={show.date} href={`/show/${show.date}`} className="mv-result-row" style={{ display: 'grid' }}>
-                  <span className="t">{show.venue}</span>
-                  <span className="s">{fmtDate(show.date)} · {show.city}{show.state ? `, ${show.state}` : ''}</span>
+              {data!.venues.map(v => (
+                <Link key={`${v.name}-${v.city}`} href={`/search?q=${encodeURIComponent(v.name)}`} className="mv-result-row" style={{ display: 'grid' }}>
+                  <span className="t">{v.name}</span>
+                  <span className="s">{v.city}{v.state ? `, ${v.state}` : ''} · {v.showCount} shows · {v.firstYear}–{v.lastYear}</span>
                 </Link>
               ))}
             </>
           )}
 
-          {venues.length > 0 && (
+          {(data?.releases.length ?? 0) > 0 && (
             <>
               <div className="mv-sec">
-                <span className="name">Shows at venue</span>
-                <span className="more">{venues.length}</span>
+                <span className="name">Releases</span>
+                <span className="more">{data!.releases.length}</span>
               </div>
-              {venues.map(show => (
-                <Link key={`venue-${show.date}`} href={`/show/${show.date}`} className="mv-result-row" style={{ display: 'grid' }}>
-                  <span className="t">{show.venue}</span>
-                  <span className="s">{fmtDate(show.date)} · {show.city}{show.state ? `, ${show.state}` : ''}</span>
+              {data!.releases.map(r => (
+                <Link key={r.title} href={`/show/${r.date}`} className="mv-result-row" style={{ display: 'grid' }}>
+                  <span className="t">{r.title}</span>
+                  <span className="s">{r.series} · {r.date}</span>
                 </Link>
               ))}
             </>
@@ -1371,7 +1465,7 @@ function SearchScreen() {
         </div>
       )}
 
-    </>
+    </div>
   )
 }
 

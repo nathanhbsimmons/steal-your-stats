@@ -33,7 +33,7 @@ function normalizeRaw(title: string): string {
  * Aggressive normalization: strips all punctuation for fuzzy / key matching.
  * "Truckin'" → "truckin", "St. Stephen" → "st stephen", "Slipknot!" → "slipknot"
  */
-function normalizeFuzzy(title: string): string {
+export function normalizeFuzzy(title: string): string {
   return normalizeRaw(title)
     .replace(/[^\w\s]/g, '')
     .replace(/\s+/g, ' ')
