@@ -89,6 +89,7 @@ export interface ArchiveClient {
   getItemDescription(identifier: string): Promise<string | null>
   getShowMetadata(identifier: string): Promise<ArchiveShowMetadata>
   selectBestRecording(candidates: ArchiveShowCandidate[], totalSongs: number): Promise<{ identifier: string; mp3Count: number }>
+  getCachedAudioTrackCount(date: string): number
 }
 
 function normalizeForMatch(s: string): string {
@@ -562,6 +563,15 @@ export class ArchiveClientImpl implements ArchiveClient {
       return b.mp3Count - a.mp3Count
     })
     return { identifier: sorted[0].identifier, mp3Count: sorted[0].mp3Count }
+  }
+
+  // Synchronous, catalog-only — never falls through to live HTTP. Used by
+  // show-of-the-day's scoring/widen-search, which must stay on the offline
+  // fast path. Returns 0 for an uncatalogued date or one with no resolved
+  // recording — callers can't tell those apart here, which is fine: either
+  // way there's nothing to prefer.
+  getCachedAudioTrackCount(date: string): number {
+    return archiveCatalog.getByDate(date)?.best?.tracks.length ?? 0
   }
 }
 
