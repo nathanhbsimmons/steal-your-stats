@@ -508,9 +508,14 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
 
   const displayDate = featured?.date ?? null
 
+  // The show-of-the-day payload is fetched once, in full — there is no
+  // separate archive-resolution step to await afterward. A null archiveMatch
+  // means no recording was found for this show, not "still loading", so this
+  // must default to an empty Set rather than null (which would otherwise be
+  // read as a permanent loading state below).
   const archiveCoveredIndices = archiveMatch
     ? new Set(archiveMatch.matched.filter(m => m.track).map(m => m.flatIdx))
-    : null
+    : new Set<number>()
   const archiveDurations = new Map(
     archiveMatch ? archiveMatch.matched.filter(m => m.track?.duration).map(m => [m.flatIdx, m.track!.duration!]) : []
   )
@@ -582,7 +587,7 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
   const displayCity = featured ? `${featured.city}${featured.state ? `, ${featured.state}` : ''}` : ''
   const venueTidbit = featured ? getVenueTidbit(featured.venue, featured.city) : null
   const allSongs = showDetail?.sets.flatMap(s => s.songs) ?? []
-  const hasMissingAudio = archiveCoveredIndices !== null && allSongs.some((_, i) => !archiveCoveredIndices.has(i))
+  const hasMissingAudio = allSongs.length > 0 && allSongs.some((_, i) => !archiveCoveredIndices.has(i))
 
   return (
     <>
@@ -605,12 +610,7 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
               ) : null
             })()}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {displayDate && archiveCoveredIndices === null && (
-                <button className="mv-play-show-btn" disabled style={{ opacity: 0.6, cursor: 'default' }}>
-                  Loading…
-                </button>
-              )}
-              {displayDate && archiveCoveredIndices !== null && archiveCoveredIndices.size > 0 && (
+              {displayDate && archiveCoveredIndices.size > 0 && (
                 <button className="mv-play-show-btn" onClick={handlePlay}>▶ Play Show</button>
               )}
               {displayDate && (
@@ -651,20 +651,19 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
                 {set.songs.map((song, ti) => {
                   const flatIdx = showDetail.sets.slice(0, si).reduce((n, s) => n + s.songs.length, ti)
                   const isCurrent = currentTrack?.name === song && currentTrack?.showDate === showDetail.date
-                  const archiveLoading = archiveCoveredIndices === null
-                  const inArchive = !archiveLoading && archiveCoveredIndices!.has(flatIdx)
+                  const inArchive = archiveCoveredIndices.has(flatIdx)
                   const dur = archiveDurations.get(flatIdx)
                   return (
                     <div
                       key={`${si}-${ti}`}
-                      className={`mv-track${isCurrent ? ' current' : ''}${archiveLoading ? ' pending' : !inArchive ? ' unavailable' : ''}`}
+                      className={`mv-track${isCurrent ? ' current' : ''}${!inArchive ? ' unavailable' : ''}`}
                       onClick={inArchive ? () => handleTrackClick(flatIdx) : undefined}
                       role={inArchive ? 'button' : undefined}
                       aria-label={inArchive ? `Play ${song}` : undefined}
                     >
                       <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
                       <span className="title">{song}</span>
-                      {!archiveLoading && !inArchive ? (
+                      {!inArchive ? (
                         <span className="mv-unavail">Audio Unavailable</span>
                       ) : (
                         <span className="dur">{formatDur(dur)}</span>
@@ -1511,6 +1510,14 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
     let cancelled = false
     setCandidates([])
     setSelectedIdentifier(null)
+    // archiveCoveredIndices === null reads as "still resolving" further down —
+    // any exit from this resolution (no recording found, request failed) must
+    // settle archiveMatch to a real (possibly all-null) match, or that state
+    // never clears and the UI is stuck showing "Loading…" forever.
+    const noRecordingFound = () => {
+      if (cancelled) return
+      setArchiveMatch({ matched: showDetail.sets.flatMap(s => s.songs).map((song, flatIdx) => ({ song, flatIdx, track: null })), bonus: [] })
+    }
     ;(async () => {
       try {
         const resolveRes = await fetch('/api/archive/resolve-show', {
@@ -1518,13 +1525,20 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ date, totalSongs: showDetail.totalSongs }),
         })
-        if (!resolveRes.ok || cancelled) return
+        if (cancelled) return
+        if (!resolveRes.ok) { noRecordingFound(); return }
         const data = await resolveRes.json()
         if (cancelled) return
         if (Array.isArray(data.candidates)) setCandidates(data.candidates)
-        if (data.identifier) setSelectedIdentifier(data.identifier)
         setArchiveDescription(data.description ?? null)
-      } catch {}
+        if (data.identifier) {
+          setSelectedIdentifier(data.identifier)
+        } else {
+          noRecordingFound()
+        }
+      } catch {
+        noRecordingFound()
+      }
     })()
     return () => { cancelled = true }
   }, [date, showDetail?.totalSongs])

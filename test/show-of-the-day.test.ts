@@ -22,12 +22,15 @@ vi.mock('@/lib/services/show-detail', () => ({
   fetchShowDetail: (...args: unknown[]) => fetchShowDetailMock(...args),
 }))
 
+const getCachedAudioTrackCount = vi.fn()
+
 vi.mock('@/lib/clients/archive', () => ({
   ArchiveClientImpl: class {
     listArchiveShowCandidates = (...args: unknown[]) => listCandidates(...args)
     selectBestRecording = (...args: unknown[]) => selectBest(...args)
     getAllTracks = (...args: unknown[]) => getAllTracks(...args)
     getItemDescription = (...args: unknown[]) => getItemDescription(...args)
+    getCachedAudioTrackCount = (...args: unknown[]) => getCachedAudioTrackCount(...args)
   },
 }))
 
@@ -40,7 +43,7 @@ vi.mock('fs', () => {
   return { default: mocked, ...mocked }
 })
 
-import { ShowOfTheDayService, localDateKey } from '@/lib/services/show-of-the-day'
+import { ShowOfTheDayService, localDateKey, MAX_WIDEN_DAYS } from '@/lib/services/show-of-the-day'
 
 const barton = {
   date: '1977-05-08', year: 1977, venue: 'Barton Hall', city: 'Ithaca',
@@ -62,6 +65,9 @@ function happyPathMocks() {
     { name: 'gd77soundcheck.mp3', title: 'Set III: Soundcheck', length: '2:00' },
   ])
   getItemDescription.mockResolvedValue('Includes a pre-show soundcheck.')
+  // Nonzero so barton scores as audio-having and selectFeatured returns
+  // immediately without widening — see the note on the widening tests below.
+  getCachedAudioTrackCount.mockReturnValue(2)
 }
 
 async function flushAsync() {
@@ -221,6 +227,113 @@ describe('ShowOfTheDayService', () => {
 
     expect(payload.dateKey).toBe('2026-07-12')
     expect(getShowsOnDate).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('ShowOfTheDayService audio-aware widening', () => {
+  const widenedNear = {
+    date: '1975-07-11', year: 1975, venue: 'Winterland', city: 'San Francisco',
+    state: 'CA', country: 'US', songs: ['Franklin\'s Tower'],
+  }
+  const widenedFar = {
+    date: '1978-07-10', year: 1978, venue: 'Red Rocks', city: 'Morrison',
+    state: 'CO', country: 'US', songs: ['Scarlet Begonias'],
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-07-12T09:00:00'))
+    readFileSync.mockImplementation(() => { throw new Error('no disk cache') })
+    getSetlistForDate.mockResolvedValue(null)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('uses the exact date\'s audio-having show without widening', async () => {
+    happyPathMocks()
+    const svc = new ShowOfTheDayService()
+    const payload = await svc.get()
+
+    expect(payload.featured).toEqual(barton)
+    expect(getShowsOnDate).toHaveBeenCalledTimes(1)
+  })
+
+  it('widens to the closest audio-having date when the exact date has no audio', async () => {
+    happyPathMocks()
+    getShowsOnDate.mockImplementation((month: string, day: string) => {
+      if (month === '07' && day === '12') return Promise.resolve([barton])
+      if (month === '07' && day === '11') return Promise.resolve([widenedNear])
+      return Promise.resolve([])
+    })
+    getCachedAudioTrackCount.mockImplementation((date: string) => date === widenedNear.date ? 3 : 0)
+
+    const svc = new ShowOfTheDayService()
+    const payload = await svc.get()
+
+    expect(payload.featured).toEqual(widenedNear)
+    expect(payload.shows).toEqual([barton])
+    expect(getShowsOnDate).toHaveBeenCalledTimes(2)
+    expect(getShowsOnDate).toHaveBeenLastCalledWith('07', '11')
+  })
+
+  it('prefers a closer audio-having date over a farther one', async () => {
+    happyPathMocks()
+    // Both widenedNear (distance 1, 07-11) and widenedFar (distance 2, 07-10)
+    // have audio — the search must stop at the first (closer) hit.
+    getShowsOnDate.mockImplementation((month: string, day: string) => {
+      if (month === '07' && day === '12') return Promise.resolve([barton])
+      if (month === '07' && day === '11') return Promise.resolve([widenedNear])
+      if (month === '07' && day === '10') return Promise.resolve([widenedFar])
+      return Promise.resolve([])
+    })
+    getCachedAudioTrackCount.mockImplementation((date: string) =>
+      date === widenedNear.date || date === widenedFar.date ? 3 : 0
+    )
+
+    const svc = new ShowOfTheDayService()
+    const payload = await svc.get()
+
+    expect(payload.featured).toEqual(widenedNear)
+    // exact date + distance-1 candidate (11) — stops before reaching distance 2
+    expect(getShowsOnDate).toHaveBeenCalledTimes(2)
+  })
+
+  it('falls back to the exact-date pick when nothing has audio within the cap', async () => {
+    happyPathMocks()
+    getShowsOnDate.mockImplementation((month: string, day: string) => {
+      if (month === '07' && day === '12') return Promise.resolve([barton])
+      return Promise.resolve([])
+    })
+    getCachedAudioTrackCount.mockReturnValue(0)
+    listCandidates.mockResolvedValue([])
+
+    const svc = new ShowOfTheDayService()
+    const payload = await svc.get()
+
+    expect(payload.featured).toEqual(barton)
+    expect(payload.archive).toBeNull()
+    expect(getShowsOnDate).toHaveBeenCalledTimes(1 + 2 * MAX_WIDEN_DAYS)
+  })
+
+  it('finds a widened show when the exact date has no shows at all', async () => {
+    happyPathMocks()
+    getShowsOnDate.mockImplementation((month: string, day: string) => {
+      if (month === '07' && day === '12') return Promise.resolve([])
+      if (month === '07' && day === '11') return Promise.resolve([widenedNear])
+      return Promise.resolve([])
+    })
+    getCachedAudioTrackCount.mockImplementation((date: string) => date === widenedNear.date ? 3 : 0)
+
+    const svc = new ShowOfTheDayService()
+    const payload = await svc.get()
+
+    expect(payload.shows).toEqual([])
+    expect(payload.featured).toEqual(widenedNear)
+    expect(payload.archive).not.toBeNull()
+    expect(getShowsOnDate).toHaveBeenCalledTimes(2)
   })
 })
 

@@ -4,9 +4,10 @@ import { ArchiveClientImpl } from '@/lib/clients/archive'
 import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
 import { fetchShowDetail, mapSetlistToShowDetail } from '@/lib/services/show-detail'
 import { pickFeaturedShow } from '@/lib/featured-show'
+import { widenDateSearch } from '@/lib/date-offset'
 import { formatArchiveTracks } from '@/lib/archive-track-format'
 import { matchArchiveTracksToSetlist } from '@/lib/archive-track-match'
-import type { ShowOfTheDayPayload } from '@/lib/show-of-the-day-types'
+import type { ShowOfTheDayPayload, ShowOnThisDay } from '@/lib/show-of-the-day-types'
 
 // "The day" is fixed to US/Eastern, matching the /api/on-this-day convention.
 // Deploy hosts run UTC, which rolls to the next date hours before US evening —
@@ -15,6 +16,10 @@ import type { ShowOfTheDayPayload } from '@/lib/show-of-the-day-types'
 const DISK_CACHE_PATH = path.join(process.cwd(), '.cache', 'show-of-the-day.json')
 const INCOMPLETE_RETRY_MS = 10 * 60 * 1000
 const SHOW_DAY_TZ = 'America/New_York'
+// Each direction; widening only walks the offline setlist/archive-catalog
+// indexes (see selectFeatured), so 14 extra getShowsOnDate calls worst case
+// stays cheap/local — no new network calls in the common case.
+export const MAX_WIDEN_DAYS = 7
 
 const dateKeyFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: SHOW_DAY_TZ,
@@ -74,10 +79,44 @@ export class ShowOfTheDayService {
     return this.inflight
   }
 
+  // Picks the featured show, preferring one with a cached Archive.org
+  // recording. If the exact date's best pick has no audio (or there are no
+  // shows at all on the exact date), widens outward across nearby calendar
+  // dates (year-agnostic) looking for the closest one with audio, falling
+  // back to the exact-date pick (which may be null) if the cap is exhausted.
+  // Stays entirely on the offline setlist/archive-catalog fast path — no
+  // live HTTP calls are made here.
+  private async selectFeatured(
+    exactShows: ShowOnThisDay[],
+    seed: string,
+    month: string,
+    day: string,
+    getAudioTrackCount: (date: string) => number,
+  ): Promise<ShowOnThisDay | null> {
+    const bestExact = pickFeaturedShow(exactShows, seed, getAudioTrackCount)
+    if (bestExact && getAudioTrackCount(bestExact.date) > 0) return bestExact
+
+    for (const candidate of widenDateSearch(month, day, MAX_WIDEN_DAYS)) {
+      const shows = await realtimeSongFactsService.getShowsOnDate(candidate.month, candidate.day)
+      const best = pickFeaturedShow(shows, seed, getAudioTrackCount)
+      if (best && getAudioTrackCount(best.date) > 0) return best
+    }
+
+    return bestExact
+  }
+
   private async compute(dateKey: string): Promise<ShowOfTheDayPayload> {
     const [, month, day] = dateKey.split('-')
     const shows = await realtimeSongFactsService.getShowsOnDate(month, day)
-    const featured = pickFeaturedShow(shows, dateKey)
+    // One client for the whole compute so its HttpClient cache dedupes
+    // repeat /metadata fetches within the archive chain, and so the widen
+    // search's catalog-only lookups and the final live-resolution chain
+    // share the same instance.
+    const archiveClient = new ArchiveClientImpl()
+    const featured = await this.selectFeatured(
+      shows, dateKey, month, day,
+      date => archiveClient.getCachedAudioTrackCount(date),
+    )
 
     if (!featured) {
       return { dateKey, shows, featured: null, showDetail: null, archive: null, archiveMatch: null, complete: true, computedAt: Date.now() }
@@ -96,9 +135,6 @@ export class ShowOfTheDayService {
 
     let archive: ShowOfTheDayPayload['archive'] = null
     try {
-      // One client for the whole compute so its HttpClient cache dedupes
-      // repeat /metadata fetches within the archive chain.
-      const archiveClient = new ArchiveClientImpl()
       const candidates = await archiveClient.listArchiveShowCandidates({
         date: featured.date,
         venue: featured.venue,

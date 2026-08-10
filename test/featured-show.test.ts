@@ -47,3 +47,32 @@ describe('pickFeaturedShow', () => {
     expect(input).toEqual(copy)
   })
 })
+
+describe('pickFeaturedShow audio-aware scoring', () => {
+  it('prefers a show with audio over a show without, even against era/setlist', () => {
+    const withAudio = show(1995, [])
+    const withoutAudio = show(1970, ['Dark Star'])
+    const getAudioTrackCount = (date: string) => date === withAudio.date ? 5 : 0
+    expect(pickFeaturedShow([withoutAudio, withAudio], '', getAudioTrackCount)).toBe(withAudio)
+  })
+
+  it('prefers more tracks among shows that both have audio', () => {
+    const more = show(1970, ['Dark Star'])
+    const fewer = show(1978, ['Dark Star'])
+    const getAudioTrackCount = (date: string) => date === more.date ? 10 : 2
+    expect(pickFeaturedShow([fewer, more], '', getAudioTrackCount)).toBe(more)
+  })
+
+  it('falls back to setlist/era tiebreak beneath equal audio counts', () => {
+    const era = show(1970, ['Dark Star'])
+    const late = show(1995, ['Dark Star'])
+    const getAudioTrackCount = () => 4
+    expect(pickFeaturedShow([late, era], '', getAudioTrackCount)).toBe(era)
+  })
+
+  it('keeps the default no-audio lookup backward compatible', () => {
+    const withSongs = show(1995, ['Dark Star'])
+    const withoutSongs = show(1977)
+    expect(pickFeaturedShow([withoutSongs, withSongs])).toBe(withSongs)
+  })
+})

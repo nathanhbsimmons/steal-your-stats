@@ -240,4 +240,44 @@ describe('ArchiveClientImpl', () => {
       expect(mockHttp.get).toHaveBeenCalled()
     })
   })
+
+  describe('getCachedAudioTrackCount', () => {
+    const catalogTrack = { name: 'gd77-05-08d1t01.mp3', title: 'Dark Star', length: '1200.0' }
+    const bestEntry = {
+      identifier: 'gd1977-05-08.sbd',
+      venue: 'Barton Hall', city: 'Ithaca', state: 'NY', country: 'US',
+      licenseurl: 'https://example.org/license', rights: 'Public',
+      publicdate: '2005-01-01', description: 'A legendary show.',
+      tracks: [catalogTrack],
+    }
+    const candidates = [{ identifier: 'gd1977-05-08.sbd', title: 'Barton Hall', recordingType: 'sbd' as const, score: 1 }]
+
+    it('returns the track count on a catalog hit with a resolved recording, without any HTTP call', () => {
+      vi.mocked(archiveCatalog.getByDate).mockReturnValue({ date: '1977-05-08', candidates, best: bestEntry, resolvedAt: 0 })
+
+      expect(client.getCachedAudioTrackCount('1977-05-08')).toBe(1)
+      expect(mockHttp.get).not.toHaveBeenCalled()
+    })
+
+    it('returns 0 on a catalog miss, without any HTTP call', () => {
+      vi.mocked(archiveCatalog.getByDate).mockReturnValue(undefined)
+
+      expect(client.getCachedAudioTrackCount('2030-01-01')).toBe(0)
+      expect(mockHttp.get).not.toHaveBeenCalled()
+    })
+
+    it('returns 0 for a catalogued date with no resolved recording', () => {
+      vi.mocked(archiveCatalog.getByDate).mockReturnValue({ date: '1972-08-27', candidates: [], resolvedAt: 0 })
+
+      expect(client.getCachedAudioTrackCount('1972-08-27')).toBe(0)
+    })
+
+    it('returns 0 for a catalogued recording with an empty track list', () => {
+      vi.mocked(archiveCatalog.getByDate).mockReturnValue({
+        date: '1977-05-08', candidates, best: { ...bestEntry, tracks: [] }, resolvedAt: 0,
+      })
+
+      expect(client.getCachedAudioTrackCount('1977-05-08')).toBe(0)
+    })
+  })
 })
