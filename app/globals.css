@@ -31,6 +31,8 @@
   --rule-soft:    rgba(26, 20, 12, 0.22);
   --rule-faint:   rgba(26, 20, 12, 0.10);
   --hi:           rgba(168, 57, 31, 0.10);
+  --focus-ring:   2px solid var(--rust);
+  --focus-ring-offset: 2px;
 
   --serif-display: var(--font-dm-serif-display), var(--font-bodoni-moda), 'Bodoni 72', 'Didot', serif;
   --serif-numerals: var(--font-bodoni-moda), var(--font-dm-serif-display), 'Didot', serif;
@@ -83,6 +85,23 @@ button { font-family: inherit; cursor: pointer; }
 input, textarea { font-family: inherit; }
 h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: 400; }
 p { margin: 0; }
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
 
 /* ---------------------------------------- PAGE SHELL */
 .vault-page {
@@ -172,7 +191,6 @@ p { margin: 0; }
 .masthead .search-box input {
   background: transparent;
   border: 0;
-  outline: 0;
   font: inherit;
   flex: 1;
   width: 0;
@@ -1209,7 +1227,7 @@ p { margin: 0; }
   letter-spacing: 0.04em; width: 100%; max-width: 380px;
   box-shadow: 3px 3px 0 var(--rule-soft);
 }
-.filter-input input { background: transparent; border: 0; outline: 0; font: inherit; flex: 1; color: var(--ink); }
+.filter-input input { background: transparent; border: 0; font: inherit; flex: 1; color: var(--ink); }
 .filter-input input::placeholder { color: var(--ink-3); }
 .filter-input .clear { color: var(--ink-3); cursor: pointer; font-family: var(--mono); }
 .filter-input .clear:hover { color: var(--rust); }
@@ -1359,7 +1377,7 @@ p { margin: 0; }
   font-family: var(--mono); font-size: 13px; letter-spacing: 0.03em;
 }
 .fx-search .gl { color: var(--ink-3); font-size: 12px; }
-.fx-search input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; font: inherit; color: var(--ink); }
+.fx-search input { flex: 1; min-width: 0; background: transparent; border: 0; font: inherit; color: var(--ink); }
 .fx-search input::placeholder { color: var(--ink-4); }
 .fx-search .clear { background: none; border: 0; font: inherit; font-size: 11px; color: var(--ink-3); cursor: pointer; letter-spacing: 0.08em; }
 .fx-search .clear:hover { color: var(--rust); }
@@ -1424,7 +1442,7 @@ p { margin: 0; }
 }
 .fx-opt .box:checked { background: var(--cc); border-color: var(--cc); }
 .fx-opt .box:checked::after { content: '✓'; color: var(--paper); font-size: 9px; line-height: 1; }
-.fx-opt .box:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; }
+.fx-opt .box:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
 .fx-opt .lb { font-family: var(--serif-body); font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fx-opt:has(.box:checked) .lb { font-weight: 600; }
 .fx-opt .ct { font-family: var(--mono); font-size: 10px; color: var(--ink-4); font-feature-settings: "tnum"; }
@@ -1443,7 +1461,7 @@ p { margin: 0; }
 .fx-chip .x { font-size: 11px; opacity: 0.72; }
 .fx-chip:hover { background: var(--ink); }
 .fx-chip:hover .x { opacity: 1; }
-.fx-chip:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; }
+.fx-chip:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-ring-offset); }
 .fx-clear { background: none; border: 0; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
 .fx-clear:hover { color: var(--rust); }
 .fx-empty { font-family: var(--serif-body); font-style: italic; font-size: 13px; color: var(--ink-4); }
