@@ -35,9 +35,9 @@ export function VaultPlayer() {
   const [volume, setVolume] = useState(0.72)
   const [showQueue, setShowQueue] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
-  const barRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
-  const volRef = useRef<HTMLDivElement>(null)
+  const queueToggleRef = useRef<HTMLButtonElement>(null)
+  const wasQueueOpenRef = useRef(false)
 
   // Load new src when track URL changes
   useEffect(() => {
@@ -186,6 +186,14 @@ export function VaultPlayer() {
   // Close queue on navigation
   useEffect(() => { setShowQueue(false) }, [pathname])
 
+  // Return focus to the toggle button when the drawer closes
+  useEffect(() => {
+    if (wasQueueOpenRef.current && !showQueue) {
+      queueToggleRef.current?.focus()
+    }
+    wasQueueOpenRef.current = showQueue
+  }, [showQueue])
+
   // Close queue on click outside (exclude the player bar, queue drawer, play/add-queue buttons)
   useEffect(() => {
     if (!showQueue) return
@@ -209,17 +217,12 @@ export function VaultPlayer() {
 
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0
 
-  const onBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const fraction = (e.clientX - rect.left) / rect.width
+  const onSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const audio = audioRef.current
-    if (audio && duration > 0) audio.currentTime = fraction * duration
-  }
-
-  const onVolClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const v = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    setVolume(v)
+    if (!audio) return
+    const t = parseFloat(e.target.value)
+    audio.currentTime = t
+    setCurrentTime(t)
   }
 
   const releases = useMemo(
@@ -282,13 +285,23 @@ export function VaultPlayer() {
             </div>
             <div className="progress">
               <span className="time">{formatTime(currentTime)}</span>
-              <div className="bar" ref={barRef} onClick={onBarClick}>
+              <div className="bar">
                 <div className="track-rule" />
                 <div className="ticks">
                   {Array.from({ length: 11 }).map((_, i) => <span key={i} />)}
                 </div>
                 <div className="fill" style={{ width: `${pct}%` }} />
-                <div className="needle" style={{ left: `${pct}%` }} />
+                <input
+                  type="range"
+                  className="bar-input"
+                  min={0}
+                  max={duration || 0}
+                  step={1}
+                  value={currentTime}
+                  onChange={onSeekChange}
+                  aria-label="Seek"
+                  aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+                />
               </div>
               <span className="time right">{formatTime(duration)}</span>
             </div>
@@ -298,15 +311,28 @@ export function VaultPlayer() {
           <div className="right-ctrls">
             <div className="vol">
               <span className="vol-label">VOL</span>
-              <div className="slider" ref={volRef} onClick={onVolClick}>
+              <div className="slider">
                 <div className="rule" />
                 <div className="fill" style={{ width: `${volume * 100}%` }} />
-                <div className="knob" style={{ left: `${volume * 100}%` }} />
+                <input
+                  type="range"
+                  className="vol-input"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={volume}
+                  onChange={e => setVolume(parseFloat(e.target.value))}
+                  aria-label="Volume"
+                  aria-valuetext={`${Math.round(volume * 100)}%`}
+                />
               </div>
             </div>
             <button
+              ref={queueToggleRef}
               className={`toggleq${showQueue ? ' active' : ''}`}
               onClick={() => setShowQueue(s => !s)}
+              aria-expanded={showQueue}
+              aria-controls="vault-queue-drawer"
             >
               Queue <span className="badge">{queue.length}</span>
             </button>
@@ -323,17 +349,39 @@ export function VaultPlayer() {
 function VaultQueueDrawer({ onClose }: { onClose: () => void }) {
   const { queue, currentTrack, selectTrack, removeFromQueue, clearQueue } = usePlayer()
   const currentIdx = currentTrack ? queue.findIndex(t => t.id === currentTrack.id) : -1
+  const drawerRef = useRef<HTMLDivElement>(null)
+  const closeBtnRef = useRef<HTMLButtonElement>(null)
+
+  // Move focus into the drawer on open
+  useEffect(() => {
+    closeBtnRef.current?.focus()
+  }, [])
+
+  // Escape closes the drawer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   return (
-    <div className="vault-queue">
-      <header onClick={onClose} style={{ cursor: 'pointer' }}>
+    <div id="vault-queue-drawer" className="vault-queue" ref={drawerRef} role="region" aria-label="Play queue">
+      <header>
         <div>
           <h4>Queue{' '}
             <span className="sub">{queue.length} TRACKS · {formatQueueTime(queue)}</span>
           </h4>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <button className="close-btn queue-dismiss-btn" onClick={onClose}>×</button>
+          <button
+            ref={closeBtnRef}
+            type="button"
+            className="close-btn queue-dismiss-btn"
+            onClick={onClose}
+            aria-label="Close queue"
+          >×</button>
         </div>
       </header>
       <div className="list">
@@ -346,18 +394,27 @@ function VaultQueueDrawer({ onClose }: { onClose: () => void }) {
           <div
             key={t.id + i}
             className={`qrow${i === currentIdx ? ' current' : ''}`}
-            onClick={() => selectTrack(t)}
           >
-            <span className="qnum">{String(i + 1).padStart(2, '0')}</span>
-            <span>
-              <div className="qtitle">{t.name}</div>
-              <div className="qsub">{t.showDate} · {t.venue}</div>
-            </span>
-            <span className="qdur">{t.duration ? formatTime(t.duration) : '—'}</span>
-            <span
+            <button
+              type="button"
+              className="qrow-btn"
+              onClick={() => selectTrack(t)}
+              aria-label={`Play track ${i + 1}: ${t.name}`}
+              aria-current={i === currentIdx ? 'true' : undefined}
+            >
+              <span className="qnum">{String(i + 1).padStart(2, '0')}</span>
+              <span>
+                <div className="qtitle">{t.name}</div>
+                <div className="qsub">{t.showDate} · {t.venue}</div>
+              </span>
+              <span className="qdur">{t.duration ? formatTime(t.duration) : '—'}</span>
+            </button>
+            <button
+              type="button"
               className="qx"
               onClick={e => { e.stopPropagation(); removeFromQueue(t.id) }}
-            >×</span>
+              aria-label={`Remove ${t.name} from queue`}
+            >×</button>
           </div>
         ))}
       </div>
