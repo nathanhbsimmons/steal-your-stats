@@ -1581,6 +1581,11 @@ p { margin: 0; }
 .export-tab.active { color: var(--ink); border-bottom: 3px solid var(--rust); margin-bottom: -1px; }
 .export-tab:hover { background: var(--hi); }
 
+.dossier-check-input:focus-visible + .dossier-check-box {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
 /* ============================================================
    BREADCRUMBS
    ============================================================ */

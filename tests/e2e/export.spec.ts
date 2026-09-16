@@ -1,6 +1,28 @@
 import { test, expect } from '@playwright/test'
 import { mockAllApis, mockStats, mockSongFacts, mockPositionFacts, mockVersions } from './fixtures'
 
+const mockSetlistSongs = {
+  songs: [
+    {
+      title: 'dark star', displayTitle: 'Dark Star', aliases: [],
+      hints: {
+        positionHints: { isCommonOpener: false, isCommonCloser: false, isCommonEncore: false },
+        avgDurationSec: 900,
+        topPredecessors: [{ name: 'China Cat Sunflower', count: 5 }],
+        topSuccessors: [{ name: 'St. Stephen', count: 4 }],
+      },
+    },
+    {
+      title: 'bertha', displayTitle: 'Bertha', aliases: [],
+      hints: {
+        positionHints: { isCommonOpener: true, isCommonCloser: false, isCommonEncore: false },
+        avgDurationSec: 400,
+      },
+    },
+  ],
+  total: 2,
+}
+
 test.describe('Export page — layout and navigation', () => {
   test.beforeEach(async ({ page }) => {
     await mockAllApis(page)
@@ -56,6 +78,19 @@ test.describe('Export page — Data Export tab', () => {
     await expect(page.getByText('Versions table (top 25)').first()).toBeVisible()
   })
 
+  test('sections are a labeled fieldset of real, checked checkboxes', async ({ page }) => {
+    await expect(page.getByRole('group', { name: 'Sections' })).toBeVisible()
+    await expect(page.getByRole('checkbox', { name: /Performance facts/ })).toBeChecked()
+    await expect(page.getByRole('checkbox', { name: /Aliases & attribution/ })).not.toBeChecked()
+  })
+
+  test('a section checkbox is keyboard-toggleable', async ({ page }) => {
+    const checkbox = page.getByRole('checkbox', { name: /Performance facts/ })
+    await checkbox.focus()
+    await page.keyboard.press('Space')
+    await expect(checkbox).not.toBeChecked()
+  })
+
   test('live preview shows the song title', async ({ page }) => {
     await expect(page.getByText('STEAL YOUR STATS · SONG DOSSIER')).toBeVisible()
     // The preview shows the song name
@@ -97,7 +132,7 @@ test.describe('Export page — Data Export tab', () => {
   })
 
   test('toggling a section checkbox hides it from preview', async ({ page }) => {
-    // Click the checkbox label span — event bubbles up to the row div's onClick
+    // Click the visible label text — bubbles to the wrapping <label>'s checkbox
     await page.locator('span', { hasText: 'Performance facts' }).first().click()
     // Checkbox label is still visible in the left panel
     await expect(page.getByText('Performance facts').first()).toBeVisible()
@@ -120,5 +155,75 @@ test.describe('Export page — Setlist Builder tab', () => {
     page.on('pageerror', e => errors.push(e.message))
     await page.waitForTimeout(1500)
     expect(errors).toHaveLength(0)
+  })
+})
+
+test.describe('Export page — Setlist Builder accessibility', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockAllApis(page)
+    await page.route('**/api/songs**', r => r.fulfill({ json: mockSetlistSongs }))
+    await page.goto('/export')
+    await page.getByPlaceholder('China Cat, Dark Star, Bertha…').fill('dark')
+  })
+
+  // Search results and the added setlist can both show a song's title, so
+  // scope the "Add" click to the result row (title span's immediate parent).
+  async function addFromResults(page: import('@playwright/test').Page, title: string) {
+    await page.getByText(title, { exact: true }).first().locator('..').getByRole('button', { name: /^Add/ }).click()
+  }
+
+  test('the search-is-pending state is announced in a live region', async ({ page }) => {
+    await page.route('**/api/songs**', async r => {
+      await new Promise(res => setTimeout(res, 800))
+      await r.fulfill({ json: mockSetlistSongs })
+    })
+    await page.getByPlaceholder('China Cat, Dark Star, Bertha…').fill('darkx')
+    await expect(page.locator('[aria-live="polite"]', { hasText: 'Searching…' })).toBeAttached()
+  })
+
+  test('predecessor/successor chips are toggle buttons with aria-pressed', async ({ page }) => {
+    const pred = page.getByRole('button', { name: /China Cat Sunflower/ })
+    const succ = page.getByRole('button', { name: /St\. Stephen/ })
+    await expect(pred).toHaveAttribute('aria-pressed', 'false')
+    await expect(succ).toHaveAttribute('aria-pressed', 'false')
+
+    await pred.click()
+    await expect(pred).toHaveAttribute('aria-pressed', 'true')
+    await succ.click()
+    await expect(succ).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('added song rows have an accessible, song-specific remove and segue control', async ({ page }) => {
+    await addFromResults(page, 'Dark Star')
+
+    const removeBtn = page.getByRole('button', { name: 'Remove Dark Star' })
+    await expect(removeBtn).toBeVisible()
+
+    const segueBtn = page.getByRole('button', { name: /segue after Dark Star/ })
+    await expect(segueBtn).toHaveAttribute('aria-pressed', 'false')
+    await segueBtn.click()
+    await expect(segueBtn).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('keyboard "Move down"/"Move up" reorders the setlist and announces the move', async ({ page }) => {
+    await addFromResults(page, 'Dark Star')
+    await addFromResults(page, 'Bertha')
+
+    // Starting order: Dark Star, Bertha — Dark Star is first, Bertha is last.
+    await expect(page.getByRole('button', { name: 'Move Dark Star up' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Move Bertha down' })).toBeDisabled()
+
+    await page.getByRole('button', { name: 'Move Dark Star down' }).click()
+
+    await expect(page.locator('[aria-live="polite"]', { hasText: 'Dark Star moved to position 2 of 2' })).toBeAttached()
+    // Order is now flipped: Bertha first, Dark Star last.
+    await expect(page.getByRole('button', { name: 'Move Bertha up' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Move Dark Star down' })).toBeDisabled()
+  })
+
+  test('clear-search button is a labeled type="button" control', async ({ page }) => {
+    const clearBtn = page.getByRole('button', { name: 'Clear search' })
+    await expect(clearBtn).toBeVisible()
+    await expect(clearBtn).toHaveAttribute('type', 'button')
   })
 })
