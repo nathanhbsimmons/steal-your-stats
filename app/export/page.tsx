@@ -161,34 +161,42 @@ export default function ExportPage() {
                   value={songInput}
                   onChange={e => setSongInput(e.target.value)}
                   placeholder="Song name…"
-                  style={{ background: 'transparent', border: 0, outline: 'none', fontFamily: 'var(--mono)', fontSize: 12, flex: 1, color: 'var(--ink)' }}
+                  aria-label="Choose a song"
+                  style={{ background: 'transparent', border: 0, fontFamily: 'var(--mono)', fontSize: 12, flex: 1, color: 'var(--ink)' }}
                 />
               </div>
 
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Sections</div>
-              {DOSSIER_SECTIONS.map(s => (
-                <div
-                  key={s.key}
-                  onClick={() => setInclude(prev => ({ ...prev, [s.key]: !prev[s.key] }))}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0',
-                    borderBottom: '1px dotted var(--rule-soft)', cursor: 'pointer',
-                  }}
-                >
-                  <span style={{
-                    width: 14, height: 14, border: '1px solid var(--ink)',
-                    background: include[s.key] ? 'var(--forest)' : 'var(--paper)',
-                    color: 'var(--paper)', fontFamily: 'var(--mono)', fontSize: 10,
-                    display: 'grid', placeItems: 'center', flexShrink: 0,
-                  }}>
-                    {include[s.key] ? '✓' : ''}
-                  </span>
-                  <span style={{
-                    fontFamily: 'var(--serif-body)', fontSize: 14,
-                    color: include[s.key] ? 'var(--ink)' : 'var(--ink-3)',
-                  }}>{s.label}</span>
-                </div>
-              ))}
+              <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+                <legend style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8, padding: 0 }}>Sections</legend>
+                {DOSSIER_SECTIONS.map(s => (
+                  <label
+                    key={s.key}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0',
+                      borderBottom: '1px dotted var(--rule-soft)', cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only dossier-check-input"
+                      checked={include[s.key]}
+                      onChange={() => setInclude(prev => ({ ...prev, [s.key]: !prev[s.key] }))}
+                    />
+                    <span className="dossier-check-box" aria-hidden="true" style={{
+                      width: 14, height: 14, border: '1px solid var(--ink)',
+                      background: include[s.key] ? 'var(--forest)' : 'var(--paper)',
+                      color: 'var(--paper)', fontFamily: 'var(--mono)', fontSize: 10,
+                      display: 'grid', placeItems: 'center', flexShrink: 0,
+                    }}>
+                      {include[s.key] ? '✓' : ''}
+                    </span>
+                    <span style={{
+                      fontFamily: 'var(--serif-body)', fontSize: 14,
+                      color: include[s.key] ? 'var(--ink)' : 'var(--ink-3)',
+                    }}>{s.label}</span>
+                  </label>
+                ))}
+              </fieldset>
 
               <button
                 className="btn primary"

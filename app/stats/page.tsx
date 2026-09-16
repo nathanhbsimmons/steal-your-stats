@@ -89,6 +89,9 @@ function DonutChart({ positions, songLabel }: { positions: PositionEntry[]; song
 
 interface SongSuggestion { title: string; displayTitle: string }
 
+const POSITION_SONG_LISTBOX_ID = 'position-song-listbox'
+const positionSongOptionId = (i: number) => `position-song-option-${i}`
+
 export default function StatsPage() {
   const { data: stats } = useSWR<GlobalStats>('/api/stats', fetcher, swrOpts)
   const { data: summary } = useSWR<SummaryData>('/api/stats/summary', fetcher, swrOpts)
@@ -102,9 +105,11 @@ export default function StatsPage() {
   const [suggestions, setSuggestions] = useState<SongSuggestion[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [activeIdx, setActiveIdx] = useState(-1)
+  const [announcement, setAnnouncement] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const announceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -144,7 +149,9 @@ export default function StatsPage() {
         { label: 'Encore',  count: encore, pct: `${Math.round((encore / safe) * 100)}%` },
       ])
       setPositionTotal(total)
-      setPositionSong(pos?.songTitle || songTitle)
+      const resolvedSong = pos?.songTitle || songTitle
+      setPositionSong(resolvedSong)
+      setAnnouncement(`Showing position breakdown for ${resolvedSong}, ${total} performances`)
     } catch {
       // keep existing data on error
     } finally {
@@ -156,6 +163,7 @@ export default function StatsPage() {
     setSongQuery(q)
     setActiveIdx(-1)
     if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (announceDebounceRef.current) clearTimeout(announceDebounceRef.current)
     if (!q.trim()) { setSuggestions([]); setShowDropdown(false); return }
     debounceRef.current = setTimeout(() => {
       fetch(`/api/songs?q=${encodeURIComponent(q)}`)
@@ -164,12 +172,21 @@ export default function StatsPage() {
           const found: SongSuggestion[] = (d?.songs ?? []).slice(0, 8)
           setSuggestions(found)
           setShowDropdown(found.length > 0)
+          // Announce on a longer, separate debounce than the fetch itself so
+          // rapid keystrokes don't queue up multiple polite live-region updates.
+          if (announceDebounceRef.current) clearTimeout(announceDebounceRef.current)
+          announceDebounceRef.current = setTimeout(() => {
+            setAnnouncement(found.length > 0
+              ? `${found.length} suggestion${found.length === 1 ? '' : 's'} available`
+              : 'No suggestions found')
+          }, 500)
         })
         .catch(() => {})
     }, 180)
   }
 
   function selectSong(song: SongSuggestion) {
+    if (announceDebounceRef.current) clearTimeout(announceDebounceRef.current)
     setSongQuery('')
     setSuggestions([])
     setShowDropdown(false)
@@ -286,8 +303,14 @@ export default function StatsPage() {
                     onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
                     onKeyDown={handleKeyDown}
                     placeholder="Search…"
+                    role="combobox"
+                    aria-expanded={showDropdown}
+                    aria-controls={POSITION_SONG_LISTBOX_ID}
+                    aria-autocomplete="list"
+                    aria-activedescendant={activeIdx >= 0 ? positionSongOptionId(activeIdx) : undefined}
+                    aria-label="Search for a song's chart position"
                     style={{
-                      border: 'none', outline: 'none', background: 'transparent',
+                      border: 'none', background: 'transparent',
                       fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink)',
                       flex: 1, minWidth: 0,
                     }}
@@ -299,6 +322,8 @@ export default function StatsPage() {
                 {showDropdown && suggestions.length > 0 && (
                   <div
                     ref={dropdownRef}
+                    id={POSITION_SONG_LISTBOX_ID}
+                    role="listbox"
                     style={{
                       position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0,
                       background: 'var(--paper)', border: '2px solid var(--ink)',
@@ -309,6 +334,10 @@ export default function StatsPage() {
                     {suggestions.map((s, i) => (
                       <div
                         key={s.title}
+                        id={positionSongOptionId(i)}
+                        role="option"
+                        aria-selected={i === activeIdx}
+                        tabIndex={-1}
                         onMouseDown={() => selectSong(s)}
                         onMouseEnter={() => setActiveIdx(i)}
                         style={{
@@ -324,6 +353,7 @@ export default function StatsPage() {
                     ))}
                   </div>
                 )}
+                <div aria-live="polite" className="sr-only">{announcement}</div>
               </div>
 
               {/* Legend — centered in remaining space below the search bar */}

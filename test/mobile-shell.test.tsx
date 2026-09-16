@@ -443,40 +443,49 @@ describe('MobileShell', () => {
       activateDeck()
       const slider = screen.getByRole('slider', { name: 'Seek' })
       expect(slider).toBeInTheDocument()
-      expect(slider).toHaveAttribute('aria-valuenow')
-      expect(slider).toHaveAttribute('aria-valuemin', '0')
+      expect(slider).toHaveAttribute('min', '0')
+      expect(slider).toHaveAttribute('aria-valuetext')
     })
 
-    it('dispatches vault-seek-to-fraction on click at the midpoint', () => {
+    it('dispatches vault-seek-to-fraction when the seek slider is changed', () => {
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
       activateDeck()
-      const bar = screen.getByRole('slider', { name: 'Seek' })
+      act(() => {
+        window.dispatchEvent(new CustomEvent('vault-time-update', {
+          detail: { currentTime: 0, duration: 200 },
+        }))
+      })
+      const slider = screen.getByRole('slider', { name: 'Seek' })
       const events: CustomEvent[] = []
       window.addEventListener('vault-seek-to-fraction', e => events.push(e as CustomEvent))
-      Object.defineProperty(bar, 'getBoundingClientRect', {
-        value: () => ({ left: 0, width: 200, top: 0, bottom: 20, right: 200, height: 20 }),
-        configurable: true,
-      })
-      fireEvent.click(bar, { clientX: 100 })
+      fireEvent.change(slider, { target: { value: '100' } })
       expect(events).toHaveLength(1)
-      expect(events[0].detail.fraction).toBeCloseTo(0.5, 1)
+      expect(events[0].detail.fraction).toBeCloseTo(0.5, 5)
     })
 
     it('dispatches vault-seek-to-fraction: fraction clamps to 0..1', () => {
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: false })
       render(<MobileShell />)
       activateDeck()
-      const bar = screen.getByRole('slider', { name: 'Seek' })
+      act(() => {
+        window.dispatchEvent(new CustomEvent('vault-time-update', {
+          detail: { currentTime: 0, duration: 200 },
+        }))
+      })
+      const slider = screen.getByRole('slider', { name: 'Seek' })
       const events: CustomEvent[] = []
       window.addEventListener('vault-seek-to-fraction', e => events.push(e as CustomEvent))
-      Object.defineProperty(bar, 'getBoundingClientRect', {
-        value: () => ({ left: 0, width: 200, top: 0, bottom: 20, right: 200, height: 20 }),
-        configurable: true,
-      })
-      fireEvent.click(bar, { clientX: 999 })
+      fireEvent.change(slider, { target: { value: '200' } })
       expect(events[0].detail.fraction).toBe(1)
-      fireEvent.click(bar, { clientX: -50 })
+      // The real audio element reports its new position via vault-time-update after a seek,
+      // which is what keeps this controlled input's value in sync for the next interaction.
+      act(() => {
+        window.dispatchEvent(new CustomEvent('vault-time-update', {
+          detail: { currentTime: 200, duration: 200 },
+        }))
+      })
+      fireEvent.change(slider, { target: { value: '0' } })
       expect(events[1].detail.fraction).toBe(0)
     })
 
@@ -727,11 +736,11 @@ describe('MobileShell', () => {
       await waitFor(() => expect(screen.getByText('Barton Hall')).toBeInTheDocument())
     })
 
-    it('navigates to the show when a row is clicked', async () => {
+    it('links the row to the show page', async () => {
       render(<MobileShell />)
       await waitFor(() => expect(screen.getByText('Barton Hall')).toBeInTheDocument())
-      fireEvent.click(screen.getByText('Barton Hall'))
-      expect(mockPush).toHaveBeenCalledWith('/show/1977-05-08')
+      const link = screen.getByText('Barton Hall').closest('a')
+      expect(link).toHaveAttribute('href', '/show/1977-05-08')
     })
   })
 

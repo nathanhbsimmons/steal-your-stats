@@ -89,6 +89,25 @@ function generatePrintHTML(sl: SetlistState): string {
 
 interface DragSource { setKey: SetKey; idx: number }
 
+function reorderSetlist(prev: SetlistState, src: DragSource, destKey: SetKey, destIdx: number): SetlistState {
+  const result = {
+    ...prev,
+    set1: [...prev.set1],
+    set2: [...prev.set2],
+    encore: [...prev.encore],
+  }
+  const srcList = result[src.setKey]
+  const [item] = srcList.splice(src.idx, 1)
+
+  const destList = result[destKey]
+  const insertAt = src.setKey === destKey && destIdx > src.idx
+    ? Math.max(0, destIdx - 1)
+    : destIdx
+  destList.splice(Math.min(insertAt, destList.length), 0, item)
+
+  return result
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 interface SongResultProps {
@@ -146,23 +165,24 @@ function SongResult({ displayTitle, hints, onAdd, isDuplicate }: SongResultProps
         {hints.topPredecessors && hints.topPredecessors.map(p => {
           const active = selectedPred === p.name
           return (
-            <span
+            <button
               key={p.name}
+              type="button"
               className="pill"
+              aria-pressed={active}
               onClick={() => setSelectedPred(active ? null : p.name)}
               style={{
                 fontSize: 10.5, padding: '2px 8px', cursor: 'pointer',
                 background: active ? 'rgba(30,80,50,0.18)' : 'rgba(30,80,50,0.07)',
                 borderColor: active ? 'rgba(30,80,50,0.55)' : 'rgba(30,80,50,0.28)',
                 color: active ? 'var(--forest)' : 'rgba(30,80,50,0.75)',
-                outline: active ? '1.5px solid var(--forest)' : 'none',
-                outlineOffset: 1,
+                boxShadow: active ? 'inset 0 0 0 1.5px var(--forest)' : 'none',
                 fontWeight: active ? 600 : 400,
               }}
               title="Click to include before the searched song when adding"
             >
               {p.name} → <span style={{ opacity: 0.65 }}>({p.count}×)</span>
-            </span>
+            </button>
           )
         })}
 
@@ -171,23 +191,24 @@ function SongResult({ displayTitle, hints, onAdd, isDuplicate }: SongResultProps
           ? hints.topSuccessors.map(s => {
               const active = selectedSucc === s.name
               return (
-                <span
+                <button
                   key={s.name}
+                  type="button"
                   className="pill"
+                  aria-pressed={active}
                   onClick={() => setSelectedSucc(active ? null : s.name)}
                   style={{
                     fontSize: 10.5, padding: '2px 8px', cursor: 'pointer',
                     background: active ? 'rgba(180,80,30,0.18)' : 'rgba(240,176,74,0.10)',
                     borderColor: active ? 'rgba(180,80,30,0.55)' : 'rgba(240,176,74,0.25)',
                     color: active ? 'var(--rust)' : 'var(--accent)',
-                    outline: active ? '1.5px solid var(--rust)' : 'none',
-                    outlineOffset: 1,
+                    boxShadow: active ? 'inset 0 0 0 1.5px var(--rust)' : 'none',
                     fontWeight: active ? 600 : 400,
                   }}
                   title="Click to include after the searched song when adding"
                 >
                   → {s.name} <span style={{ opacity: 0.6 }}>({s.count}×)</span>
-                </span>
+                </button>
               )
             })
           : pairing && (
@@ -230,10 +251,11 @@ interface SetSectionProps {
   onDragOver: (e: React.DragEvent, setKey: SetKey, idx: number) => void
   onDrop: (e: React.DragEvent, setKey: SetKey, idx: number) => void
   onDragLeave: () => void
-  onDragStart: (setKey: SetKey, idx: number) => void
+  onDragStart: (e: React.DragEvent, setKey: SetKey, idx: number) => void
   onDragEnd: () => void
   onToggleSegue: (setKey: SetKey, idx: number) => void
   onRemove: (setKey: SetKey, idx: number) => void
+  onMoveSong: (setKey: SetKey, idx: number, direction: -1 | 1) => void
   accentColor?: string
 }
 
@@ -241,7 +263,7 @@ function SetSection({
   label, setKey, songs,
   dragSource, dropTarget,
   onDragOver, onDrop, onDragLeave, onDragStart, onDragEnd,
-  onToggleSegue, onRemove, accentColor,
+  onToggleSegue, onRemove, onMoveSong, accentColor,
 }: SetSectionProps) {
   const estTotal = totalDuration(songs)
 
@@ -300,7 +322,7 @@ function SetSection({
 
             <div
               draggable
-              onDragStart={() => onDragStart(setKey, i)}
+              onDragStart={e => onDragStart(e, setKey, i)}
               onDragEnd={onDragEnd}
               onDragOver={e => onDragOver(e, setKey, i)}
               onDrop={e => onDrop(e, setKey, i)}
@@ -319,8 +341,40 @@ function SetSection({
               </span>
 
               {/* Grip icon */}
-              <span style={{ color: 'var(--fg-4)', flexShrink: 0, cursor: 'grab' }}>
+              <span style={{ color: 'var(--fg-4)', flexShrink: 0, cursor: 'grab' }} aria-hidden="true">
                 <Icon d={ICONS.list} size={12} />
+              </span>
+
+              {/* Keyboard reorder */}
+              <span style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                <button
+                  type="button"
+                  id={`move-up-${song.id}`}
+                  onClick={() => onMoveSong(setKey, i, -1)}
+                  disabled={i === 0}
+                  aria-label={`Move ${song.displayTitle} up`}
+                  style={{
+                    background: 'transparent', border: 0, padding: 0, lineHeight: 1,
+                    fontSize: 9, color: 'var(--fg-4)', cursor: i === 0 ? 'default' : 'pointer',
+                    opacity: i === 0 ? 0.3 : 1,
+                  }}
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  id={`move-down-${song.id}`}
+                  onClick={() => onMoveSong(setKey, i, 1)}
+                  disabled={i === songs.length - 1}
+                  aria-label={`Move ${song.displayTitle} down`}
+                  style={{
+                    background: 'transparent', border: 0, padding: 0, lineHeight: 1,
+                    fontSize: 9, color: 'var(--fg-4)', cursor: i === songs.length - 1 ? 'default' : 'pointer',
+                    opacity: i === songs.length - 1 ? 0.3 : 1,
+                  }}
+                >
+                  ▼
+                </button>
               </span>
 
               {/* Title */}
@@ -337,7 +391,10 @@ function SetSection({
 
               {/* Segue toggle */}
               <button
+                type="button"
                 onClick={() => onToggleSegue(setKey, i)}
+                aria-pressed={song.segueIntoNext}
+                aria-label={song.segueIntoNext ? `Remove segue after ${song.displayTitle}` : `Mark segue after ${song.displayTitle}`}
                 title={song.segueIntoNext ? 'Remove segue →' : 'Mark as segue →'}
                 style={{
                   background: song.segueIntoNext ? 'var(--accent-soft)' : 'transparent',
@@ -357,8 +414,10 @@ function SetSection({
 
               {/* Remove */}
               <button
+                type="button"
                 onClick={() => onRemove(setKey, i)}
                 style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--fg-4)', padding: 2, flexShrink: 0, display: 'flex' }}
+                aria-label={`Remove ${song.displayTitle}`}
                 title="Remove"
               >
                 <Icon d={ICONS.close} size={12} />
@@ -422,6 +481,7 @@ export function SetlistBuilder() {
   // Drag state
   const dragSource = useRef<DragSource | null>(null)
   const [dropTarget, setDropTarget] = useState<{ setKey: SetKey; idx: number } | null>(null)
+  const [moveAnnouncement, setMoveAnnouncement] = useState('')
 
   // Export state
   const [exporting, setExporting] = useState(false)
@@ -493,7 +553,8 @@ export function SetlistBuilder() {
   }, [])
 
   // ── Drag and drop ────────────────────────────────────────────────────────────
-  const onDragStart = useCallback((setKey: SetKey, idx: number) => {
+  const onDragStart = useCallback((e: React.DragEvent, setKey: SetKey, idx: number) => {
+    e.dataTransfer.setData('text/plain', '')
     dragSource.current = { setKey, idx }
   }, [])
 
@@ -516,28 +577,33 @@ export function SetlistBuilder() {
     const src = dragSource.current
     if (!src) return
 
-    setSetlist(prev => {
-      const result = {
-        ...prev,
-        set1: [...prev.set1],
-        set2: [...prev.set2],
-        encore: [...prev.encore],
-      }
-      const srcList = result[src.setKey]
-      const [item] = srcList.splice(src.idx, 1)
-
-      const destList = result[destKey]
-      const insertAt = src.setKey === destKey && destIdx > src.idx
-        ? Math.max(0, destIdx - 1)
-        : destIdx
-      destList.splice(Math.min(insertAt, destList.length), 0, item)
-
-      return result
-    })
+    setSetlist(prev => reorderSetlist(prev, src, destKey, destIdx))
 
     dragSource.current = null
     setDropTarget(null)
   }, [])
+
+  // ── Keyboard reorder ─────────────────────────────────────────────────────────
+  const moveSong = useCallback((setKey: SetKey, idx: number, direction: -1 | 1) => {
+    const list = setlist[setKey]
+    const destIdx = direction === -1 ? idx - 1 : idx + 2
+    if (destIdx < 0 || destIdx > list.length) return
+
+    const song = list[idx]
+    const newPos = idx + direction
+    const atTopBoundary = direction === -1 && newPos === 0
+    const atBottomBoundary = direction === 1 && newPos === list.length - 1
+
+    setSetlist(prev => reorderSetlist(prev, { setKey, idx }, setKey, destIdx))
+    setMoveAnnouncement(`${song.displayTitle} moved to position ${idx + direction + 1} of ${list.length}`)
+
+    // The button just pressed is about to become disabled at this boundary —
+    // shift focus to the still-enabled sibling button so it isn't dropped to <body>.
+    if (list.length > 1) {
+      if (atTopBoundary) document.getElementById(`move-down-${song.id}`)?.focus()
+      else if (atBottomBoundary) document.getElementById(`move-up-${song.id}`)?.focus()
+    }
+  }, [setlist])
 
   // ── PDF export ───────────────────────────────────────────────────────────────
   const handleExportPDF = useCallback(async () => {
@@ -577,18 +643,23 @@ export function SetlistBuilder() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="China Cat, Dark Star, Bertha…"
-              autoFocus
-              style={{ background: 'transparent', border: 0, outline: 'none', color: 'var(--fg)', fontSize: 13, flex: 1 }}
+              style={{ background: 'transparent', border: 0, color: 'var(--fg)', fontSize: 13, flex: 1 }}
             />
             {searching && (
-              <span style={{ fontSize: 10, color: 'var(--fg-4)' }}>…</span>
+              <span aria-hidden="true" style={{ fontSize: 10, color: 'var(--fg-4)' }}>…</span>
             )}
             {query && !searching && (
-              <button onClick={() => { setQuery(''); setResults([]) }} style={{ background: 'none', border: 0, cursor: 'pointer', color: 'var(--fg-4)', display: 'flex', padding: 0 }}>
+              <button
+                type="button"
+                onClick={() => { setQuery(''); setResults([]) }}
+                aria-label="Clear search"
+                style={{ background: 'none', border: 0, cursor: 'pointer', color: 'var(--fg-4)', display: 'flex', padding: 0 }}
+              >
                 <Icon d={ICONS.close} size={12} />
               </button>
             )}
           </div>
+          <span aria-live="polite" className="sr-only">{searching ? 'Searching…' : ''}</span>
 
           {/* Add to set selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -700,7 +771,7 @@ export function SetlistBuilder() {
                     value={setlist[key]}
                     onChange={e => setSetlist(prev => ({ ...prev, [key]: e.target.value }))}
                     placeholder={placeholder}
-                    style={{ background: 'transparent', border: 0, outline: 'none', color: 'var(--fg)', fontSize: 12.5, width: '100%' }}
+                    style={{ background: 'transparent', border: 0, color: 'var(--fg)', fontSize: 12.5, width: '100%' }}
                   />
                 </div>
               </div>
@@ -730,10 +801,13 @@ export function SetlistBuilder() {
                 onDragEnd={onDragEnd}
                 onToggleSegue={toggleSegue}
                 onRemove={removeSong}
+                onMoveSong={moveSong}
                 accentColor={accentColor}
               />
             </React.Fragment>
           ))}
+
+          <span aria-live="polite" className="sr-only">{moveAnnouncement}</span>
 
           {/* Grand total */}
           {grandTotal > 0 && (

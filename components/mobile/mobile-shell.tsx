@@ -300,31 +300,13 @@ function MobileNowPlaying() {
     return () => window.removeEventListener('vault-time-update', handler)
   }, [])
 
-  const progressBarRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const bar = progressBarRef.current
-    if (!bar) return
-    const onTouch = (e: TouchEvent) => {
-      e.preventDefault()
-      const rect = bar.getBoundingClientRect()
-      const t = e.touches[0] ?? e.changedTouches[0]
-      if (!t) return
-      const fraction = Math.max(0, Math.min(1, (t.clientX - rect.left) / rect.width))
-      window.dispatchEvent(new CustomEvent('vault-seek-to-fraction', { detail: { fraction } }))
+  const handleSeekChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value)
+    const duration = audioTime.duration
+    if (duration > 0) {
+      window.dispatchEvent(new CustomEvent('vault-seek-to-fraction', { detail: { fraction: value / duration } }))
     }
-    bar.addEventListener('touchstart', onTouch, { passive: false })
-    bar.addEventListener('touchmove', onTouch, { passive: false })
-    return () => {
-      bar.removeEventListener('touchstart', onTouch)
-      bar.removeEventListener('touchmove', onTouch)
-    }
-  }, [])
-
-  const handleBarClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    window.dispatchEvent(new CustomEvent('vault-seek-to-fraction', { detail: { fraction } }))
-  }, [])
+  }, [audioTime.duration])
 
   if (!currentTrack) return null
 
@@ -362,23 +344,23 @@ function MobileNowPlaying() {
       <div className="mv-transport">
         <div className="mv-progress">
           <span className="t">{formatDur(audioTime.currentTime) || '0:00'}</span>
-          <div
-            ref={progressBarRef}
-            className="mv-bar"
-            onClick={handleBarClick}
-            role="slider"
-            aria-label="Seek"
-            aria-valuenow={Math.round(audioTime.currentTime)}
-            aria-valuemin={0}
-            aria-valuemax={Math.round(audioTime.duration)}
-            style={{ cursor: 'pointer' }}
-          >
+          <div className="mv-bar">
             <div className="rule" />
             <div className="ticks">
               {Array.from({ length: 11 }).map((_, i) => <span key={i} />)}
             </div>
             <div className="fill" style={{ width: `${pct}%` }} />
-            <div className="needle" style={{ left: `${pct}%` }} />
+            <input
+              type="range"
+              className="mv-bar-input"
+              min={0}
+              max={audioTime.duration || 0}
+              step={1}
+              value={audioTime.currentTime}
+              onChange={handleSeekChange}
+              aria-label="Seek"
+              aria-valuetext={`${formatDur(audioTime.currentTime) || '0:00'} of ${formatDur(audioTime.duration) || '0:00'}`}
+            />
           </div>
           <span className="t right">
             {audioTime.duration > 0
@@ -460,17 +442,23 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
                 <div
                   key={t.id + i}
                   className={`mv-qrow${i === currentIdx ? ' current' : ''}`}
-                  onClick={() => selectTrack(t)}
-                  role="button"
-                  aria-label={`Play ${t.name}`}
                 >
-                  <span className="mv-qnum">{String(i + 1).padStart(2, '0')}</span>
-                  <span className="mv-qmeta">
-                    <span className="mv-qtitle">{t.name}</span>
-                    <span className="mv-qsub">{t.showDate}{t.venue ? ` · ${t.venue}` : ''}</span>
-                  </span>
-                  <span className="mv-qdur">{formatDur(t.duration)}</span>
                   <button
+                    type="button"
+                    className="mv-qrow-btn"
+                    onClick={() => selectTrack(t)}
+                    aria-label={`Play ${t.name}`}
+                    aria-current={i === currentIdx ? 'true' : undefined}
+                  >
+                    <span className="mv-qnum">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="mv-qmeta">
+                      <span className="mv-qtitle">{t.name}</span>
+                      <span className="mv-qsub">{t.showDate}{t.venue ? ` · ${t.venue}` : ''}</span>
+                    </span>
+                    <span className="mv-qdur">{formatDur(t.duration)}</span>
+                  </button>
+                  <button
+                    type="button"
                     className="mv-qx"
                     onClick={e => { e.stopPropagation(); removeFromQueue(t.id) }}
                     aria-label={`Remove ${t.name} from queue`}
@@ -657,16 +645,24 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
                     <div
                       key={`${si}-${ti}`}
                       className={`mv-track${isCurrent ? ' current' : ''}${!inArchive ? ' unavailable' : ''}`}
-                      onClick={inArchive ? () => handleTrackClick(flatIdx) : undefined}
-                      role={inArchive ? 'button' : undefined}
-                      aria-label={inArchive ? `Play ${song}` : undefined}
                     >
-                      <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
-                      <span className="title">{song}</span>
-                      {!inArchive ? (
-                        <span className="mv-unavail">Audio Unavailable</span>
+                      {inArchive ? (
+                        <button
+                          type="button"
+                          className={`mv-track-main${isCurrent ? ' current' : ''}`}
+                          onClick={() => handleTrackClick(flatIdx)}
+                          aria-label={`Play ${song}`}
+                        >
+                          <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
+                          <span className="title">{song}</span>
+                          <span className="dur">{formatDur(dur)}</span>
+                        </button>
                       ) : (
-                        <span className="dur">{formatDur(dur)}</span>
+                        <span className="mv-track-main">
+                          <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
+                          <span className="title">{song}</span>
+                          <span className="mv-unavail">Audio Unavailable</span>
+                        </span>
                       )}
                       {inArchive ? (
                         <button
@@ -694,16 +690,17 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
             <span className="meta">{archiveMatch.bonus.length} tracks</span>
           </div>
           {archiveMatch.bonus.map(track => (
-            <div
-              key={track.id}
-              className="mv-track"
-              onClick={() => handlePlayBonusTrack(track)}
-              role="button"
-              aria-label={`Play ${formatBonusTrackTitle(track)}`}
-            >
-              <span className="n" style={{ opacity: 0.35 }}>·</span>
-              <span className="title" style={{ fontStyle: 'italic' }}>{formatBonusTrackTitle(track)}</span>
-              <span className="dur">{formatDur(track.duration)}</span>
+            <div key={track.id} className="mv-track">
+              <button
+                type="button"
+                className="mv-track-main"
+                onClick={() => handlePlayBonusTrack(track)}
+                aria-label={`Play ${formatBonusTrackTitle(track)}`}
+              >
+                <span className="n" style={{ opacity: 0.35 }}>·</span>
+                <span className="title" style={{ fontStyle: 'italic' }}>{formatBonusTrackTitle(track)}</span>
+                <span className="dur">{formatDur(track.duration)}</span>
+              </button>
               <button
                 className="mv-addq"
                 onClick={e => handleAddBonusTrack(e, track)}
@@ -841,7 +838,6 @@ function SongsScreen() {
 /* ========================================================= SONG DETAIL SCREEN */
 
 function SongDetailScreen({ slug, onOpenPlayer }: { slug: string; onOpenPlayer: () => void }) {
-  const router = useRouter()
   const { enqueueSongVersions } = usePlayer()
   const [facts, setFacts] = useState<SongFacts | null>(null)
   const [versions, setVersions] = useState<VersionsFacts | null>(null)
@@ -943,28 +939,24 @@ function SongDetailScreen({ slug, onOpenPlayer }: { slug: string; onOpenPlayer: 
             </button>
           </div>
           {displayedVersions.map(v => (
-            <div
-              key={v.id}
-              className="mv-version"
-              onClick={() => router.push(`/show/${v.showDate}`)}
-              role="button"
-              aria-label={`Show from ${v.showDate}`}
-            >
-              <span className="date">{fmtDate(v.showDate)}</span>
-              <span className="ven">
-                {v.venue}
-                <span className="city">{v.city}{v.state ? `, ${v.state}` : ''}</span>
-              </span>
-              <span className="dur">{formatDur(v.durationSec)}</span>
+            <div key={v.id} className="mv-version">
+              <Link href={`/show/${v.showDate}`} className="mv-version-link" aria-label={`Show from ${v.showDate}`}>
+                <span className="date">{fmtDate(v.showDate)}</span>
+                <span className="ven">
+                  {v.venue}
+                  <span className="city">{v.city}{v.state ? `, ${v.state}` : ''}</span>
+                </span>
+                <span className="dur">{formatDur(v.durationSec)}</span>
+              </Link>
               <span className="mv-version-actions">
                 <button
                   className="mv-vbtn"
-                  onClick={e => { e.stopPropagation(); enqueueSongVersions(slug, [toRef(v)], { mode: 'prepend' }); onOpenPlayer() }}
+                  onClick={() => { enqueueSongVersions(slug, [toRef(v)], { mode: 'prepend' }); onOpenPlayer() }}
                   aria-label={`Play ${slug} from ${v.showDate}`}
                 >▶</button>
                 <button
                   className="mv-vbtn"
-                  onClick={e => { e.stopPropagation(); enqueueSongVersions(slug, [toRef(v)], { mode: 'append' }) }}
+                  onClick={() => enqueueSongVersions(slug, [toRef(v)], { mode: 'append' })}
                   aria-label={`Add ${slug} from ${v.showDate} to queue`}
                 >+</button>
               </span>
@@ -1194,20 +1186,22 @@ function StatsScreen() {
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
               placeholder="Search…"
               aria-label="Search songs for position breakdown"
-              style={{ border: 'none', outline: 'none', background: 'transparent', fontFamily: 'var(--serif-body)', fontSize: 14, color: 'var(--ink)', flex: 1, minWidth: 0 }}
+              style={{ border: 'none', background: 'transparent', fontFamily: 'var(--serif-body)', fontSize: 14, color: 'var(--ink)', flex: 1, minWidth: 0 }}
             />
             {positionLoading && <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>…</span>}
           </div>
           {showSuggestions && suggestions.length > 0 && (
             <div style={{ position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0, background: 'var(--paper)', border: '2px solid var(--ink)', borderRadius: 8, zIndex: 50, overflow: 'hidden', boxShadow: '4px 4px 0 var(--ink)' }}>
               {suggestions.map(s => (
-                <div
+                <button
                   key={s.title}
+                  type="button"
                   onMouseDown={() => selectPosSong(s)}
-                  style={{ padding: '8px 12px', fontFamily: 'var(--serif-display)', fontSize: 15, color: 'var(--ink)', cursor: 'pointer', borderBottom: '1px solid var(--rule-soft)' }}
+                  onClick={() => selectPosSong(s)}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', border: 'none', background: 'none', padding: '8px 12px', fontFamily: 'var(--serif-display)', fontSize: 15, color: 'var(--ink)', cursor: 'pointer', borderBottom: '1px solid var(--rule-soft)' }}
                 >
                   {s.displayTitle}
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -1697,16 +1691,28 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
                     <div
                       key={`${si}-${ti}`}
                       className={`mv-track${isCurrent ? ' current' : ''}${archiveLoading ? ' pending' : !inArchive ? ' unavailable' : ''}`}
-                      onClick={inArchive ? () => handleTrackClick(flatIdx) : undefined}
-                      role={inArchive ? 'button' : undefined}
-                      aria-label={inArchive ? `Play ${song}` : undefined}
                     >
-                      <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
-                      <span className="title">{song}</span>
-                      {!archiveLoading && !inArchive ? (
-                        <span className="mv-unavail">Audio Unavailable</span>
+                      {inArchive ? (
+                        <button
+                          type="button"
+                          className={`mv-track-main${isCurrent ? ' current' : ''}`}
+                          onClick={() => handleTrackClick(flatIdx)}
+                          aria-label={`Play ${song}`}
+                        >
+                          <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
+                          <span className="title">{song}</span>
+                          <span className="dur">{formatDur(dur)}</span>
+                        </button>
                       ) : (
-                        <span className="dur">{formatDur(dur)}</span>
+                        <span className="mv-track-main">
+                          <span className="n">{String(flatIdx + 1).padStart(2, '0')}</span>
+                          <span className="title">{song}</span>
+                          {!archiveLoading ? (
+                            <span className="mv-unavail">Audio Unavailable</span>
+                          ) : (
+                            <span className="dur">{formatDur(dur)}</span>
+                          )}
+                        </span>
                       )}
                       {inArchive ? (
                         <button
@@ -1736,16 +1742,17 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
             <span className="meta">{archiveMatch.bonus.length} tracks</span>
           </div>
           {archiveMatch.bonus.map(track => (
-            <div
-              key={track.id}
-              className="mv-track"
-              onClick={() => handlePlayBonusTrack(track)}
-              role="button"
-              aria-label={`Play ${formatBonusTrackTitle(track)}`}
-            >
-              <span className="n" style={{ opacity: 0.35 }}>·</span>
-              <span className="title" style={{ fontStyle: 'italic' }}>{formatBonusTrackTitle(track)}</span>
-              <span className="dur">{formatDur(track.duration)}</span>
+            <div key={track.id} className="mv-track">
+              <button
+                type="button"
+                className="mv-track-main"
+                onClick={() => handlePlayBonusTrack(track)}
+                aria-label={`Play ${formatBonusTrackTitle(track)}`}
+              >
+                <span className="n" style={{ opacity: 0.35 }}>·</span>
+                <span className="title" style={{ fontStyle: 'italic' }}>{formatBonusTrackTitle(track)}</span>
+                <span className="dur">{formatDur(track.duration)}</span>
+              </button>
               <button
                 className="mv-addq"
                 onClick={e => handleAddBonusTrack(e, track)}
@@ -1801,7 +1808,6 @@ function ShowsDecadeGrid({ countByYear }: { countByYear: Map<number, number> }) 
 }
 
 function ShowsByYearMobile({ year }: { year: number }) {
-  const router = useRouter()
   const [shows, setShows] = useState<Array<{ id: string; date: string; venue: string; city: string; state?: string }>>([])
   const [loading, setLoading] = useState(true)
   const [audioDates, setAudioDates] = useState<Set<string>>(new Set())
@@ -1867,11 +1873,10 @@ function ShowsByYearMobile({ year }: { year: number }) {
           const releases = getOfficialReleasesForDate(s.date)
           const hasAudio = audioDates.has(s.date)
           return (
-            <div
+            <Link
               key={s.id || i}
+              href={`/show/${s.date}`}
               className="mv-show-row"
-              onClick={() => router.push(`/show/${s.date}`)}
-              role="button"
               aria-label={`Show at ${s.venue}, ${s.date}`}
             >
               <span className="mv-srow-date">{monthDay}</span>
@@ -1884,7 +1889,7 @@ function ShowsByYearMobile({ year }: { year: number }) {
                 {hasAudio && <span className="mv-srow-audio">▶ audio</span>}
               </span>
               <span className="mv-srow-arr">›</span>
-            </div>
+            </Link>
           )
         })
       )}

@@ -41,6 +41,16 @@
 - **Added:** `formatArchiveTrackName` unit tests (`test/format-archive-track-name.test.ts`)
 - **Added:** advanced `useAudioPlayer` edge-case tests (`test/use-audio-player-advanced.test.ts`)
 
+### Task 15 — Accessibility Remediation (8-tier a11y pass)
+- **Foundation:** global focus-ring and `.sr-only` CSS tokens (`--focus-ring`, `--focus-ring-offset`) added to `app/globals.css`
+- **Vault player + mobile shell:** keyboard-accessible seek bar and volume slider (native `<input type="range">`, `aria-valuetext`), queue drawer opens with focus moving inside, Escape closes and restores focus to the toggle; mobile now-playing bar seek/touch targets fixed
+- **Global nav:** masthead/chapters links and inputs ARIA-wired, single `aria-current="page"`; input labels added across search/filter controls
+- **Tables & widgets:** keyboard-accessible show rows (shows-year-table, venues-table via a focusable `Link` in the row), setlist track slices as real buttons, eras-board timeline/cards modeled as one roving-tabindex `role="tablist"`, "clear filter" spans converted to labeled buttons
+- **Stats combobox:** song search on `/stats` ARIA-wired (`role="combobox"`/`listbox`/`option`, `aria-activedescendant`, `aria-expanded`), live-region announcements decoupled from fetch debounce
+- **Export page:** dossier section checkboxes are real labeled checkboxes, predecessor/successor chips are `aria-pressed` toggle buttons, keyboard "Move up"/"Move down" setlist reorder with live-region position announcements
+- **Guardrails (this task):** `eslint-plugin-jsx-a11y` (`recommended` + 6 rules ratcheted to `error`) wired into `eslint.config.mjs` via the existing `FlatCompat` pattern, with a scoped override for verified-unmounted legacy files (`components/glass/*`, `components/ui/audio-player-dock.tsx`, `components/ui/queue.tsx`, `components/ui/versions-table.tsx`); remaining live-code stragglers fixed (home page track rows, show detail track rows, member bar chart, mobile position search, stats combobox option, styleguide demo links, song versions table header)
+- **Added:** `tests/e2e/a11y-keyboard.spec.ts` — keyboard smoke suite covering seek bar/volume slider arrow-key scrubbing, queue toggle focus management, queue row selection and remove-button labeling, keyboard show-row navigation on `/shows/[year]`, and a chapter-nav `<Link>` regression guard
+
 ## Backlog
 
 ### Task 11 — Track Metadata Enrichment

@@ -51,9 +51,10 @@ export function SongsFilterList({ allSongs }: { allSongs: SongCatalogEntry[] }) 
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="filter songs…"
+              aria-label="Filter songs"
             />
             {query && (
-              <span className="clear" onClick={() => { setQuery(''); inputRef.current?.focus() }}>×</span>
+              <button type="button" className="clear" aria-label="Clear filter" onClick={() => { setQuery(''); inputRef.current?.focus() }}>×</button>
             )}
           </div>
         </div>

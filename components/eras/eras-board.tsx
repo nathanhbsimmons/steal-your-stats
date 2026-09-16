@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
 interface YearCount { year: number; count: number }
@@ -99,8 +99,12 @@ function sumYears(data: YearCount[], from: number, to: number): number {
   return data.filter(d => d.year >= from && d.year <= to).reduce((s, d) => s + d.count, 0)
 }
 
+type TabKind = 'segment' | 'card'
+
 export function ErasBoard({ showsPerYear }: { showsPerYear: YearCount[] }) {
   const [focusId, setFocusId] = useState('europe72')
+  const [activeKind, setActiveKind] = useState<TabKind>('card')
+  const tabRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   // Read ?focus= URL param on mount to pre-select an era from member links
   useEffect(() => {
@@ -118,6 +122,41 @@ export function ErasBoard({ showsPerYear }: { showsPerYear: YearCount[] }) {
   const totalSpan = 1995 - 1965 + 1
   const focus = eras.find(e => e.id === focusId) ?? eras[1]
 
+  function selectTab(id: string, kind: TabKind) {
+    setFocusId(id)
+    setActiveKind(kind)
+  }
+
+  function handleTabKeyDown(e: React.KeyboardEvent, id: string, kind: TabKind) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      selectTab(id, kind)
+      return
+    }
+
+    const flat: Array<{ id: string; kind: TabKind }> = [
+      ...eras.map(era => ({ id: era.id, kind: 'segment' as const })),
+      ...eras.map(era => ({ id: era.id, kind: 'card' as const })),
+    ]
+    const currentIndex = flat.findIndex(t => t.id === id && t.kind === kind)
+    let nextIndex: number
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % flat.length
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + flat.length) % flat.length
+    } else if (e.key === 'Home') {
+      nextIndex = 0
+    } else if (e.key === 'End') {
+      nextIndex = flat.length - 1
+    } else {
+      return
+    }
+    e.preventDefault()
+    const next = flat[nextIndex]
+    selectTab(next.id, next.kind)
+    tabRefs.current[`${next.kind}:${next.id}`]?.focus()
+  }
+
   return (
     <>
       {/* Timeline axis */}
@@ -125,46 +164,64 @@ export function ErasBoard({ showsPerYear }: { showsPerYear: YearCount[] }) {
         <span>1965</span><span>1970</span><span>1975</span><span>1980</span><span>1985</span><span>1990</span><span>1995</span>
       </div>
 
-      {/* Timeline strip */}
-      <div className="timeline">
-        {eras.map(e => (
-          <div
-            key={e.id}
-            className={`seg ${e.segClass}`}
-            style={{ flexBasis: `${(e.span / totalSpan) * 100}%` }}
-            onClick={() => setFocusId(e.id)}
-          />
-        ))}
-      </div>
+      {/* Timeline strip + era cards: a single tablist selecting the focused era */}
+      <div role="tablist" aria-label="Eras">
+        <div className="timeline">
+          {eras.map(e => {
+            const selected = focusId === e.id
+            return (
+              <div
+                key={e.id}
+                ref={el => { tabRefs.current[`segment:${e.id}`] = el }}
+                role="tab"
+                aria-selected={selected && activeKind === 'segment'}
+                aria-label={`${e.name}, ${e.years}`}
+                tabIndex={selected && activeKind === 'segment' ? 0 : -1}
+                className={`seg ${e.segClass}`}
+                style={{ flexBasis: `${(e.span / totalSpan) * 100}%` }}
+                onClick={() => selectTab(e.id, 'segment')}
+                onKeyDown={ev => handleTabKeyDown(ev, e.id, 'segment')}
+              />
+            )
+          })}
+        </div>
 
-      {/* Era cards */}
-      <div className="era-grid">
-        {eras.map(e => (
-          <div
-            key={e.id}
-            className="era-card"
-            style={focusId === e.id ? { background: 'var(--hi)', borderBottom: '3px solid var(--rust)' } : {}}
-            onClick={() => setFocusId(e.id)}
-          >
-            <div className="tag">{e.tag}</div>
-            <h4>{e.name}</h4>
-            <div className="years">{e.years}</div>
-            <div className="shows">
-              Shows
-              <span className="n">
-                {e.shows !== null ? e.shows.toLocaleString() : '—'}
-              </span>
-            </div>
-            <div className="sigs">{e.sig}</div>
-            <Link
-              href={`/eras/${e.id}`}
-              className="explore"
-              onClick={ev => ev.stopPropagation()}
-            >
-              Explore ⟶
-            </Link>
-          </div>
-        ))}
+        <div className="era-grid">
+          {eras.map(e => {
+            const selected = focusId === e.id
+            return (
+              <div
+                key={e.id}
+                ref={el => { tabRefs.current[`card:${e.id}`] = el }}
+                role="tab"
+                aria-selected={selected && activeKind === 'card'}
+                tabIndex={selected && activeKind === 'card' ? 0 : -1}
+                className="era-card"
+                style={selected ? { background: 'var(--hi)', borderBottom: '3px solid var(--rust)' } : {}}
+                onClick={() => selectTab(e.id, 'card')}
+                onKeyDown={ev => handleTabKeyDown(ev, e.id, 'card')}
+              >
+                <div className="tag">{e.tag}</div>
+                <h4>{e.name}</h4>
+                <div className="years">{e.years}</div>
+                <div className="shows">
+                  Shows
+                  <span className="n">
+                    {e.shows !== null ? e.shows.toLocaleString() : '—'}
+                  </span>
+                </div>
+                <div className="sigs">{e.sig}</div>
+                <Link
+                  href={`/eras/${e.id}`}
+                  className="explore"
+                  onClick={ev => ev.stopPropagation()}
+                >
+                  Explore ⟶
+                </Link>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Focus section */}
