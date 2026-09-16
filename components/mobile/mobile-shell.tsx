@@ -1193,13 +1193,15 @@ function StatsScreen() {
           {showSuggestions && suggestions.length > 0 && (
             <div style={{ position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0, background: 'var(--paper)', border: '2px solid var(--ink)', borderRadius: 8, zIndex: 50, overflow: 'hidden', boxShadow: '4px 4px 0 var(--ink)' }}>
               {suggestions.map(s => (
-                <div
+                <button
                   key={s.title}
+                  type="button"
                   onMouseDown={() => selectPosSong(s)}
-                  style={{ padding: '8px 12px', fontFamily: 'var(--serif-display)', fontSize: 15, color: 'var(--ink)', cursor: 'pointer', borderBottom: '1px solid var(--rule-soft)' }}
+                  onClick={() => selectPosSong(s)}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', border: 'none', background: 'none', padding: '8px 12px', fontFamily: 'var(--serif-display)', fontSize: 15, color: 'var(--ink)', cursor: 'pointer', borderBottom: '1px solid var(--rule-soft)' }}
                 >
                   {s.displayTitle}
-                </div>
+                </button>
               ))}
             </div>
           )}

@@ -412,6 +412,10 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                         key={`s${ji}`}
                         className={`track${isCurrentSong && isPlaying ? ' playing' : ''}${pending ? ' pending' : ''}`}
                         onClick={inArchive ? () => { if (isCurrentSong && isPlaying) { pause() } else { void handlePlaySingleSong(songFlatIdx) } } : undefined}
+                        onKeyDown={inArchive ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (isCurrentSong && isPlaying) { pause() } else { void handlePlaySingleSong(songFlatIdx) } } } : undefined}
+                        role={inArchive ? 'button' : undefined}
+                        tabIndex={inArchive ? 0 : undefined}
+                        aria-label={inArchive ? `${isCurrentSong && isPlaying ? 'Pause' : 'Play'} ${song}` : undefined}
                         style={!inArchive && !pending && archiveRecording !== null ? { cursor: 'default', opacity: 0.4 } : undefined}
                         data-queue-safe={inArchive ? 'true' : undefined}
                       >
@@ -473,6 +477,10 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                   key={track.id}
                   className={`track${isCurrentBonus && isPlaying ? ' playing' : ''}`}
                   onClick={() => { if (isCurrentBonus && isPlaying) { pause() } else { handlePlayBonusTrack(track) } }}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (isCurrentBonus && isPlaying) { pause() } else { handlePlayBonusTrack(track) } } }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${isCurrentBonus && isPlaying ? 'Pause' : 'Play'} ${displayName}`}
                   data-queue-safe="true"
                 >
                   <span className="num" style={{ opacity: 0.35, fontSize: 13 }}>·</span>
@@ -569,6 +577,10 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                       key={i}
                       className={`track${isCurrentArchiveTrack && isPlaying ? ' playing' : ''}`}
                       onClick={() => handlePlayArchiveTrack(i)}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePlayArchiveTrack(i) } }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${isCurrentArchiveTrack && isPlaying ? 'Pause' : 'Play'} ${displayName}`}
                       style={{ opacity: 0.9 }}
                     >
                       <span className="num">{String(i + 1).padStart(2, '0')}</span>

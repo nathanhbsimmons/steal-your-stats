@@ -232,7 +232,9 @@ export function VaultPlayer() {
 
   return (
     <>
-      {/* Hidden audio element — controlled via audioRef */}
+      {/* Hidden audio element — controlled via audioRef. Instrumental/live
+          concert audio with no dialogue track, so no caption track applies. */}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} preload="metadata" style={{ display: 'none' }} />
       <div className="vault-player">
         <div className="inner">

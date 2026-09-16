@@ -61,7 +61,10 @@ export function FilterSheet({
 
   return (
     <>
-      <div className="mfx-scrim" onClick={onClose} />
+      {/* Backdrop — click-outside-to-close only; Escape (wired above) is the
+          keyboard equivalent, so this scrim itself takes no keyboard focus
+          (aria-hidden also keeps jsx-a11y's interaction rules from applying). */}
+      <div className="mfx-scrim" onClick={onClose} aria-hidden="true" />
       <div className="mfx-sheet" role="dialog" aria-modal="true" aria-label="Filters" ref={sheetRef} tabIndex={-1}>
         <div className="grab" />
         <div className="sh">

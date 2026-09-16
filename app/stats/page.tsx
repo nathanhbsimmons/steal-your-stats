@@ -337,6 +337,7 @@ export default function StatsPage() {
                         id={positionSongOptionId(i)}
                         role="option"
                         aria-selected={i === activeIdx}
+                        tabIndex={-1}
                         onMouseDown={() => selectSong(s)}
                         onMouseEnter={() => setActiveIdx(i)}
                         style={{

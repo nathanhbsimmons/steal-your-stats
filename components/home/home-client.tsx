@@ -280,6 +280,10 @@ export function HomeClient({
                           key={`s${si}-${ji}`}
                           className="track"
                           onClick={inArchive ? () => handlePlaySingleSong(globalNum) : undefined}
+                          onKeyDown={inArchive ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePlaySingleSong(globalNum) } } : undefined}
+                          role={inArchive ? 'button' : undefined}
+                          tabIndex={inArchive ? 0 : undefined}
+                          aria-label={inArchive ? `Play ${song}` : undefined}
                           style={!inArchive ? { cursor: 'default', opacity: 0.4 } : undefined}
                         >
                           <span className="num">{String(ji + 1).padStart(2, '0')}</span>
@@ -332,6 +336,10 @@ export function HomeClient({
                   key={track.id}
                   className="track"
                   onClick={() => handlePlayAncillaryTrack(track)}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePlayAncillaryTrack(track) } }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Play ${formatBonusTrackTitle(track)}`}
                 >
                   <span className="num" style={{ opacity: 0.35, fontSize: 13 }}>·</span>
                   <span className="play-dot">▶</span>
@@ -358,7 +366,15 @@ export function HomeClient({
                 <div className="duration">{featured.songs.length} songs</div>
               </div>
               {featured.songs.map((song, i) => (
-                <div key={i} className="track" onClick={() => handlePlaySingleSong(i)}>
+                <div
+                  key={i}
+                  className="track"
+                  onClick={() => handlePlaySingleSong(i)}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePlaySingleSong(i) } }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Play ${song}`}
+                >
                   <span className="num">{String(i + 1).padStart(2, '0')}</span>
                   <span className="play-dot">▶</span>
                   <Link

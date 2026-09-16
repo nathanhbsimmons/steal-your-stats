@@ -107,6 +107,10 @@ export function MemberShowBrowser({
             className={`bar${year === selectedYear ? ' peak' : ''}`}
             style={{ height: count > 0 ? `${(count / maxCount) * 100}%` : '2%' }}
             onClick={() => jumpToYear(year)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jumpToYear(year) } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Jump to ${year}, ${count} shows`}
             title={`${year} · ${count} shows`}
           >
             <span className="val">{count || ''}</span>
@@ -119,6 +123,10 @@ export function MemberShowBrowser({
             key={year}
             className={year === selectedYear ? 'on' : ''}
             onClick={() => jumpToYear(year)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jumpToYear(year) } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Jump to ${year}`}
           >
             &apos;{String(year).slice(2)}
           </span>

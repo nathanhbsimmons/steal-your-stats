@@ -422,7 +422,7 @@ export function SongDetailClient({
                     <th>Venue</th>
                     <th>City</th>
                     <th className="r">Duration</th>
-                    <th style={{ width: 40 }}></th>
+                    <th style={{ width: 40 }}><span className="sr-only">Play</span></th>
                   </tr>
                 </thead>
                 <tbody>

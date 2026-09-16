@@ -194,23 +194,23 @@ export default function StyleguidePage() {
           >
             <ul className="space-y-1">
               <li>
-                <a
-                  href="#"
-                  className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] px-3 py-2 font-medium bg-[var(--color-ink)] text-white shadow-[2px_2px_0_rgba(0,0,0,0.2)] hover:bg-[var(--color-ink)]/90 transition-colors"
+                <button
+                  type="button"
+                  className="w-full text-left block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-ink)] px-3 py-2 font-medium bg-[var(--color-ink)] text-white shadow-[2px_2px_0_rgba(0,0,0,0.2)] hover:bg-[var(--color-ink)]/90 transition-colors"
                   aria-current="page"
                 >
                   Active Item
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] px-3 py-2 hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors">
+                <button type="button" className="w-full text-left block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] px-3 py-2 hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors">
                   Normal Item
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] px-3 py-2 hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors">
+                <button type="button" className="w-full text-left block rounded-[var(--radius-md)] border-[var(--border-w)] border-[var(--color-gray)] px-3 py-2 hover:border-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-white transition-colors">
                   Hover Item (hover to see effect)
-                </a>
+                </button>
               </li>
             </ul>
           </nav>

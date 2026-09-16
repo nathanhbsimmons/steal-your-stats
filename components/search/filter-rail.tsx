@@ -27,6 +27,10 @@ function OptRow({ cat, group, opt }: { cat: Category; group: CategoryGroup; opt:
 function Popover({ cat, onClose, id }: { cat: Category; onClose: () => void; id: string }) {
   const [q, setQ] = useState('')
   return (
+    // Not an interactive affordance — the onClick below just stops the
+    // outside-click handler (attached to document) from treating a click
+    // inside the popover as a click outside it. No keyboard equivalent needed.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
     <div
       id={id}
       role="group"
