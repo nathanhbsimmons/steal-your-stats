@@ -63,15 +63,18 @@ export function TimelineStrip({ sets, showDate, onPlayFrom }: TimelineStripProps
           const isQueued = isThisShowQueued && !isCurrent && idx < queue.length
           const setClass = `set-${Math.min(item.setIdx, 2)}`
           return (
-            <div
+            <button
               key={idx}
+              type="button"
               className={`slice ${setClass}${isCurrent ? ' playing' : ''}${isQueued ? ' queued' : ''}`}
               title={item.song}
+              aria-label={`Play ${item.song}`}
+              aria-current={isCurrent ? 'true' : undefined}
               onClick={() => handleSliceClick(idx)}
             >
               <span className="num">{String(idx + 1).padStart(2, '0')}</span>
               <span className="ttl">{item.song}</span>
-            </div>
+            </button>
           )
         })}
       </div>

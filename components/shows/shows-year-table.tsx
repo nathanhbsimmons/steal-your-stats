@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { OfficialRelease } from '@/lib/official-releases'
 import { ReleaseBadge } from '@/components/ui/release-badge'
@@ -94,7 +95,11 @@ export function ShowsYearTable({ initialShows, audioDates, officialReleases }: {
                 onClick={() => router.push(`/show/${s.date}`)}
               >
                 <td style={{ fontFamily: 'var(--mono)', fontSize: 12, whiteSpace: 'nowrap' }}>{formatDate(s.date)}</td>
-                <td><span className="tbl-title">{s.venue}</span></td>
+                <td>
+                  <Link href={`/show/${s.date}`} className="tbl-title" onClick={e => e.stopPropagation()}>
+                    {s.venue}
+                  </Link>
+                </td>
                 <td style={{ fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink-3)' }}>
                   {s.city}{s.state ? `, ${s.state}` : ''}
                 </td>

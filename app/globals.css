@@ -489,6 +489,13 @@ p { margin: 0; }
   justify-content: space-between;
   padding: 5px 6px 4px;
   transition: filter .08s;
+  background: none;
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
 }
 .duration-timeline .slice:last-child { border-right: 0; }
 .duration-timeline .slice::before {
@@ -1304,7 +1311,7 @@ p { margin: 0; }
 }
 .filter-input input { background: transparent; border: 0; font: inherit; flex: 1; color: var(--ink); }
 .filter-input input::placeholder { color: var(--ink-3); }
-.filter-input .clear { color: var(--ink-3); cursor: pointer; font-family: var(--mono); }
+.filter-input .clear { background: none; border: 0; font: inherit; color: var(--ink-3); cursor: pointer; font-family: var(--mono); text-align: left; }
 .filter-input .clear:hover { color: var(--rust); }
 
 /* alphabetical column rules for catalog */
@@ -1587,7 +1594,7 @@ p { margin: 0; }
    DURATION TIMELINE
    ============================================================ */
 .duration-timeline { display: flex; height: 64px; border: 1.5px solid var(--ink); margin: 14px 0 4px; overflow: hidden; background: var(--paper-2); position: relative; }
-.duration-timeline .slice { flex: 1; position: relative; cursor: pointer; border-right: 1px solid var(--ink); min-width: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 5px 6px 4px; transition: filter .08s; }
+.duration-timeline .slice { flex: 1; position: relative; cursor: pointer; border-right: 1px solid var(--ink); min-width: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 5px 6px 4px; transition: filter .08s; background: none; border-top: 0; border-bottom: 0; border-left: 0; font: inherit; text-align: left; color: inherit; }
 .duration-timeline .slice:last-child { border-right: 0; }
 .duration-timeline .slice::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.85; }
 .duration-timeline .slice.set-0::before { background: repeating-linear-gradient(45deg, var(--forest), var(--forest) 3px, var(--forest-2) 3px, var(--forest-2) 6px); }
