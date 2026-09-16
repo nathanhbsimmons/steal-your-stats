@@ -37,7 +37,6 @@ export function VaultPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null)
   const pathname = usePathname()
   const queueToggleRef = useRef<HTMLButtonElement>(null)
-  const wasQueueOpenRef = useRef(false)
 
   // Load new src when track URL changes
   useEffect(() => {
@@ -183,16 +182,17 @@ export function VaultPlayer() {
     }
   }, [])
 
-  // Close queue on navigation
+  // Close queue on navigation — no refocus; focus should follow the navigation, not
+  // jump back to a toggle button that may no longer be relevant on the new page.
   useEffect(() => { setShowQueue(false) }, [pathname])
 
-  // Return focus to the toggle button when the drawer closes
-  useEffect(() => {
-    if (wasQueueOpenRef.current && !showQueue) {
-      queueToggleRef.current?.focus()
-    }
-    wasQueueOpenRef.current = showQueue
-  }, [showQueue])
+  // Explicit dismiss (Escape / close button): close and return focus to the toggle.
+  // Distinct from the outside-click and navigation closes below, which just hide the
+  // drawer without stealing focus from whatever the user was interacting with.
+  const closeQueueAndRefocus = () => {
+    setShowQueue(false)
+    queueToggleRef.current?.focus()
+  }
 
   // Close queue on click outside (exclude the player bar, queue drawer, play/add-queue buttons)
   useEffect(() => {
@@ -341,7 +341,7 @@ export function VaultPlayer() {
       </div>
 
       {/* Queue drawer (conditionally shown) */}
-      {showQueue && <VaultQueueDrawer onClose={() => setShowQueue(false)} />}
+      {showQueue && <VaultQueueDrawer onClose={closeQueueAndRefocus} />}
     </>
   )
 }
