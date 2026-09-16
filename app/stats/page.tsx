@@ -109,6 +109,7 @@ export default function StatsPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const announceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -162,6 +163,7 @@ export default function StatsPage() {
     setSongQuery(q)
     setActiveIdx(-1)
     if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (announceDebounceRef.current) clearTimeout(announceDebounceRef.current)
     if (!q.trim()) { setSuggestions([]); setShowDropdown(false); return }
     debounceRef.current = setTimeout(() => {
       fetch(`/api/songs?q=${encodeURIComponent(q)}`)
@@ -170,15 +172,21 @@ export default function StatsPage() {
           const found: SongSuggestion[] = (d?.songs ?? []).slice(0, 8)
           setSuggestions(found)
           setShowDropdown(found.length > 0)
-          setAnnouncement(found.length > 0
-            ? `${found.length} suggestion${found.length === 1 ? '' : 's'} available`
-            : 'No suggestions found')
+          // Announce on a longer, separate debounce than the fetch itself so
+          // rapid keystrokes don't queue up multiple polite live-region updates.
+          if (announceDebounceRef.current) clearTimeout(announceDebounceRef.current)
+          announceDebounceRef.current = setTimeout(() => {
+            setAnnouncement(found.length > 0
+              ? `${found.length} suggestion${found.length === 1 ? '' : 's'} available`
+              : 'No suggestions found')
+          }, 500)
         })
         .catch(() => {})
     }, 180)
   }
 
   function selectSong(song: SongSuggestion) {
+    if (announceDebounceRef.current) clearTimeout(announceDebounceRef.current)
     setSongQuery('')
     setSuggestions([])
     setShowDropdown(false)
