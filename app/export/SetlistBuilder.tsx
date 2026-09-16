@@ -349,6 +349,7 @@ function SetSection({
               <span style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                 <button
                   type="button"
+                  id={`move-up-${song.id}`}
                   onClick={() => onMoveSong(setKey, i, -1)}
                   disabled={i === 0}
                   aria-label={`Move ${song.displayTitle} up`}
@@ -362,6 +363,7 @@ function SetSection({
                 </button>
                 <button
                   type="button"
+                  id={`move-down-${song.id}`}
                   onClick={() => onMoveSong(setKey, i, 1)}
                   disabled={i === songs.length - 1}
                   aria-label={`Move ${song.displayTitle} down`}
@@ -588,8 +590,19 @@ export function SetlistBuilder() {
     if (destIdx < 0 || destIdx > list.length) return
 
     const song = list[idx]
+    const newPos = idx + direction
+    const atTopBoundary = direction === -1 && newPos === 0
+    const atBottomBoundary = direction === 1 && newPos === list.length - 1
+
     setSetlist(prev => reorderSetlist(prev, { setKey, idx }, setKey, destIdx))
     setMoveAnnouncement(`${song.displayTitle} moved to position ${idx + direction + 1} of ${list.length}`)
+
+    // The button just pressed is about to become disabled at this boundary —
+    // shift focus to the still-enabled sibling button so it isn't dropped to <body>.
+    if (list.length > 1) {
+      if (atTopBoundary) document.getElementById(`move-down-${song.id}`)?.focus()
+      else if (atBottomBoundary) document.getElementById(`move-up-${song.id}`)?.focus()
+    }
   }, [setlist])
 
   // ── PDF export ───────────────────────────────────────────────────────────────
@@ -630,7 +643,7 @@ export function SetlistBuilder() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="China Cat, Dark Star, Bertha…"
-              style={{ background: 'transparent', border: 0, outline: 'none', color: 'var(--fg)', fontSize: 13, flex: 1 }}
+              style={{ background: 'transparent', border: 0, color: 'var(--fg)', fontSize: 13, flex: 1 }}
             />
             {searching && (
               <span aria-hidden="true" style={{ fontSize: 10, color: 'var(--fg-4)' }}>…</span>
@@ -758,7 +771,7 @@ export function SetlistBuilder() {
                     value={setlist[key]}
                     onChange={e => setSetlist(prev => ({ ...prev, [key]: e.target.value }))}
                     placeholder={placeholder}
-                    style={{ background: 'transparent', border: 0, outline: 'none', color: 'var(--fg)', fontSize: 12.5, width: '100%' }}
+                    style={{ background: 'transparent', border: 0, color: 'var(--fg)', fontSize: 12.5, width: '100%' }}
                   />
                 </div>
               </div>

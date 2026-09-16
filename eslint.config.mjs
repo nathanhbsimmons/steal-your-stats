@@ -58,9 +58,10 @@ const eslintConfig = [
   {
     // components/ui/versions-table.tsx is not on the Tier 7 brief's audited
     // dead-file list, but a grep sweep during this task turned up zero
-    // imports of it anywhere outside its own unit test — it is unmounted,
-    // same as the files above. Flagged for controller confirmation rather
-    // than silently folded into the block above.
+    // imports of it anywhere outside its own unit test — verified unmounted
+    // in production, same as the files above. Kept as its own block rather
+    // than folded into the block above since it's not one of the six named
+    // files.
     files: ["components/ui/versions-table.tsx"],
     rules: {
       "jsx-a11y/no-noninteractive-element-interactions": "off",

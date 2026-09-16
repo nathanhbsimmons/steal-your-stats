@@ -308,6 +308,8 @@
   -webkit-appearance: none;
   width: 10px; height: 10px; border-radius: 50%;
   background: var(--paper); border: 1.5px solid var(--rust);
+  box-sizing: border-box;
+  margin-top: 4px;
   cursor: pointer;
 }
 .mv-bar-input::-moz-range-thumb {
@@ -774,7 +776,6 @@ button.mv-track-main { cursor: pointer; }
   font-size: 16px;
   font-style: italic;
   color: var(--ink-2);
-  outline: none;
   width: 100%;
 }
 .mv-search input::placeholder { color: var(--ink-4); }

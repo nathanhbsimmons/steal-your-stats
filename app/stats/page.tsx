@@ -310,7 +310,7 @@ export default function StatsPage() {
                     aria-activedescendant={activeIdx >= 0 ? positionSongOptionId(activeIdx) : undefined}
                     aria-label="Search for a song's chart position"
                     style={{
-                      border: 'none', outline: 'none', background: 'transparent',
+                      border: 'none', background: 'transparent',
                       fontFamily: 'var(--serif-body)', fontSize: 13, color: 'var(--ink)',
                       flex: 1, minWidth: 0,
                     }}

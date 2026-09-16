@@ -1186,7 +1186,7 @@ function StatsScreen() {
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
               placeholder="Search…"
               aria-label="Search songs for position breakdown"
-              style={{ border: 'none', outline: 'none', background: 'transparent', fontFamily: 'var(--serif-body)', fontSize: 14, color: 'var(--ink)', flex: 1, minWidth: 0 }}
+              style={{ border: 'none', background: 'transparent', fontFamily: 'var(--serif-body)', fontSize: 14, color: 'var(--ink)', flex: 1, minWidth: 0 }}
             />
             {positionLoading && <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-3)' }}>…</span>}
           </div>

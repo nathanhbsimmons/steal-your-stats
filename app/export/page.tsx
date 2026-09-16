@@ -162,7 +162,7 @@ export default function ExportPage() {
                   onChange={e => setSongInput(e.target.value)}
                   placeholder="Song name…"
                   aria-label="Choose a song"
-                  style={{ background: 'transparent', border: 0, outline: 'none', fontFamily: 'var(--mono)', fontSize: 12, flex: 1, color: 'var(--ink)' }}
+                  style={{ background: 'transparent', border: 0, fontFamily: 'var(--mono)', fontSize: 12, flex: 1, color: 'var(--ink)' }}
                 />
               </div>
 
@@ -182,7 +182,7 @@ export default function ExportPage() {
                       checked={include[s.key]}
                       onChange={() => setInclude(prev => ({ ...prev, [s.key]: !prev[s.key] }))}
                     />
-                    <span className="dossier-check-box" style={{
+                    <span className="dossier-check-box" aria-hidden="true" style={{
                       width: 14, height: 14, border: '1px solid var(--ink)',
                       background: include[s.key] ? 'var(--forest)' : 'var(--paper)',
                       color: 'var(--paper)', fontFamily: 'var(--mono)', fontSize: 10,
