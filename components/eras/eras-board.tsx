@@ -174,7 +174,7 @@ export function ErasBoard({ showsPerYear }: { showsPerYear: YearCount[] }) {
                 key={e.id}
                 ref={el => { tabRefs.current[`segment:${e.id}`] = el }}
                 role="tab"
-                aria-selected={selected}
+                aria-selected={selected && activeKind === 'segment'}
                 aria-label={`${e.name}, ${e.years}`}
                 tabIndex={selected && activeKind === 'segment' ? 0 : -1}
                 className={`seg ${e.segClass}`}
@@ -194,7 +194,7 @@ export function ErasBoard({ showsPerYear }: { showsPerYear: YearCount[] }) {
                 key={e.id}
                 ref={el => { tabRefs.current[`card:${e.id}`] = el }}
                 role="tab"
-                aria-selected={selected}
+                aria-selected={selected && activeKind === 'card'}
                 tabIndex={selected && activeKind === 'card' ? 0 : -1}
                 className="era-card"
                 style={selected ? { background: 'var(--hi)', borderBottom: '3px solid var(--rust)' } : {}}
