@@ -63,6 +63,7 @@ export function VenuesTable({ initialVenues, initialTotal }: { initialVenues: Ve
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="filter venues…"
+              aria-label="Filter venues"
             />
             {query && <span className="clear" onClick={() => setQuery('')}>×</span>}
           </div>

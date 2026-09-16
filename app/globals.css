@@ -159,8 +159,8 @@ p { margin: 0; }
   margin: 0 0 8px;
   color: var(--ink);
   font-feature-settings: "ss01", "lnum";
-  cursor: pointer;
 }
+.masthead h1 a { color: inherit; text-decoration: none; }
 .masthead h1 .your { font-style: italic; font-weight: 400; color: var(--rust); }
 .masthead .sub {
   font-family: var(--serif-body);
@@ -234,7 +234,7 @@ p { margin: 0; }
   padding: 10px 0 0;
   margin: 0 0 22px;
 }
-.chapters button {
+.chapters a {
   background: transparent;
   border: 0;
   border-right: 1px solid var(--rule-soft);
@@ -253,17 +253,17 @@ p { margin: 0; }
   flex: 1;
   white-space: nowrap;
 }
-.chapters button:not(:first-child) { font-size: 13.5px; }
-.chapters button .num {
+.chapters a:not(:first-child) { font-size: 13.5px; }
+.chapters a .num {
   font-family: var(--mono);
   font-size: 9.5px;
   color: var(--rust);
   letter-spacing: 0.1em;
 }
-.chapters button:first-child .num { font-size: 13px; }
-.chapters button:hover { color: var(--ink); background: var(--hi); }
-.chapters button.active { color: var(--ink); }
-.chapters button.active::after {
+.chapters a:first-child .num { font-size: 13px; }
+.chapters a:hover { color: var(--ink); background: var(--hi); }
+.chapters a.active { color: var(--ink); }
+.chapters a.active::after {
   content: "";
   position: absolute;
   left: 0; right: 0; bottom: -1px;

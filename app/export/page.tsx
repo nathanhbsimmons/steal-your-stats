@@ -161,6 +161,7 @@ export default function ExportPage() {
                   value={songInput}
                   onChange={e => setSongInput(e.target.value)}
                   placeholder="Song name…"
+                  aria-label="Choose a song"
                   style={{ background: 'transparent', border: 0, outline: 'none', fontFamily: 'var(--mono)', fontSize: 12, flex: 1, color: 'var(--ink)' }}
                 />
               </div>

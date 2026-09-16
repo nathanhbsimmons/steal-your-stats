@@ -577,7 +577,6 @@ export function SetlistBuilder() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="China Cat, Dark Star, Bertha…"
-              autoFocus
               style={{ background: 'transparent', border: 0, outline: 'none', color: 'var(--fg)', fontSize: 13, flex: 1 }}
             />
             {searching && (

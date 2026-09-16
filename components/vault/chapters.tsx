@@ -1,6 +1,7 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 
 const CHAPTERS = [
@@ -38,16 +39,15 @@ const PAGE_NUMS: Record<string, string> = {
 
 export function Chapters() {
   const pathname = usePathname()
-  const router = useRouter()
   const activeId = getActiveId(pathname)
 
   return (
     <nav className="chapters" role="navigation" aria-label="Chapter navigation">
       {CHAPTERS.map(c => (
-        <button
+        <Link
           key={c.id}
+          href={c.href}
           className={activeId === c.id ? 'active' : ''}
-          onClick={() => router.push(c.href)}
           aria-current={activeId === c.id ? 'page' : undefined}
         >
           <span className="num">{c.num}.</span>
@@ -57,7 +57,7 @@ export function Chapters() {
               {c.badge}
             </span>
           )}
-        </button>
+        </Link>
       ))}
     </nav>
   )

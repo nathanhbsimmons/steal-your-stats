@@ -20,7 +20,9 @@ function SearchContent() {
   const { data, loading, loadingMore, active } = useSearchResults(dq, filters, page)
   const { tokens } = parseQuery(dq)
 
-  useEffect(() => { inputRef.current?.focus() }, [])
+  useEffect(() => {
+    if (window.matchMedia('(min-width:768px)').matches) inputRef.current?.focus()
+  }, [])
 
   return (
     <section className="col">
@@ -39,9 +41,11 @@ function SearchContent() {
           <span className="gl">⌕</span>
           <input
             ref={inputRef}
+            type="search"
             value={q}
             onChange={e => setQ(e.target.value)}
             placeholder="song, show, venue, date…"
+            aria-label="Search"
           />
           {q && (
             <button className="clear" onClick={() => { setQ(''); inputRef.current?.focus() }}>

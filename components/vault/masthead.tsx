@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import useSWR from 'swr'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -79,8 +80,10 @@ export function Masthead({ search, setSearch }: MastheadProps) {
       <div className="left">{dateStr}</div>
 
       <div className="center">
-        <h1 onClick={() => router.push('/')}>
-          Steal<span className="your">your</span>Stats
+        <h1>
+          <Link href="/">
+            Steal<span className="your">your</span>Stats
+          </Link>
         </h1>
         <div className="sub">
           The{' '}
@@ -101,6 +104,7 @@ export function Masthead({ search, setSearch }: MastheadProps) {
               onChange={e => setSearch(e.target.value)}
               onKeyDown={onSearch}
               placeholder="search songs, shows, venues…"
+              aria-label="Search songs, shows, venues"
             />
             <span className="kbd">⌘K</span>
           </label>
