@@ -17,10 +17,12 @@ export function HomeClient({
   initialKpi,
   initialStats,
   initialDayPayload,
+  initialQuote,
 }: {
   initialKpi: SummaryStats | null
   initialStats: GlobalStats | null
   initialDayPayload: ShowOfTheDayPayload | null
+  initialQuote: { quote: string; song: string }
 }) {
   const { enqueueEntireShow, enqueueShowTrack, playShowTrack, prependToQueue, selectTrack, addToQueue } = usePlayer()
 
@@ -516,8 +518,8 @@ export function HomeClient({
         )}
 
         <div className="cartouche">
-          <div className="quote">If you get confused, just listen to the music play.</div>
-          <div className="cite">— Franklin&apos;s Tower, R. Hunter</div>
+          <div className="quote">{initialQuote.quote}</div>
+          <div className="cite">— {initialQuote.song}</div>
         </div>
       </aside>
     </>

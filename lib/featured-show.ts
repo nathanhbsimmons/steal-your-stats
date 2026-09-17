@@ -18,7 +18,7 @@ function score(s: ShowOnThisDay, getAudioTrackCount: AudioTrackCountLookup): num
   return hasAudio * 1_000_000 + audioTracksCapped * 1_000 + hasSetlist * 100 + eraBonus * 50
 }
 
-function hashString(s: string): number {
+export function hashString(s: string): number {
   let h = 2166136261
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i)

@@ -36,7 +36,12 @@ function sotdPayload(overrides: Partial<ShowOfTheDayPayload> = {}): ShowOfTheDay
 function renderHome(dayPayload: ShowOfTheDayPayload | null = sotdPayload()) {
   return render(
     <PlayerProvider>
-      <HomeClient initialKpi={null} initialStats={null} initialDayPayload={dayPayload} />
+      <HomeClient
+        initialKpi={null}
+        initialStats={null}
+        initialDayPayload={dayPayload}
+        initialQuote={{ quote: 'Test quote', song: 'Test Song' }}
+      />
     </PlayerProvider>
   )
 }
