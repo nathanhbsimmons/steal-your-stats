@@ -1,74 +1,109 @@
 {
+  "Alabama Getaway": [
+    "Thirty-two teeth in a jawbone",
+    "Alabama's tryin' for none",
+    "Before I have to hit him",
+    "I hope he's got the sense to run"
+  ],
   "Alligator": [
     "Sleepy alligator in the noonday sun",
-    "Call for his whiskey",
-    "He can run his mouth until the sun goes down",
-    "Creepy alligator coming all around the bend"
+    "Sleepin' by the river just like he usually done",
+    "Creepy alligator comin' all around the bend",
+    "Talkin' 'bout the times when we was mutual friends"
+  ],
+  "Althea": [
+    "I told Althea I was feeling lost",
+    "Lacking in some direction",
+    "Althea told me upon scrutiny",
+    "My back might need protection"
   ],
   "And We Bid You Goodnight": [
-    "Lay down my dear brothers",
-    "Lay down and take your rest",
-    "Won't you lay your head upon your savior's breast",
-    "I love you, oh but Jesus loves you the best"
+    "Lay down my dear brothers, lay down and take your rest",
+    "Oh won't you lay your head upon your savior's breast",
+    "I love you, oh but Jesus loves you the best",
+    "And I bid you goodnight, goodnight, goodnight"
   ],
   "Attics Of My Life": [
     "In the attics of my life",
     "Full of cloudy dreams unreal",
-    "In the secret space of dreams",
-    "When I had no wings to fly"
+    "Full of tastes no tongue can know",
+    "And lights no eye can see"
   ],
   "Bertha": [
-    "I had to move, really had to move",
-    "I am on my knees, begging you please",
-    "Don't you come around here anymore",
-    "Ran into a rainstorm, ducked back into a bar door"
+    "I had to move",
+    "Really had to move",
+    "That's why, if you please",
+    "I am on my bended knees"
   ],
   "Big Boss Man": [
     "Big boss man, can't you hear me when I call?",
-    "You ain't so big, you just tall that's all",
-    "Well you got me working boss man",
-    "Working around the clock"
+    "Well, you ain't so big, you're just tall, that's all",
+    "Got me working, boss man, working 'round the clock"
   ],
   "Big Railroad Blues": [
     "Well my mama told me, my papa told me too",
-    "Don't you let no woman make a fool out of you",
-    "I got a girl in the bottom, she's got a navel on her knee",
-    "Well the railroad dispatcher won't give me no train"
+    "Well I shouldn't be here trying to sing these railroad blues",
+    "Wish I had listened to oh what mama said",
+    "Well I wouldn't be here trying to sleep in this cold iron bed"
   ],
   "Big River": [
-    "I taught the weeping willow how to cry",
-    "I showed the clouds how to cover up a clear blue sky",
-    "Then you went and walked out on me",
-    "I'm gonna sit right here until I die"
+    "I taught the weeping willow how to cry, cry, cry",
+    "Taught the clouds how to cover up a clear blue sky",
+    "Then you went and left me and it like to hurt my pride",
+    "And I'm gonna sit right here until I die"
+  ],
+  "Bird Song": [
+    "Laugh in the sunshine",
+    "Sing, cry in the dark",
+    "Fly through the night",
+    "All I know is something like a bird within her sang"
+  ],
+  "Black Peter": [
+    "All of my friends come to see me last night",
+    "I was laying in my bed and dying",
+    "Annie Bonneau from Saint Angel",
+    "Just then the wind came squalling through the door"
+  ],
+  "Box Of Rain": [
+    "Look out of any window",
+    "Any morning, any evening, any day",
+    "Maybe the sun is shining",
+    "Birds are winging or rain is falling from a heavy sky"
   ],
   "Brokedown Palace": [
-    "Fare you well my honey",
-    "Fare you well my only true one",
-    "In a bed, in a bed, by the waterside I will lay my head",
-    "Listen to the river sing sweet songs to rock my soul"
+    "Fare you well, fare you well",
+    "I love you more than words can tell",
+    "Listen to the river sing sweet songs",
+    "To rock my soul"
   ],
   "Candyman": [
-    "Come on boys and gamble",
-    "Roll those laughing bones",
-    "Hand me my old guitar",
-    "Pass the whiskey 'round"
+    "Come all you pretty women",
+    "With your hair a-hanging down",
+    "Open up your windows",
+    "'Cause the Candyman's in town"
   ],
   "Casey Jones": [
     "Driving that train, high on cocaine",
-    "Casey Jones you better watch your speed",
+    "Casey Jones, you better watch your speed",
     "Trouble ahead, trouble behind",
     "And you know that notion just crossed my mind"
   ],
+  "Cassidy": [
+    "I have seen where the wolf has slept by the silver stream",
+    "I can tell by the mark he left you were in his dream",
+    "Ah, child of countless trees",
+    "Ah, child of boundless seas"
+  ],
   "Caution (Do Not Stop On Tracks)": [
-    "I went down to see the gypsy woman",
-    "I told her all my troubles",
-    "She said, 'Son, I believe you need a mojo hand'",
-    "All you need is a little bit of caution"
+    "I went down one day",
+    "To see a gypsy woman, just one day, yes I did",
+    "I wanna find out",
+    "What's wrong with me and my baby"
   ],
   "China Cat Sunflower": [
     "Look for a while at the China Cat Sunflower",
     "Proud-walking jingle in the midnight sun",
-    "Copper-dome bodhi drip a silver kimono",
+    "Copper-dome Bodhi drip a silver kimono",
     "Comic book colors on a violin river"
   ],
   "Cold Rain And Snow": [
@@ -77,6 +112,24 @@
     "Well she's coming down the stairs, combing back her yellow hair",
     "And I ain't going to be treated this a-way"
   ],
+  "Comes A Time": [
+    "Comes a time",
+    "When the blind man takes your hand",
+    "Says: don't you see?",
+    "Got to make it somehow on the dreams you still believe"
+  ],
+  "Crazy Fingers": [
+    "Your rain falls like crazy fingers",
+    "Peals of fragile thunder keeping time",
+    "Recall the days that still are to come",
+    "Some sing blue"
+  ],
+  "Cumberland Blues": [
+    "I can't stay much longer, Melinda",
+    "The sun is getting high",
+    "I can't help you with your troubles",
+    "If you won't help with mine"
+  ],
   "Dark Star": [
     "Dark star crashes, pouring its light into ashes",
     "Reason tatters, the forces tear loose from the axis",
@@ -84,28 +137,22 @@
     "Shall we go, you and I while we can"
   ],
   "Deal": [
-    "Since it costs a lot to win, and even more to lose",
-    "You and me bound to spend some time wondering what to choose",
-    "Goes to show, you don't ever know",
-    "Watch each card you play and play it slow"
+    "Since it cost a lot to win",
+    "And even more to lose",
+    "You and me bound to spend some time",
+    "Wondering what to choose"
   ],
   "Dire Wolf": [
     "In the timbers of Fennario",
-    "The wolves are running round",
-    "Don't murder me, I beg of you, don't murder me",
-    "Please, don't murder me"
-  ],
-  "Drums": [
-    "[Rhythmic drumming begins]",
-    "[Complex polyrhythms]",
-    "[Hand percussion solo]",
-    "[Bass drum resonance]"
+    "The wolves are running 'round",
+    "The winter was so hard and cold",
+    "Froze ten feet 'neath the ground"
   ],
   "Easy Wind": [
-    "I been balling a shiny black steel jack-hammer",
-    "Been chipping up rocks for the great highway",
-    "Easy wind cross the Bayou today",
-    "There's a whole lot of women out in red on the streets today"
+    "I been ballin' a shiny black steel jackhammer",
+    "Been chippin' up rocks for the great highway",
+    "Live five years if I take my time",
+    "Ballin' that jack and a drinkin' my wine"
   ],
   "El Paso": [
     "Out in the West Texas town of El Paso",
@@ -113,41 +160,47 @@
     "Nighttime would find me in Rosa's cantina",
     "Music would play and Felina would whirl"
   ],
-  "Eyes Of The World": [
-    "Right outside this lazy summer home",
-    "You ain't gonna learn what you don't want to know",
-    "Wake up to find out that you are the eyes of the world",
-    "The heart has its beaches, its homeland and thoughts of its own"
+  "Estimated Prophet": [
+    "My time coming, any day, don't worry 'bout me, no",
+    "Been so long I felt this way, ain't in no hurry, no",
+    "Rainbow's end down that highway where ocean breezes blow",
+    "My time coming, voices saying, they tell me where to go"
   ],
-  "Feedback": [
-    "[Amplifier hum builds]",
-    "[High pitched squeal]",
-    "[Distorted ambient noise]",
-    "[Sonic exploration]"
+  "Eyes Of The World": [
+    "Wake up to find out",
+    "That you are the eyes of the world",
+    "But the heart has its beaches",
+    "Its homeland and thoughts of its own"
   ],
   "Fire On The Mountain": [
     "Long distance runner, what you standin' there for?",
-    "Get up, get out, get out of the door",
-    "Fire on the mountain",
-    "Almost ablaze still you don't feel the heat"
+    "Get up, get off, get out of the door",
+    "Fire, fire on the mountain",
+    "Almost aflame still you don't feel the heat"
+  ],
+  "Foolish Heart": [
+    "Search for where the rivers end",
+    "Or where the rivers start",
+    "Do everything that's in you",
+    "But never give your love, my friend, unto a foolish heart"
   ],
   "Franklin's Tower": [
     "In another time's forgotten space",
-    "Some other shape has found its place",
-    "Roll away the dew",
+    "Your eyes looked from your mother's face",
+    "Roll away, the dew",
     "If you get confused, listen to the music play"
   ],
   "Friend Of The Devil": [
-    "I lit out from Reno, I was trailed by twenty hounds",
+    "I lit out from Reno",
+    "I was trailed by twenty hounds",
     "Didn't get to sleep that night till the morning came around",
-    "Set out running but I take my time",
-    "A friend of the devil is a friend of mine"
+    "A friend of the Devil is a friend of mine"
   ],
   "Goin' Down The Road Feeling Bad": [
-    "Goin' down the road feelin' bad",
-    "Don't wanna be treated this a-way",
-    "Goin' where the climate suits my clothes",
-    "And I ain't gonna be treated this a-way"
+    "Goin' down the road feeling bad",
+    "Goin' down the road feeling bad",
+    "Goin' down the road feeling bad",
+    "Don't wanna be treated this-a way"
   ],
   "Good Lovin'": [
     "Well I was feeling so bad",
@@ -162,27 +215,27 @@
     "I'm a little schoolboy too"
   ],
   "Help On The Way": [
-    "Paradise waits, on the crest of a wave",
+    "Paradise waits",
+    "On the crest of a wave",
     "Her angels in flame",
-    "Help on the way, well I know only this",
-    "I've got you today"
+    "She has no pain"
   ],
   "High Time": [
-    "You told me goodbye, how was I to know",
-    "You didn't mean goodbye, you meant please don't let me go?",
-    "I was having a high time",
-    "Living the good life, well I know"
+    "You told me goodbye",
+    "How was I to know",
+    "You didn't mean goodbye",
+    "You meant please don't let me go"
   ],
   "I Know You Rider": [
     "I know you rider, gonna miss me when I'm gone",
+    "I know you rider, gonna miss me when I'm gone",
     "Gonna miss your baby, from rolling in your arms",
-    "I wish I was a headlight, on a North-bound train",
-    "I'd shine my light through the cool Colorado rain"
+    "The sun will shine in my back door some day"
   ],
   "I Need A Miracle": [
     "I need a woman 'bout twice my age",
-    "A lady of nobility, gentility and rage",
-    "It takes a dynamite clothing, a handsome facade",
+    "A lady of nobility, gentility, and rage",
+    "A splendor in the dark, lightning on the draw",
     "I need a miracle every day"
   ],
   "It Hurts Me Too": [
@@ -198,15 +251,15 @@
     "Dug for him a shallow grave and laid his body down"
   ],
   "Loser": [
-    "If I had a gun for every ace I have drawn",
+    "If I had a gun for every ace I've drawn",
     "I could arm a town the size of Abilene",
-    "Don't you push me baby, cause I'm moaning low",
-    "I got no chance of losing this time"
+    "Don't you push me, baby, 'cause I'm moaning low",
+    "You know I'm only in it for the gold"
   ],
   "Mama Tried": [
     "The first thing I remember knowing",
-    "Was a lonesome whistle blowing",
-    "I turned twenty-one in prison doing life without parole",
+    "Was that lonesome whistle blowing",
+    "And I turned twenty-one in prison doing life without parole",
     "No one could steer me right but mama tried"
   ],
   "Me And My Uncle": [
@@ -216,28 +269,40 @@
     "I left his dead ass there by the side of the road"
   ],
   "Mexicali Blues": [
-    "Laid back in an old saloon, with a peso in my hand",
-    "Watching flies and children on the street",
     "Is there anything a man don't stand to lose",
-    "When the devil wants to ride it hides the Mexicali Blues"
+    "When he lets a woman hold him in her hands",
+    "You just might find yourself out there on horseback in the dark",
+    "Just riding and running across those desert sands"
+  ],
+  "Might As Well": [
+    "Great North Special, were you on board?",
+    "You can't find a ride like that no more",
+    "Night the chariot swung down low",
+    "Might as well travel the elegant way"
   ],
   "New Speedway Boogie": [
     "Please don't dominate the rap, Jack",
     "If you got nothing new to say",
-    "One way or another",
-    "This darkness got to give"
+    "If you please, don't back up the track",
+    "This train got to run today"
   ],
   "Next Time You See Me": [
     "Next time you see me, things won't be the same",
-    "Next time you see me, things won't be the same",
-    "If it hurts you my darling, you only got yourself to blame",
-    "Well it's a true, true saying, that all dogs have their day"
+    "If it hurts you my darling, you only have yourself to blame",
+    "Like a true, true sayin', all that shines is not gold",
+    "Like the good book say, you've got to reap just what you sow"
   ],
   "Not Fade Away": [
     "I'm gonna tell you how it's gonna be",
     "You're gonna give your love to me",
     "Love is real, not fade away",
     "Not fade away, not fade away"
+  ],
+  "Passenger": [
+    "Firefly, can you see me?",
+    "Shine on, glowing brief and brightly",
+    "Could you imagine, one summer day",
+    "That same night be on your way"
   ],
   "Playing In The Band": [
     "Some folks trust to reason",
@@ -258,16 +323,16 @@
     "I knew right away she was not like other girls"
   ],
   "Shakedown Street": [
-    "You tell me this town ain't got no heart",
-    "You just gotta poke around",
+    "Nothin' shakin' on Shakedown Street",
+    "Used to be the heart of town",
     "Don't tell me this town ain't got no heart",
-    "Nothin' shakin' on Shakedown Street"
+    "You just gotta poke around"
   ],
-  "Slipknot!": [
-    "[Intricate instrumental transition]",
-    "[Arpeggiated guitar lines]",
-    "[Syncopated rhythm shift]",
-    "[Complex melodic progression]"
+  "Ship Of Fools": [
+    "It was later than I thought",
+    "When I first believed you",
+    "Now I cannot share your laughter",
+    "Ship of fools"
   ],
   "Smokestack Lightning": [
     "Whoa, smokestack lightning",
@@ -275,17 +340,23 @@
     "Don't you hear me crying",
     "A-whoa, whoa, whoa"
   ],
-  "Space": [
-    "[Freeform instrumental improvisation]",
-    "[Synthesizer ambient textures]",
-    "[Atonal guitar exploration]",
-    "[Deep space echoing effects]"
-  ],
   "St. Stephen": [
     "Saint Stephen with a rose",
     "In and out of the garden he goes",
     "Country garland in the wind and the rain",
     "Wherever he goes the people all complain"
+  ],
+  "Standing On The Moon": [
+    "Standing on the moon",
+    "I got no cobweb on my shoe",
+    "Standing on the moon",
+    "I'm feeling so alone and blue"
+  ],
+  "Stella Blue": [
+    "When all the cards are down",
+    "There's nothing left to see",
+    "There's just the pavement left",
+    "And broken dreams"
   ],
   "Sugar Magnolia": [
     "Sugar Magnolia, blossoms blooming",
@@ -293,11 +364,17 @@
     "Saw my baby down by the river",
     "Knew she'd have to come up soon for air"
   ],
+  "Sugaree": [
+    "When they come to take you down",
+    "When they bring that wagon 'round",
+    "When they come to call on you",
+    "And drag your poor body down"
+  ],
   "Tennessee Jed": [
-    "Cold iron shackles, ball and chain",
+    "Cold iron shackles and a ball and chain",
     "Listen to the whistle of the evening train",
     "Tennessee, Tennessee, there ain't no place I'd rather be",
-    "Baby won't you carry me back to Tennessee"
+    "Baby, won't you carry me back to Tennessee"
   ],
   "Terrapin Station": [
     "Let my inspiration flow",
@@ -305,34 +382,70 @@
     "That will not forsake me",
     "Till my tale is told and done"
   ],
+  "The Days Between": [
+    "There were days",
+    "And there were days",
+    "And there were days between",
+    "Summer flies and August dies, the world grows dark and mean"
+  ],
   "The Eleven": [
-    "No more time to tell how",
-    "This is the season of what",
-    "Now is the time of returning",
-    "With our thought jewels polished and gleaming"
+    "Eight-sided whispering hallelujah hatrack",
+    "Seven-faced marble eye transitory dream doll",
+    "Six proud walkers on jingle-bell rainbow",
+    "Five men writing in fingers of gold"
+  ],
+  "The Music Never Stopped": [
+    "There's mosquitoes on the river",
+    "Fish are rising up like birds",
+    "It's been hot for seven weeks now",
+    "Too hot to even speak now"
   ],
   "The Other One": [
     "Spanish lady come to me, she lays on me this rose",
-    "It rainbow spirals round and round it trembles and explodes",
-    "It left a smoking crater of my mind I like to blow away",
-    "But the heat came 'round and busted me for smiling on a cloudy day"
+    "It rainbow spirals round and round, it trembles and explodes",
+    "It left a smoking crater of my mind, I like to blow away",
+    "But the heat came round and busted me for smilin' on a cloudy day"
+  ],
+  "The Wheel": [
+    "The wheel is turning",
+    "And you can't slow down",
+    "You can't let go",
+    "And you can't hold on"
+  ],
+  "Touch Of Grey": [
+    "Must be getting early",
+    "Clocks are running late",
+    "Paint-by-number morning sky",
+    "Looks so phony"
   ],
   "Truckin'": [
-    "Truckin' got my chips cashed in",
-    "Keep truckin', like the do-dah man",
+    "Truckin', got my chips cashed in",
+    "Keep truckin', like the doodah man",
     "Together, more or less in line",
     "Just keep truckin' on"
   ],
   "Turn On Your Lovelight": [
     "Without a warning you broke my heart",
-    "Taking it baby, tore it apart",
+    "You took it darlin' and you tore it apart",
     "Let it shine, let it shine, let it shine",
     "Turn on your lovelight"
   ],
   "Uncle John's Band": [
     "Well the first days are the hardest days",
     "Don't you worry anymore",
-    "Cause when life looks like easy street",
+    "'Cause when life looks like easy street",
     "There is danger at your door"
+  ],
+  "West L.A. Fadeaway": [
+    "Looking for a chateau",
+    "Twenty-one rooms but one will do",
+    "I don't want to buy it",
+    "I just want to rent it for an hour or two"
+  ],
+  "Wharf Rat": [
+    "My name is August West",
+    "And I love my Pearly Baker best",
+    "More than my wine",
+    "More than my maker, though He's no friend of mine"
   ]
 }
