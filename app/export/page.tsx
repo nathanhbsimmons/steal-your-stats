@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 import { SetlistBuilder } from './SetlistBuilder'
 
 const DOSSIER_SECTIONS = [
@@ -212,7 +213,7 @@ export default function ExportPage() {
             <div style={{ border: '1.5px solid var(--ink)', padding: '18px 20px', background: 'var(--paper)', boxShadow: '3px 3px 0 var(--rule-soft)' }}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>Raw Data · CSV</div>
               <div style={{ fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 13.5, color: 'var(--ink-2)', marginBottom: 12, lineHeight: 1.35 }}>
-                All-time leaderboard — all 442 songs with counts and percentages. Re-importable into other archives.
+                All-time leaderboard — all {CANONICAL_SONG_COUNT} songs with counts and percentages. Re-importable into other archives.
               </div>
               <button
                 className="btn ghost"

@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { fetcher, swrOpts } from '@/lib/swr-fetcher'
+import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 
 interface YearCount { year: number; count: number }
 interface LeaderEntry { name: string; count: number; pct: number }
@@ -206,6 +207,7 @@ export default function StatsPage() {
   const peakYear = barData.reduce((best, d) => d.count > best.count ? d : best, { year: 0, count: 0 })
   const leaderboard = stats?.leaderboard ?? []
   const leaderMax = leaderboard.length > 0 ? leaderboard[0].count : 1
+  const totalShows = summary?.totalShows ?? (stats ? barData.reduce((s, d) => s + d.count, 0) : undefined)
 
   return (
     <section className="col">
@@ -220,12 +222,12 @@ export default function StatsPage() {
       <div className="kpi-row">
         <div className="kpi">
           <div className="label">Total Shows</div>
-          <div className="val rust">{summary?.totalShows ? summary.totalShows.toLocaleString() : stats ? '2,333' : '—'}</div>
+          <div className="val rust">{totalShows !== undefined ? totalShows.toLocaleString() : '—'}</div>
           <div className="annot">indexed from setlist.fm</div>
         </div>
         <div className="kpi">
           <div className="label">Unique Songs</div>
-          <div className="val">{summary?.uniqueSongs ? summary.uniqueSongs.toLocaleString() : '442'}</div>
+          <div className="val">{(summary?.uniqueSongs ?? CANONICAL_SONG_COUNT).toLocaleString()}</div>
           <div className="annot">titles in the catalog</div>
         </div>
         <div className="kpi">
@@ -243,7 +245,7 @@ export default function StatsPage() {
       <div className="section-head">
         <h3>Shows per year <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--rust)', marginLeft: 10 }}>1965 — 1995</span></h3>
         <div className="descr">peak year highlighted</div>
-        <span className="meta">N = 2,333</span>
+        <span className="meta">N = {totalShows !== undefined ? totalShows.toLocaleString() : '—'}</span>
       </div>
 
       {!stats ? (
@@ -376,7 +378,7 @@ export default function StatsPage() {
           <div className="section-head" style={{ marginTop: 0 }}>
             <h3>All-time leaderboard</h3>
             <div className="descr">top {leaderboard.length} most-played</div>
-            <span className="meta">N=442 songs</span>
+            <span className="meta">N={(summary?.uniqueSongs ?? CANONICAL_SONG_COUNT).toLocaleString()} songs</span>
           </div>
           {!stats ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

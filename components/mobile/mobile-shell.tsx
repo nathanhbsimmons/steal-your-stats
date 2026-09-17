@@ -159,7 +159,8 @@ function MobileTabBar({ activeTabId, onTabClick }: MobileTabBarProps) {
 
 /* ---------------------------------------------------------- chapter strip */
 
-function chapterMeta(tabId: MobileTabId, pathname: string, songTitle?: string): { left: React.ReactNode; right: string } {
+function chapterMeta(tabId: MobileTabId, pathname: string, songTitle?: string, totalShows?: number | null): { left: React.ReactNode; right: string } {
+  const showsBadge = String(totalShows ?? 2329)
   if (tabId === 'home') {
     if (pathname.startsWith('/show/')) return {
       left: <><span className="num">I·a</span> HOME · SETLIST</>,
@@ -182,13 +183,13 @@ function chapterMeta(tabId: MobileTabId, pathname: string, songTitle?: string): 
     }
     return {
       left: <><span className="num">III.</span> SHOWS · BY DECADE</>,
-      right: '2333',
+      right: showsBadge,
     }
   }
   if (tabId === 'songs') {
     if (pathname.startsWith('/song/') && songTitle) return {
       left: <><span className="num">IV·a</span> SONGS › DETAIL</>,
-      right: '0214 / 2333',
+      right: `0214 / ${CANONICAL_SONG_COUNT}`,
     }
     return {
       left: <><span className="num">IV.</span> SONGS · CATALOG</>,
@@ -197,18 +198,18 @@ function chapterMeta(tabId: MobileTabId, pathname: string, songTitle?: string): 
   }
   if (tabId === 'stats') return {
     left: <><span className="num">V.</span> STATS · BY THE NUMBERS</>,
-    right: '2333',
+    right: showsBadge,
   }
   if (tabId === 'search') return {
     left: <><span className="num">VI.</span> SEARCH · CATALOG</>,
-    right: '2333',
+    right: showsBadge,
   }
   return { left: <><span className="num">I.</span> THE VAULT</>, right: '0001' }
 }
 
-function MobileChapter({ tabId, pathname, songTitle }: { tabId: MobileTabId; pathname: string; songTitle?: string }) {
+function MobileChapter({ tabId, pathname, songTitle, totalShows }: { tabId: MobileTabId; pathname: string; songTitle?: string; totalShows?: number | null }) {
   const router = useRouter()
-  const { left, right } = chapterMeta(tabId, pathname, songTitle)
+  const { left, right } = chapterMeta(tabId, pathname, songTitle, totalShows)
   const isDetail = pathname.startsWith('/song/') || pathname.startsWith('/show/') || pathname.match(/^\/shows\/\d{4}$/)
   return (
     <div className="mv-chapter">
@@ -1109,8 +1110,8 @@ function StatsScreen() {
 
   const leaderboard = stats?.leaderboard ?? []
   const leaderMax = leaderboard[0]?.count ?? 1
-  const totalShows = summary?.totalShows ?? 2333
-  const uniqueSongs = summary?.uniqueSongs ?? 442
+  const totalShows = summary?.totalShows ?? 2329
+  const uniqueSongs = summary?.uniqueSongs ?? CANONICAL_SONG_COUNT
   const hoursArchived = summary?.hoursArchived
 
   return (
@@ -1135,7 +1136,7 @@ function StatsScreen() {
         </div>
         <div className="cell">
           <div className="lab">Hours on Tape</div>
-          <div className="val" style={{ fontSize: 22 }}>{hoursArchived ? hoursArchived.toLocaleString() : '6,422'}</div>
+          <div className="val" style={{ fontSize: 22 }}>{(hoursArchived ?? 6288).toLocaleString()}</div>
           <div className="foot">≈ 267 days</div>
         </div>
         <div className="cell">
@@ -1259,6 +1260,11 @@ function SearchScreen() {
   const dq = useDebounce(query, 280)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const [totalShows, setTotalShows] = useState(2329)
+  useEffect(() => {
+    fetch('/api/stats/summary').then(r => r.ok ? r.json() : null).then(d => { if (d?.totalShows) setTotalShows(d.totalShows) }).catch(() => {})
+  }, [])
+
   const { data, loading, loadingMore, active } = useSearchResults(dq, filters, page)
   const { tokens } = parseQuery(dq)
 
@@ -1377,7 +1383,7 @@ function SearchScreen() {
 
       {!active && (
         <div style={{ padding: '40px 18px', color: 'var(--ink-3)', fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 16, lineHeight: 1.5 }}>
-          Start typing to search 2,333 shows and {CANONICAL_SONG_COUNT} songs.
+          Start typing to search {totalShows.toLocaleString()} shows and {CANONICAL_SONG_COUNT} songs.
         </div>
       )}
 
@@ -1929,6 +1935,11 @@ export function MobileShell() {
   const router = useRouter()
   const { currentTrack } = usePlayer()
 
+  const [totalShows, setTotalShows] = useState<number | null>(null)
+  useEffect(() => {
+    fetch('/api/stats/summary').then(r => r.ok ? r.json() : null).then(d => { if (d?.totalShows) setTotalShows(d.totalShows) }).catch(() => {})
+  }, [])
+
   // Tracks whether the player (deck) tab is active.
   // Both Home and Deck live at '/'; this distinguishes them.
   const [deckTabActive, setDeckTabActive] = useState(false)
@@ -2014,7 +2025,7 @@ export function MobileShell() {
     <div className="mv" role="main">
       <div ref={scrollRef} className={`mv-scroll${!hasMini ? ' no-mini' : ''}`}>
         {showMast && <MobileMast />}
-        <MobileChapter tabId={activeTabId} pathname={pathname} songTitle={songSlug} />
+        <MobileChapter tabId={activeTabId} pathname={pathname} songTitle={songSlug} totalShows={totalShows} />
 
         {/* Home tab */}
         {activeTabId === 'home' && isAtRoot && <HomeScreen onPlayShow={navigateToDeck} />}

@@ -3,7 +3,7 @@ import path from 'path'
 import { SetlistClientImpl, Setlist } from '../clients/setlist'
 import { ArchiveClientImpl } from '../clients/archive'
 import { HttpError } from '../http'
-import { resolveSong } from '../ids'
+import { resolveSong, CANONICAL_SONG_COUNT } from '../ids'
 import { fromSetlistDate, parseArchiveDuration, toTitleCase } from '../utils'
 
 export interface ShowRef {
@@ -595,19 +595,18 @@ export class RealtimeSongFactsService {
   async getSummaryStats(): Promise<SummaryStats> {
     const allSetlists = await this.getAllGDSetlists()
 
-    const songNames = new Set<string>()
-    for (const setlist of allSetlists) {
-      for (const set of setlist.sets.set) {
-        for (const song of set.song) {
-          if (song.name) songNames.add(song.name.toLowerCase())
-        }
-      }
-    }
+    // Scoped to the classic 1965-1995 touring era, matching every other
+    // aggregate on the site (era pages, Peak Year, /shows year charts).
+    // Excludes the 2015 "Fare Thee Well" reunion shows.
+    const classicEraShows = allSetlists.filter(s => {
+      const year = parseInt(fromSetlistDate(s.eventDate).split('-')[0])
+      return year >= 1965 && year <= 1995
+    })
 
     return {
-      totalShows: allSetlists.length,
-      uniqueSongs: songNames.size,
-      hoursArchived: Math.round(allSetlists.length * 2.7),
+      totalShows: classicEraShows.length,
+      uniqueSongs: CANONICAL_SONG_COUNT,
+      hoursArchived: Math.round(classicEraShows.length * 2.7),
       lastUpdated: this.allSetlistsCache?.cachedAt ?? null,
     }
   }

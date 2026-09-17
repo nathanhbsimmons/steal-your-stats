@@ -1,7 +1,11 @@
 'use client'
 
 import React, { useRef, useEffect, Suspense } from 'react'
+import useSWR from 'swr'
+import { fetcher, swrOpts } from '@/lib/swr-fetcher'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
+
+interface SummaryData { totalShows?: number; uniqueSongs?: number; hoursArchived?: number }
 import { parseQuery } from '@/lib/search/query-parser'
 import { useSearchState } from '@/components/search/use-search-state'
 import { useSearchResults } from '@/components/search/use-search-results'
@@ -19,6 +23,7 @@ function SearchContent() {
 
   const { data, loading, loadingMore, active } = useSearchResults(dq, filters, page)
   const { tokens } = parseQuery(dq)
+  const { data: summary } = useSWR<SummaryData>('/api/stats/summary', fetcher, swrOpts)
 
   useEffect(() => {
     if (window.matchMedia('(min-width:768px)').matches) inputRef.current?.focus()
@@ -88,7 +93,7 @@ function SearchContent() {
 
       {!active && (
         <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--ink-3)', fontFamily: 'var(--serif-body)', fontStyle: 'italic', fontSize: 17 }}>
-          Start typing to search the archive — 2,333 shows, {CANONICAL_SONG_COUNT} songs.
+          Start typing to search the archive — {(summary?.totalShows ?? 2329).toLocaleString()} shows, {summary?.uniqueSongs ?? CANONICAL_SONG_COUNT} songs.
         </div>
       )}
 
