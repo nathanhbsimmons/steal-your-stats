@@ -37,7 +37,7 @@ describe('show index', () => {
     const index = await getShowIndex()
     const results = filterShows(index, { date: '1977-05-08' })
     expect(results).toHaveLength(1)
-    expect(results[0].venue).toContain('Cornell')
+    expect(results[0].venue).toContain('Barton Hall')
   })
 
   it('filters shows by year and series together', async () => {

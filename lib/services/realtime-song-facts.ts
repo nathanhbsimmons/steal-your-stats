@@ -5,6 +5,7 @@ import { ArchiveClientImpl } from '../clients/archive'
 import { HttpError } from '../http'
 import { resolveSong, CANONICAL_SONG_COUNT } from '../ids'
 import { fromSetlistDate, parseArchiveDuration, toTitleCase } from '../utils'
+import { after } from 'next/server'
 
 export interface ShowRef {
   id: string
@@ -150,7 +151,10 @@ export class RealtimeSongFactsService {
       this.predecessorMap = this.buildPredecessorMap(fromDisk.setlists)
 
       if (fromDisk.stale && !this.buildPromise) {
-        // Background refresh — never blocks the caller.
+        // Background refresh — never blocks the caller. Registered with
+        // after() so serverless runtimes keep the instance alive until it
+        // settles, instead of freezing execution the moment the response
+        // is sent and silently dropping the refresh mid-flight.
         this.buildPromise = this.fetchAllPages().then(setlists => {
           this.allSetlistsCache = { setlists, cachedAt: Date.now() }
           this.successorMap = this.buildSuccessorMap(setlists)
@@ -163,6 +167,12 @@ export class RealtimeSongFactsService {
           this.buildPromise = null
           throw err
         })
+        try {
+          after(() => this.buildPromise!.catch(() => {}))
+        } catch {
+          // Not inside a Next.js request scope (e.g. a script or test calling
+          // this service directly) — fall back to best-effort fire-and-forget.
+        }
       }
 
       return fromDisk.setlists
