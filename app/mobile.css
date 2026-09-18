@@ -1095,8 +1095,8 @@ button.mv-track-main { cursor: pointer; }
 .mv-play-all {
   flex: 1;
   padding: 11px 14px;
-  background: var(--rust);
-  color: var(--paper);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.14em;
@@ -1107,13 +1107,13 @@ button.mv-track-main { cursor: pointer; }
 .mv-play-all:disabled { opacity: 0.6; cursor: default; }
 .mv-queue-all {
   padding: 11px 14px;
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-fg);
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  border: 1.5px solid var(--ink);
+  border: var(--btn-border-w) solid var(--btn-secondary-border);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -1365,8 +1365,8 @@ button.mv-track-main { cursor: pointer; }
 .mv-play-show-btn {
   display: inline-block;
   padding: 10px 22px;
-  background: var(--rust);
-  color: var(--paper);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.16em;
@@ -1711,9 +1711,9 @@ button.mv-track-main { cursor: pointer; }
 .mv-open-setlist-btn {
   display: inline-block;
   padding: 10px 16px;
-  background: transparent;
-  color: var(--ink);
-  border: 1.5px solid var(--ink);
+  background: var(--btn-ghost-bg);
+  color: var(--btn-ghost-fg);
+  border: var(--btn-border-w) solid var(--btn-ghost-border);
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.12em;
