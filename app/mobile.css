@@ -1192,6 +1192,8 @@ button.mv-track-main { cursor: pointer; }
   font-size: 18px;
   font-weight: 700;
   color: var(--rust);
+  min-width: 2.4em;
+  text-align: right;
 }
 .mv-ledger .row .name {
   font-family: var(--serif-body);

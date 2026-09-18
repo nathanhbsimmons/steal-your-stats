@@ -828,7 +828,7 @@ p { margin: 0; }
   font-size: 16px;
   align-items: baseline;
 }
-.toptable .row1 .rank { font-family: var(--mono); color: var(--rust); font-size: 11px; font-weight: 500; }
+.toptable .row1 .rank { font-family: var(--mono); color: var(--rust); font-size: 11px; font-weight: 500; min-width: 2.4em; text-align: right; }
 .toptable .row1 .plays { font-family: var(--mono); font-size: 11px; color: var(--ink-2); font-feature-settings: "tnum"; }
 .toptable .bar {
   height: 4px;

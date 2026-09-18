@@ -481,7 +481,7 @@ export function HomeClient({
                 <li key={m.name}>
                   <Link href={`/song/${encodeURIComponent(m.name)}`} style={{ textDecoration: 'none' }}>
                     <div className="row1">
-                      <span className="rank">{String(i + 1).padStart(2, '0')}.</span>
+                      <span className="rank">{toRoman(i + 1)}</span>
                       <span>{m.name}</span>
                       <span className="plays">{m.count}</span>
                     </div>

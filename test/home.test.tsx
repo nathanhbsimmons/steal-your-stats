@@ -3,6 +3,7 @@ import { PlayerProvider } from '@/lib/contexts/player-context'
 import { matchArchiveTracksToSetlist } from '@/lib/archive-track-match'
 import { HomeClient } from '@/components/home/home-client'
 import type { ShowOfTheDayPayload } from '@/lib/show-of-the-day-types'
+import type { GlobalStats } from '@/lib/services/realtime-song-facts'
 
 const featuredShow = {
   date: '1977-05-08', year: 1977, venue: 'Barton Hall', city: 'Ithaca',
@@ -151,6 +152,32 @@ describe('Home', () => {
       expect(screen.queryAllByText('Dark Star').length).toBeGreaterThan(0)
       // Raw "Encore: U.S. Blues" should never appear — prefix is stripped in both matching and display
       expect(screen.queryByText('Encore: U.S. Blues')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('most played leaderboard', () => {
+    it('renders leaderboard ranks as roman numerals', () => {
+      const stats: GlobalStats = {
+        showsPerYear: [],
+        leaderboard: [
+          { name: 'Dark Star', count: 219, pct: 100 },
+          { name: 'Truckin\'', count: 200, pct: 91 },
+          { name: 'Sugar Magnolia', count: 180, pct: 82 },
+        ],
+      }
+      render(
+        <PlayerProvider>
+          <HomeClient
+            initialKpi={null}
+            initialStats={stats}
+            initialDayPayload={sotdPayload()}
+            initialQuote={{ quote: 'Test quote', song: 'Test Song' }}
+          />
+        </PlayerProvider>
+      )
+      const ranks = document.querySelectorAll('.toptable .rank, .mv-ledger .row .rank')
+      expect(Array.from(ranks).slice(0, 3).map(n => n.textContent?.trim()))
+        .toEqual(['I', 'II', 'III'])
     })
   })
 
