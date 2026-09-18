@@ -55,9 +55,9 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding-top: 0;
-  padding-bottom: calc(116px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--mv-chrome-h) + var(--safe-b));
 }
-.mv-scroll.no-mini { padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px)); }
+.mv-scroll.no-mini { padding-bottom: calc(var(--mv-tabbar-h) + var(--safe-b)); }
 
 /* Trim trailing whitespace so every screen ends right at its last row —
    the mini/tab bars already reserve their own space via padding-bottom above. */
@@ -543,8 +543,8 @@ button.mv-track-main { cursor: pointer; }
 .mv-mini {
   position: absolute;
   left: 0; right: 0;
-  bottom: calc(52px + env(safe-area-inset-bottom, 0px));
-  height: 64px;
+  bottom: calc(var(--mv-tabbar-h) + var(--safe-b));
+  height: var(--mv-mini-h);
   z-index: 5;
   background: var(--paper-2);
   border-top: 3px double var(--ink);
@@ -667,13 +667,13 @@ button.mv-track-main { cursor: pointer; }
   position: absolute;
   left: 0; right: 0;
   bottom: 0;
-  height: calc(52px + env(safe-area-inset-bottom, 0px));
+  height: calc(var(--mv-tabbar-h) + var(--safe-b));
   z-index: 5;
   background: var(--paper-3);
   border-top: 1px solid var(--rule);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--safe-b);
 }
 .mv-tabs.mv-tabs-5 {
   grid-template-columns: repeat(5, 1fr);
