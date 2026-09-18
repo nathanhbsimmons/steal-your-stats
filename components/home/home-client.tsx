@@ -7,6 +7,7 @@ import { TimelineStrip } from '@/components/ui/timeline-strip'
 import { getVenueTidbit } from '@/lib/venue-tidbits'
 import { formatDuration } from '@/lib/utils'
 import { getDateParts } from '@/lib/date-parts'
+import { toRoman } from '@/lib/roman'
 import { formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import type { ArchiveTrackPayload, ShowOfTheDayPayload } from '@/lib/show-of-the-day-types'
 import type { SummaryStats, GlobalStats } from '@/lib/services/realtime-song-facts'
@@ -259,9 +260,8 @@ export function HomeClient({
           return (
             <div className="setlist">
               {showDetail!.sets.map((set, si) => {
-                const romanNumerals = ['I', 'II', 'III', 'IV', 'E.']
                 const isEncore = set.encore
-                const roman = isEncore ? 'E.' : romanNumerals[si] ?? String(si + 1)
+                const roman = isEncore ? 'E.' : toRoman(si + 1)
                 const setOffset = flatOffset
                 flatOffset += set.songs.length
                 return (

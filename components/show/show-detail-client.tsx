@@ -7,6 +7,7 @@ import { TimelineStrip } from '@/components/ui/timeline-strip'
 import { formatArchiveTrackName } from '@/lib/hooks/use-audio-player'
 import { formatDuration, slugifyVenue } from '@/lib/utils'
 import { getEraForYear } from '@/lib/eras'
+import { toRoman } from '@/lib/roman'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import type { ArchiveTrackPayload, ArchiveSetlistMatch, ShowDetail } from '@/lib/show-of-the-day-types'
 import type { OfficialRelease } from '@/lib/official-releases'
@@ -19,8 +20,6 @@ function formatDateLong(isoDate: string): string {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   })
 }
-
-const SET_ROMANS = ['I', 'II', 'III', 'IV']
 
 function recordingTypeLabel(type: string): string {
   if (type === 'sbd') return 'SBD'
@@ -389,7 +388,7 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
             {show.sets.map((set, si) => {
               const isEncore = set.encore
               const romanIdx = isEncore ? si : setIndex++
-              const roman = isEncore ? 'E.' : SET_ROMANS[romanIdx] ?? String(romanIdx + 1)
+              const roman = isEncore ? 'E.' : `${toRoman(romanIdx + 1)}.`
               const setOffset = flatOffset
               flatOffset += set.songs.length
               return (

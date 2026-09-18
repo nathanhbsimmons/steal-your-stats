@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
+import { toRoman } from '@/lib/roman'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { getVenueTidbit } from '@/lib/venue-tidbits'
 import { getOfficialReleasesForDate, getOfficialReleasesForDates } from '@/lib/official-releases'
@@ -71,8 +72,6 @@ function shortDate(iso: string): string {
   const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month - 1]
   return `${m} ${day}, ${year}`
 }
-
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
 
 /* ---------------------------------------- archive coverage helpers */
 
@@ -630,7 +629,7 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
           )}
           {showDetail.sets.map((set, si) => {
             const isEncore = set.encore
-            const roman = isEncore ? 'E.' : (ROMAN[si] ?? String(si + 1))
+            const roman = isEncore ? 'E.' : toRoman(si + 1)
             return (
               <div key={set.name}>
                 <div className="mv-set-head">
@@ -1160,7 +1159,7 @@ function StatsScreen() {
                 className="mv-ledger row"
                 style={{ display: 'grid', textDecoration: 'none' }}
               >
-                <span className="rank">{ROMAN[i] ?? String(i + 1)}</span>
+                <span className="rank">{toRoman(i + 1)}</span>
                 <span className="name">{entry.name}</span>
                 <span className="num">{entry.count}×</span>
                 <div className="bar" style={{ '--w': `${(entry.count / leaderMax) * 100}%` } as React.CSSProperties} />
@@ -1679,7 +1678,7 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
           )}
           {showDetail.sets.map((set, si) => {
             const isEncore = set.encore
-            const roman = isEncore ? 'E.' : (ROMAN[si] ?? String(si + 1))
+            const roman = isEncore ? 'E.' : toRoman(si + 1)
             return (
               <div key={set.name}>
                 <div className="mv-set-head">
