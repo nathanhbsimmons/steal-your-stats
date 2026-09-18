@@ -9,6 +9,7 @@ import { formatDuration, slugifyVenue } from '@/lib/utils'
 import { getEraForYear } from '@/lib/eras'
 import { toRoman } from '@/lib/roman'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
+import { hasMissingAudio, missingAudioMessage } from '@/lib/missing-audio'
 import type { ArchiveTrackPayload, ArchiveSetlistMatch, ShowDetail } from '@/lib/show-of-the-day-types'
 import type { OfficialRelease } from '@/lib/official-releases'
 import type { ShowRef } from '@/lib/services/realtime-song-facts'
@@ -362,12 +363,10 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
       {/* Recording mismatch warning — only when setlist songs are actually
           missing from the tape, not when the tape just has extra bonus
           material (handled by the bonus section below). */}
-      {archiveMatch && archiveMatch.matched.filter(m => !m.track).length > 2 && (
+      {hasMissingAudio(archiveCoveredIndices, show.totalSongs) && (
         <div className="margin-note" style={{ marginTop: 8, borderColor: 'var(--rust)' }}>
           <span className="head" style={{ color: 'var(--rust)' }}>Recording note</span>
-          {archiveMatch.matched.filter(m => !m.track).length} of {archiveMatch.matched.length} songs
-          couldn&apos;t be matched to a track on this recording — see the recording
-          section below for actual track titles.
+          {missingAudioMessage({ candidateCount: candidates.length })}
         </div>
       )}
 
@@ -409,13 +408,12 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                     return (
                       <div
                         key={`s${ji}`}
-                        className={`track${isCurrentSong && isPlaying ? ' playing' : ''}${pending ? ' pending' : ''}`}
+                        className={`track${isCurrentSong && isPlaying ? ' playing' : ''}${pending ? ' pending' : ''}${!inArchive && !pending && archiveRecording !== null ? ' unavailable' : ''}`}
                         onClick={inArchive ? () => { if (isCurrentSong && isPlaying) { pause() } else { void handlePlaySingleSong(songFlatIdx) } } : undefined}
                         onKeyDown={inArchive ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (isCurrentSong && isPlaying) { pause() } else { void handlePlaySingleSong(songFlatIdx) } } } : undefined}
                         role={inArchive ? 'button' : undefined}
                         tabIndex={inArchive ? 0 : undefined}
                         aria-label={inArchive ? `${isCurrentSong && isPlaying ? 'Pause' : 'Play'} ${song}` : undefined}
-                        style={!inArchive && !pending && archiveRecording !== null ? { cursor: 'default', opacity: 0.4 } : undefined}
                         data-queue-safe={inArchive ? 'true' : undefined}
                       >
                         <span className="num">{String(ji + 1).padStart(2, '0')}</span>
@@ -433,11 +431,15 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                         >
                           {song}{hasSegue && <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--rust)', marginLeft: 8, fontWeight: 500 }}>→</span>}
                         </Link>
-                        <Link
-                          href={`/song/${encodeURIComponent(song)}`}
-                          className="chev"
-                          onClick={e => e.stopPropagation()}
-                        >go to song ↗</Link>
+                        {!inArchive && !pending && archiveRecording !== null ? (
+                          <span className="unavail">Audio Unavailable</span>
+                        ) : (
+                          <Link
+                            href={`/song/${encodeURIComponent(song)}`}
+                            className="chev"
+                            onClick={e => e.stopPropagation()}
+                          >go to song ↗</Link>
+                        )}
                         <span className="dur">
                           {archiveDurations.has(songFlatIdx) ? formatDuration(archiveDurations.get(songFlatIdx)!) : ''}
                         </span>

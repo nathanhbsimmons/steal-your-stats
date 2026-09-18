@@ -702,6 +702,16 @@ p { margin: 0; }
   background-size: 200% 100%;
   animation: shimmer-vault 1.4s ease-in-out infinite;
 }
+.track.unavailable { cursor: default; }
+.track.unavailable .title { color: var(--ink-3); }
+.track .unavail {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rust);
+  white-space: nowrap;
+}
 
 .add-q {
   width: 22px; height: 22px;

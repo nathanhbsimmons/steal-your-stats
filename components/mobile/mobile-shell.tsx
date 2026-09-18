@@ -11,6 +11,7 @@ import { getOfficialReleasesForDate, getOfficialReleasesForDates } from '@/lib/o
 import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 import { getDateParts } from '@/lib/date-parts'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
+import { hasMissingAudio as checkMissingAudio, missingAudioMessage } from '@/lib/missing-audio'
 import type { ArchiveSetlistMatch, ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
 import { parseQuery } from '@/lib/search/query-parser'
 import { useDebounce, activeRailCount, type RailFilters } from '@/components/search/use-search-state'
@@ -575,7 +576,7 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
   const displayCity = featured ? `${featured.city}${featured.state ? `, ${featured.state}` : ''}` : ''
   const venueTidbit = featured ? getVenueTidbit(featured.venue, featured.city) : null
   const allSongs = showDetail?.sets.flatMap(s => s.songs) ?? []
-  const hasMissingAudio = allSongs.length > 0 && allSongs.some((_, i) => !archiveCoveredIndices.has(i))
+  const hasMissingAudio = checkMissingAudio(archiveCoveredIndices, allSongs.length)
 
   return (
     <>
@@ -618,13 +619,12 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
         <div className="mv-setlist">
           {hasMissingAudio && (
             <div className="mv-archive-note">
-              Some songs from this show don&apos;t have available audio.{' '}
+              {missingAudioMessage({ candidateCount: 0, canOpenSetlist: true })}{' '}
               {displayDate && (
                 <Link href={`/show/${displayDate}`} style={{ color: 'var(--rust)', textDecoration: 'underline' }}>
                   Open setlist ↗
                 </Link>
-              )}{' '}
-              to browse available recordings.
+              )}
             </div>
           )}
           {showDetail.sets.map((set, si) => {
@@ -1603,7 +1603,7 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
   }, [showDetail, selectedIdentifier, enqueueEntireShow, onPlayShow])
 
   const allSongs = showDetail?.sets.flatMap(s => s.songs) ?? []
-  const hasMissingAudio = archiveCoveredIndices !== null && allSongs.some((_, i) => !archiveCoveredIndices.has(i))
+  const hasMissingAudio = checkMissingAudio(archiveCoveredIndices, allSongs.length)
 
   return (
     <>
@@ -1672,8 +1672,7 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
         <div className="mv-setlist">
           {hasMissingAudio && (
             <div className="mv-archive-note">
-              Some songs from this show don&apos;t have available audio.
-              {candidates.length > 1 ? ' Try switching recordings above.' : ''}
+              {missingAudioMessage({ candidateCount: candidates.length })}
             </div>
           )}
           {showDetail.sets.map((set, si) => {
