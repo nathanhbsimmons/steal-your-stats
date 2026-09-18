@@ -821,7 +821,7 @@ p { margin: 0; }
 .toptable li:hover { background: var(--hi); }
 .toptable .row1 {
   display: grid;
-  grid-template-columns: 18px 1fr auto;
+  grid-template-columns: minmax(18px, 26.4px) 1fr auto;
   gap: 6px;
   font-family: var(--serif-display);
   font-weight: 400;
