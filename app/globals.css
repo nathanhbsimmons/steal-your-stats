@@ -43,8 +43,8 @@
   /* chrome heights — consumed by both shells; see mobile.css dock + .vault-page */
   --safe-b: env(safe-area-inset-bottom, 0px);
   --mv-tabbar-h: 52px;
-  --mv-mini-h: 30px;
-  --mv-chrome-h: calc(var(--mv-tabbar-h) + var(--mv-mini-h));
+  --mv-dock-now-h: 30px;
+  --mv-chrome-h: calc(var(--mv-tabbar-h) + var(--mv-dock-now-h));
   --vault-player-h: 160px;
 
   /* button variants — consumed by .btn (desktop) and .mv-* buttons (mobile) */
@@ -732,11 +732,10 @@ p { margin: 0; }
 /* WCAG 2.2 AA 2.5.8 — expand the pointer target without reflowing dense
    grids. Rows are ~34px tall, so height is capped to avoid neighbouring
    targets overlapping vertically. */
-.add-q, .tbl-play, .row-play, .play-mini, .vault-player .iconbtn { position: relative; }
+.add-q, .tbl-play, .row-play, .vault-player .iconbtn { position: relative; }
 .add-q::after,
 .tbl-play::after,
 .row-play::after,
-.play-mini::after,
 .vault-player .iconbtn::after {
   content: "";
   position: absolute;

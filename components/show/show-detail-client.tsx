@@ -361,7 +361,7 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
       {hasMissingAudio(archiveCoveredIndices, show.totalSongs) && (
         <div className="margin-note" style={{ marginTop: 8, borderColor: 'var(--rust)' }}>
           <span className="head" style={{ color: 'var(--rust)' }}>Recording note</span>
-          {missingAudioMessage({ candidateCount: candidates.length })}
+          {missingAudioMessage({ candidateCount: candidates.length, switcherLocation: 'below' })}
         </div>
       )}
 

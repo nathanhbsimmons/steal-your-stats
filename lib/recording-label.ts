@@ -12,6 +12,7 @@ const TYPE_WORDS: Record<string, string> = {
 const NOISE = new Set([
   'sbd', 'aud', 'mtx', 'matrix', 'fob', 'dsbd', 'sbeok', 'shnf', 'shorten',
   'flac', 'flacf', 'mp3', 'vbr', 'set1', 'set2',
+  'unknown', 'sbefail', 'dts', 'pcm', 'gems', 'ultramatrix',
 ])
 
 // Mic models and format suffixes are alphanumeric mixes; taper surnames are not.

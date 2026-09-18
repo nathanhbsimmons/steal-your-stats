@@ -149,7 +149,7 @@ describe('MobileShell', () => {
 
   /* ---------------------------------------------------------------- tab bar */
 
-  describe('MobileTabBar', () => {
+  describe('dock navigation tabs', () => {
     it('renders all six navigation tabs', () => {
       render(<MobileShell />)
       expect(screen.getByText('Home')).toBeInTheDocument()

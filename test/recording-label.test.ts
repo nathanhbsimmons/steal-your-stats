@@ -22,8 +22,8 @@ describe('recordingLabel', () => {
     expect(label).not.toMatch(/shnf|sbeok|4982/)
   })
 
-  it('falls back to Recording when the type is unknown', () => {
-    expect(recordingLabel({ identifier: 'gd1980-01-13.unknown.12345' }).primary).toMatch(/^Recording/)
+  it('falls back to Recording when the type is unknown, without leaking the "unknown" token', () => {
+    expect(recordingLabel({ identifier: 'gd1980-01-13.unknown.12345' }).primary).toBe('Recording')
   })
 
   it('always returns the raw identifier as detail', () => {

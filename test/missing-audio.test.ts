@@ -34,4 +34,9 @@ describe('missingAudioMessage', () => {
     expect(missingAudioMessage({ candidateCount: 1, canOpenSetlist: true }))
       .toBe("Some songs from this show don't have available audio. Open the full setlist to browse other recordings.")
   })
+
+  it('points down at the Archive.org Recording section when the switcher renders below', () => {
+    expect(missingAudioMessage({ candidateCount: 3, switcherLocation: 'below' }))
+      .toBe("Some songs from this show don't have available audio. Open the Archive.org Recording section below to switch recordings.")
+  })
 })

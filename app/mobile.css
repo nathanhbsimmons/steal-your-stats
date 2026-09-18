@@ -561,7 +561,7 @@ button.mv-track-main { cursor: pointer; }
   border-top: 3px double var(--ink);
 }
 .mv-dock-now {
-  height: var(--mv-mini-h);
+  height: var(--mv-dock-now-h);
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
@@ -572,7 +572,7 @@ button.mv-track-main { cursor: pointer; }
 }
 .mv-dock-open {
   min-width: 0;
-  align-self: stretch;   /* full 30px hit area — WCAG 2.5.8 */
+  align-self: stretch;   /* full 29px hit area — WCAG 2.5.8 */
   background: none;
   border: none;
   padding: 0;
@@ -648,6 +648,9 @@ button.mv-track-main { cursor: pointer; }
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   padding-bottom: var(--safe-b);
+}
+.mv-dock > .mv-tabs:first-child {
+  border-top: none;
 }
 .mv-tabs.mv-tabs-5 {
   grid-template-columns: repeat(5, 1fr);
