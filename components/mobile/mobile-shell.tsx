@@ -1265,6 +1265,7 @@ function SearchScreen() {
 
   const { data, loading, loadingMore, active } = useSearchResults(dq, filters, page)
   const { tokens } = parseQuery(dq)
+  const searchReleases = data?.shows.flatMap(show => show.releases) ?? []
 
   // Any new search (new debounced text or a filter change) starts back at page 1 —
   // only the "load more" button should ever advance it.
@@ -1405,11 +1406,11 @@ function SearchScreen() {
                   <span className="s">{fmtDate(show.date)} · {show.city}{show.state ? `, ${show.state}` : ''}</span>
                 </Link>
               ))}
-              {data?.shows.length ? (
+              {searchReleases.length > 0 && (
                 <div className="mv-shows-legend">
-                  <ReleaseLegend releases={data.shows.flatMap(show => show.releases)} />
+                  <ReleaseLegend releases={searchReleases} />
                 </div>
-              ) : null}
+              )}
               {!loading && (data?.shows.length ?? 0) < (data?.totals.shows ?? 0) && (
                 <button className="mv-load-more" onClick={() => setPage(p => p + 1)} disabled={loadingMore}>
                   {loadingMore ? 'Loading…' : `Load more (${(data?.totals.shows ?? 0) - (data?.shows.length ?? 0)} remaining)`}

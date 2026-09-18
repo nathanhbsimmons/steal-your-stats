@@ -896,6 +896,25 @@ describe('MobileShell', () => {
       expect(link).toHaveAttribute('href', '/show/1977-05-08')
     })
 
+    it('does NOT render a release legend wrapper when shows are present but none has a release', async () => {
+      mockFetch({
+        ...defaultFetch,
+        '/api/search': {
+          ...emptySearch,
+          shows: [{
+            date: '1977-05-08', year: 1977, month: 5, day: 8, venue: 'Barton Hall', venueSlug: 'barton-hall',
+            city: 'Ithaca', state: 'NY', country: 'US', songs: [], songCount: 0,
+            hasAudio: false, releases: [], hasRelease: false, releaseSeries: [], haystack: '',
+          }],
+          totals: { ...emptySearch.totals, shows: 1 },
+        },
+      })
+      const { container } = render(<MobileShell />)
+      await typeAndFlush('Barton')
+      expect(screen.getByText('Barton Hall')).toBeInTheDocument()
+      expect(container.querySelector('.mv-shows-legend')).toBeNull()
+    })
+
     it('does NOT render the Venues section when no venues match', async () => {
       mockFetch({ ...defaultFetch, '/api/search': emptySearch })
       render(<MobileShell />)
