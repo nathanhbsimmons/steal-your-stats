@@ -283,7 +283,7 @@ function MobileMast() {
 
 /* --------------------------------------------------- shared now-playing */
 
-function MobileNowPlaying() {
+function MobileNowPlaying({ queuePos, queueLength }: { queuePos: number; queueLength: number }) {
   const { currentTrack, isPlaying, play, pause, next, previous } = usePlayer()
 
   const [audioTime, setAudioTime] = useState({ currentTime: 0, duration: 0 })
@@ -313,6 +313,9 @@ function MobileNowPlaying() {
     currentTrack.city,
   ].filter(Boolean).join(' · ')
   const pct = audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0
+  const hubLabel = queuePos >= 0 && queueLength > 0
+    ? `${String(queuePos + 1).padStart(2, '0')} / ${String(queueLength).padStart(2, '0')}`
+    : '—'
 
   return (
     <>
@@ -323,7 +326,7 @@ function MobileNowPlaying() {
             <span style={{ transform: 'translateX(-50%) rotate(120deg)' }} />
             <span style={{ transform: 'translateX(-50%) rotate(240deg)' }} />
           </div>
-          <div className="hub">A · 01</div>
+          <div className="hub">{hubLabel}</div>
         </div>
         <div className="mv-now-title">{currentTrack.name}</div>
         <div className="mv-now-sub">{subLine}</div>
@@ -422,7 +425,7 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
         </div>
       ) : (
         <>
-          <MobileNowPlaying />
+          <MobileNowPlaying queuePos={currentIdx} queueLength={queue.length} />
           <div className="mv-player-queue" style={{ paddingBottom: 24 }}>
             <div className="mv-queue-head">
               <span className="name">Queue</span>

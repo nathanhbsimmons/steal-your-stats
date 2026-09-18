@@ -459,6 +459,17 @@ describe('MobileShell', () => {
       expect(screen.getByLabelText('Reel-to-reel player')).toBeInTheDocument()
     })
 
+    it('shows the track position in the reel hub', () => {
+      setPlayer({
+        currentTrack: mockTrack,
+        isPlaying: true,
+        queue: [mockTrack, { ...mockTrack, id: 'track-2' }, { ...mockTrack, id: 'track-3' }],
+      })
+      const { container } = render(<MobileShell />)
+      activateDeck()
+      expect(container.querySelector('.mv-reel .hub')?.textContent).toBe('01 / 03')
+    })
+
     it('renders transport controls when deck tab is active', () => {
       setPlayer({ currentTrack: mockTrack, queue: [mockTrack], isPlaying: true })
       render(<MobileShell />)
