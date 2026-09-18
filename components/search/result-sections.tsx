@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ReleaseBadge } from '@/components/ui/release-badge'
+import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 import type { OfficialRelease } from '@/lib/official-releases'
 import type { SearchSongResult, SearchVenueResult, SearchReleaseResult } from './types'
 import type { ShowIndexEntry } from '@/lib/services/show-index'
@@ -105,6 +105,9 @@ export function ShowsSection({
               </Link>
             )
           })}
+          {shows.length > 0 && (
+            <ReleaseLegend inline releases={shows.flatMap(s => s.releases)} />
+          )}
           {hasMore && (
             <div style={{ paddingTop: 14 }}>
               <button className="btn ghost" onClick={onLoadMore} disabled={loadingMore}>

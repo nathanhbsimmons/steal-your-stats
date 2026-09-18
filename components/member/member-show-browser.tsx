@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { PlayShowButton } from '@/components/member/play-show-button'
 import { getOfficialReleasesForDate } from '@/lib/official-releases'
-import { ReleaseBadge } from '@/components/ui/release-badge'
+import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 
 interface YearCount { year: number; count: number }
 
@@ -221,6 +221,10 @@ export function MemberShowBrowser({
               })}
             </tbody>
           </table>
+
+          {browseShows.length > 0 && (
+            <ReleaseLegend inline releases={browseShows.flatMap(show => getOfficialReleasesForDate(show.date))} />
+          )}
 
           {totalBrowsePages > 1 && (
             <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>

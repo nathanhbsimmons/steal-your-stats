@@ -13,7 +13,7 @@ import { hasMissingAudio, missingAudioMessage } from '@/lib/missing-audio'
 import type { ArchiveTrackPayload, ArchiveSetlistMatch, ShowDetail } from '@/lib/show-of-the-day-types'
 import type { OfficialRelease } from '@/lib/official-releases'
 import type { ShowRef } from '@/lib/services/realtime-song-facts'
-import { ReleaseBadge } from '@/components/ui/release-badge'
+import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 
 function formatDateLong(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number)
@@ -309,6 +309,7 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
               ))}
             </div>
           )}
+          {officialReleases.length > 0 && <ReleaseLegend inline releases={officialReleases} />}
         </div>
         <div className="toolbar">
           <span>{show.totalSongs} songs</span>

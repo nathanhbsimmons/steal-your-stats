@@ -50,14 +50,14 @@ export function ReleaseBadge({
   )
 }
 
-export function ReleaseLegend({ releases }: { releases: OfficialRelease[] }) {
+export function ReleaseLegend({ releases, inline = false }: { releases: OfficialRelease[]; inline?: boolean }) {
   const present = new Set(releases.map(r => r.series))
   const series = RELEASE_SERIES_ORDER.filter(s => present.has(s))
 
   if (series.length === 0) return null
 
   return (
-    <div className="release-legend">
+    <div className={`release-legend${inline ? ' inline' : ''}`}>
       {series.map(s => {
         const { color } = releaseSeriesStyle(s)
         return (

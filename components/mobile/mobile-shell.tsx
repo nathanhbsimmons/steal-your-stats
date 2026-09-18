@@ -587,9 +587,14 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
             {displayDate && (() => {
               const releases = getOfficialReleasesForDate(displayDate)
               return releases.length > 0 ? (
-                <div style={{ textAlign: 'center', marginBottom: 14 }}>
-                  <ReleaseBadge releases={releases} />
-                </div>
+                <>
+                  <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                    <ReleaseBadge releases={releases} />
+                  </div>
+                  <div className="mv-shows-legend">
+                    <ReleaseLegend releases={releases} />
+                  </div>
+                </>
               ) : null
             })()}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -1400,6 +1405,11 @@ function SearchScreen() {
                   <span className="s">{fmtDate(show.date)} · {show.city}{show.state ? `, ${show.state}` : ''}</span>
                 </Link>
               ))}
+              {data?.shows.length ? (
+                <div className="mv-shows-legend">
+                  <ReleaseLegend releases={data.shows.flatMap(show => show.releases)} />
+                </div>
+              ) : null}
               {!loading && (data?.shows.length ?? 0) < (data?.totals.shows ?? 0) && (
                 <button className="mv-load-more" onClick={() => setPage(p => p + 1)} disabled={loadingMore}>
                   {loadingMore ? 'Loading…' : `Load more (${(data?.totals.shows ?? 0) - (data?.shows.length ?? 0)} remaining)`}
@@ -1613,9 +1623,14 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
               {(() => {
                 const releases = getOfficialReleasesForDate(date)
                 return releases.length > 0 ? (
-                  <div style={{ marginTop: 6 }}>
-                    <ReleaseBadge releases={releases} />
-                  </div>
+                  <>
+                    <div style={{ marginTop: 6 }}>
+                      <ReleaseBadge releases={releases} />
+                    </div>
+                    <div className="mv-shows-legend">
+                      <ReleaseLegend releases={releases} />
+                    </div>
+                  </>
                 ) : null
               })()}
             </div>

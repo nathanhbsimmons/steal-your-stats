@@ -12,7 +12,7 @@ import { formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-tr
 import type { ArchiveTrackPayload, ShowOfTheDayPayload } from '@/lib/show-of-the-day-types'
 import type { SummaryStats, GlobalStats } from '@/lib/services/realtime-song-facts'
 import { getOfficialReleasesForDate } from '@/lib/official-releases'
-import { ReleaseBadge } from '@/components/ui/release-badge'
+import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 
 export function HomeClient({
   initialKpi,
@@ -207,6 +207,8 @@ export function HomeClient({
                   </span>
                 )}
               </div>
+
+              {releases.length > 0 && <ReleaseLegend inline releases={releases} />}
 
               {venueTidbit && (
                 <div style={{ fontStyle: 'italic', fontSize: 13, color: 'var(--ink-3)', marginTop: 6, lineHeight: 1.55, maxWidth: 540 }}>

@@ -1286,6 +1286,16 @@ p { margin: 0; }
   gap: 5px;
   white-space: nowrap;
 }
+.release-legend.inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px 14px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule-faint);
+}
 
 /* ============================================================
    KPI ROW
