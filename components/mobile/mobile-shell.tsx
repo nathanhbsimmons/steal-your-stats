@@ -124,14 +124,17 @@ function getUrlTab(pathname: string): MobileTabId {
   return 'home'
 }
 
-/* --------------------------------------------------------------- tab bar */
+/* ------------------------------------------------------------- bottom dock */
 
-interface MobileTabBarProps {
+interface MobileDockProps {
   activeTabId: MobileTabId
   onTabClick: (id: MobileTabId) => void
+  onOpenDeck: () => void
+  showNowPlaying: boolean
 }
 
-function MobileTabBar({ activeTabId, onTabClick }: MobileTabBarProps) {
+function MobileDock({ activeTabId, onTabClick, onOpenDeck, showNowPlaying }: MobileDockProps) {
+  const { currentTrack, isPlaying, play, pause } = usePlayer()
   const tabs: Array<{ id: MobileTabId; num: string; label: string }> = [
     { id: 'home',   num: 'I',   label: 'Home'   },
     { id: 'deck',   num: 'II',  label: 'Deck'   },
@@ -140,19 +143,39 @@ function MobileTabBar({ activeTabId, onTabClick }: MobileTabBarProps) {
     { id: 'stats',  num: 'V',   label: 'Stats'  },
     { id: 'search', num: 'VI',  label: 'Search' },
   ]
+  const nowPlaying = showNowPlaying && !!currentTrack
+
   return (
-    <div className="mv-tabs mv-tabs-6" role="navigation" aria-label="Main navigation">
-      {tabs.map(tab => (
-        <button
-          key={tab.id}
-          className={`mv-tab${activeTabId === tab.id ? ' active' : ''}`}
-          onClick={() => onTabClick(tab.id)}
-          aria-current={activeTabId === tab.id ? 'page' : undefined}
-        >
-          <span className="num">{tab.num}</span>
-          <span className="lab">{tab.label}</span>
-        </button>
-      ))}
+    <div className="mv-dock">
+      {nowPlaying && currentTrack && (
+        <div className={`mv-dock-now${!isPlaying ? ' paused' : ''}`} role="status" aria-live="polite">
+          <button className="mv-dock-open" onClick={onOpenDeck} aria-label={`Open player — ${currentTrack.name}`}>
+            <span className="title">{currentTrack.name}</span>
+            {currentTrack.showDate && <span className="sub">{currentTrack.showDate}</span>}
+          </button>
+          <button
+            className="mv-dock-pp"
+            onClick={isPlaying ? pause : play}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+          >{isPlaying ? '❚❚' : '▶'}</button>
+        </div>
+      )}
+      <div className="mv-tabs mv-tabs-6" role="navigation" aria-label="Main navigation">
+        {tabs.map(tab => {
+          const isDeckPlaying = tab.id === 'deck' && isPlaying && !!currentTrack
+          return (
+            <button
+              key={tab.id}
+              className={`mv-tab${activeTabId === tab.id ? ' active' : ''}${isDeckPlaying ? ' deck-playing' : ''}`}
+              onClick={() => onTabClick(tab.id)}
+              aria-current={activeTabId === tab.id ? 'page' : undefined}
+            >
+              <span className="num">{tab.num}</span>
+              <span className="lab">{tab.label}</span>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -253,35 +276,6 @@ function MobileMast() {
       <div className="sub">
         The <span className="bl">Grateful Dead</span> Archive · <em>compiled by hand, played through the deck</em>
       </div>
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------- mini player */
-
-function MobileMini({ onOpen }: { onOpen: () => void }) {
-  const { currentTrack, isPlaying, play, pause, next } = usePlayer()
-  if (!currentTrack) return null
-  const dateStr = currentTrack.showDate ?? ''
-  const venueStr = [currentTrack.venue, currentTrack.city].filter(Boolean).join(' · ').toUpperCase()
-  const releases = currentTrack.showDate ? getOfficialReleasesForDate(currentTrack.showDate) : []
-  return (
-    <div className={`mv-mini${!isPlaying ? ' paused' : ''}`} role="status" aria-live="polite">
-      <div className="stamp" aria-hidden="true" />
-      <button className="mv-mini-open" onClick={onOpen} aria-label="Open player">
-        <div className="meta">
-          <div className="title-row">
-            <div className="title">{currentTrack.name}</div>
-            {releases.length > 0 && <ReleaseBadge releases={releases} variant="icon" size="xs" />}
-          </div>
-          <div className="sub">{dateStr}{venueStr ? ` · ${venueStr}` : ''}</div>
-        </div>
-      </button>
-      <button className="next" onClick={next} aria-label="Skip to next track">▶▶</button>
-      <button className="pp" onClick={isPlaying ? pause : play} aria-label={isPlaying ? 'Pause' : 'Play'}>
-        {isPlaying ? '❚❚' : '▶'}
-      </button>
-      <div className="hair" style={{ width: '0%' }} aria-hidden="true" />
     </div>
   )
 }
@@ -2048,9 +2042,6 @@ export function MobileShell() {
         {activeTabId === 'search' && <SearchScreen />}
       </div>
 
-      {/* Mini player — shown on all tabs except Deck */}
-      {!isDeckTab && <MobileMini onOpen={navigateToDeck} />}
-
       {/* Back-to-top floating button */}
       {showBackToTop && !isDeckTab && (
         <button
@@ -2060,7 +2051,12 @@ export function MobileShell() {
         >↑</button>
       )}
 
-      <MobileTabBar activeTabId={activeTabId} onTabClick={handleTabClick} />
+      <MobileDock
+        activeTabId={activeTabId}
+        onTabClick={handleTabClick}
+        onOpenDeck={navigateToDeck}
+        showNowPlaying={hasMini}
+      />
     </div>
   )
 }
