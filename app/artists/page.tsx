@@ -1,11 +1,9 @@
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { realtimeSongFactsService } from '@/lib/services/realtime-song-facts'
+import { MEMBERS } from '@/lib/members'
 
 export const revalidate = 86400
-
-interface YearCount { year: number; count: number }
 
 const CORE_SIX = [
   { name: 'Jerry Garcia',    role: 'Lead guitar · vocals',      initial: 'JG', years: '1965 – 1995', mark: 'J', href: '/member/jerry-garcia',    photo: '/members/jerry_garcia.jpg'    },
@@ -28,10 +26,6 @@ const SPECIAL_GUESTS = [
   { name: 'Bruce Hornsby',     role: 'Piano · accordion',  initial: 'BH', years: '1988 – 1995', mark: 'H', href: '/member/bruce-hornsby'    },
   { name: 'Branford Marsalis', role: 'Saxophone',          initial: 'BM', years: '1988 – 1994', mark: 'M', href: '/member/branford-marsalis' },
 ]
-
-function sumYears(data: YearCount[], from: number, to: number): number {
-  return data.filter(d => d.year >= from && d.year <= to).reduce((s, d) => s + d.count, 0)
-}
 
 interface MemberEntry {
   name: string
@@ -86,10 +80,7 @@ function MemberCard({
   )
 }
 
-export default async function ArtistsPage() {
-  const stats = await realtimeSongFactsService.getGlobalStats().catch(() => ({ showsPerYear: [] as YearCount[], leaderboard: [] }))
-  const yearData = stats.showsPerYear
-
+export default function ArtistsPage() {
   return (
     <section className="col">
       <div className="page-head">
@@ -109,9 +100,8 @@ export default async function ArtistsPage() {
       </div>
       <div className="member-grid">
         {CORE_SIX.map(m => {
-          const [from, to] = m.years.split(' – ').map(Number)
-          const shows = sumYears(yearData, from, to)
-          return <MemberCard key={m.name} member={m} shows={shows} />
+          const canonical = MEMBERS[m.href.replace('/member/', '')]
+          return <MemberCard key={m.name} member={m} shows={canonical?.shows ?? 0} />
         })}
       </div>
 
@@ -122,9 +112,8 @@ export default async function ArtistsPage() {
       </div>
       <div className="member-grid">
         {PASSING_THROUGH.map(m => {
-          const [from, to] = m.years.split(' – ').map(Number)
-          const shows = sumYears(yearData, from, to)
-          return <MemberCard key={m.name} member={m} shows={shows} minor />
+          const canonical = MEMBERS[m.href.replace('/member/', '')]
+          return <MemberCard key={m.name} member={m} shows={canonical?.shows ?? 0} minor />
         })}
       </div>
 
