@@ -10,6 +10,7 @@ import { getEraForYear } from '@/lib/eras'
 import { toRoman } from '@/lib/roman'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import { hasMissingAudio, missingAudioMessage } from '@/lib/missing-audio'
+import { recordingLabel } from '@/lib/recording-label'
 import type { ArchiveTrackPayload, ArchiveSetlistMatch, ShowDetail } from '@/lib/show-of-the-day-types'
 import type { OfficialRelease } from '@/lib/official-releases'
 import type { ShowRef } from '@/lib/services/realtime-song-facts'
@@ -20,13 +21,6 @@ function formatDateLong(isoDate: string): string {
   return new Date(year, month - 1, day).toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   })
-}
-
-function recordingTypeLabel(type: string): string {
-  if (type === 'sbd') return 'SBD'
-  if (type === 'aud') return 'AUD'
-  if (type === 'matrix') return 'Matrix'
-  return '?'
 }
 
 export function ShowDetailClient({ date, initialShow, officialReleases = [], adjacentShows = { prev: null, next: null } }: { date: string; initialShow: ShowDetail; officialReleases?: OfficialRelease[]; adjacentShows?: { prev: ShowRef | null; next: ShowRef | null } }) {
@@ -506,7 +500,7 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
       {archiveRecording && (() => {
         const currentCandidate = candidates.find(c => c.identifier === archiveRecording.identifier)
         const altCandidates = candidates.filter(c => c.identifier !== archiveRecording.identifier)
-        const typeLabel = currentCandidate ? recordingTypeLabel(currentCandidate.recordingType) : null
+        const currentLabel = recordingLabel({ identifier: archiveRecording.identifier, recordingType: currentCandidate?.recordingType })
         return (
           <div style={{ marginTop: 16, border: '2px solid var(--gray)', borderRadius: 12, overflow: 'hidden' }}>
             <button
@@ -522,16 +516,11 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                 <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.08em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>
                   Archive.org Recording
                 </div>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink)', marginTop: 2 }}>
-                  {archiveRecording.identifier}
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink)', marginTop: 2 }} title={archiveRecording.identifier}>
+                  {currentLabel.primary}
                 </div>
               </div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0, marginLeft: 12 }}>
-                {typeLabel && (
-                  <span style={{ border: '1px solid var(--gray)', borderRadius: 4, padding: '1px 5px', fontSize: 10, fontWeight: 600, color: 'var(--ink)' }}>
-                    {typeLabel}
-                  </span>
-                )}
                 {altCandidates.length > 0 && (
                   <span style={{ fontSize: 10, color: 'var(--ink-3)' }}>
                     +{altCandidates.length} more
@@ -550,13 +539,13 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                     <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.08em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: 6 }}>
                       Switch recording
                     </div>
-                    {altCandidates.map(c => (
+                    {altCandidates.map(c => {
+                      const label = recordingLabel(c)
+                      return (
                       <div key={c.identifier} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, border: '1px solid var(--gray)', borderRadius: 4, padding: '1px 5px', flexShrink: 0, color: 'var(--ink)' }}>
-                          {recordingTypeLabel(c.recordingType)}
-                        </span>
-                        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                          {c.identifier}
+                        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', overflow: 'hidden', flex: 1, minWidth: 0 }} title={label.detail}>
+                          <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label.primary}</span>
+                          <span style={{ display: 'block', fontSize: 9, color: 'var(--ink-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{label.detail}</span>
                         </span>
                         <button
                           onClick={() => handleSwitchRecording(c.identifier)}
@@ -566,7 +555,8 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                           {switchingRecording ? '...' : 'switch →'}
                         </button>
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
 

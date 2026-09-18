@@ -1425,17 +1425,6 @@ button.mv-track-main { cursor: pointer; }
   padding: 8px 18px;
   border-bottom: 1px dotted var(--rule-soft);
 }
-.mv-rec-type {
-  font-family: var(--mono);
-  font-size: 8px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border: 1px solid var(--gray);
-  border-radius: 3px;
-  padding: 1px 4px;
-  flex-shrink: 0;
-  color: var(--ink);
-}
 .mv-rec-opt-id {
   font-family: var(--mono);
   font-size: 9.5px;
@@ -1444,6 +1433,16 @@ button.mv-track-main { cursor: pointer; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.mv-rec-opt-raw {
+  display: block;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
 }
 .mv-rec-active {
   font-family: var(--mono);

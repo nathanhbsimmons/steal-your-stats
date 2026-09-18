@@ -12,6 +12,7 @@ import { formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-tr
 import type { ArchiveTrackPayload, ShowOfTheDayPayload } from '@/lib/show-of-the-day-types'
 import type { SummaryStats, GlobalStats } from '@/lib/services/realtime-song-facts'
 import { getOfficialReleasesForDate } from '@/lib/official-releases'
+import { recordingLabel } from '@/lib/recording-label'
 import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 
 export function HomeClient({
@@ -434,7 +435,7 @@ export function HomeClient({
           )}{' '}
           to browse all available recordings for this show and switch between them.
           {archiveIdentifier && (
-            <><br />Playing: <strong>{archiveIdentifier}</strong></>
+            <><br />Playing: <strong title={archiveIdentifier}>{recordingLabel({ identifier: archiveIdentifier }).primary}</strong></>
           )}
         </div>
       </section>

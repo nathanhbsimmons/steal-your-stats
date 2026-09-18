@@ -12,6 +12,7 @@ import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 import { getDateParts } from '@/lib/date-parts'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import { hasMissingAudio as checkMissingAudio, missingAudioMessage } from '@/lib/missing-audio'
+import { recordingLabel } from '@/lib/recording-label'
 import type { ArchiveSetlistMatch, ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
 import { parseQuery } from '@/lib/search/query-parser'
 import { useDebounce, activeRailCount, type RailFilters } from '@/components/search/use-search-state'
@@ -1652,15 +1653,24 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
         <div className="mv-rec-picker">
           <button className="mv-rec-toggle" onClick={() => setShowRecordingPicker(p => !p)}>
             <span className="mv-rec-label">Recording</span>
-            <span className="mv-rec-id">{selectedIdentifier ?? '…'}</span>
+            <span className="mv-rec-id" title={selectedIdentifier ?? undefined}>
+              {selectedIdentifier
+                ? recordingLabel({
+                    identifier: selectedIdentifier,
+                    recordingType: candidates.find(c => c.identifier === selectedIdentifier)?.recordingType,
+                  }).primary
+                : '…'}
+            </span>
             <span className="mv-rec-caret">{showRecordingPicker ? '▲' : '▼'}</span>
           </button>
           {showRecordingPicker && (
             <div className="mv-rec-list">
               {candidates.map(c => (
                 <div key={c.identifier} className="mv-rec-opt-row">
-                  {c.recordingType && <span className="mv-rec-type">{c.recordingType}</span>}
-                  <span className="mv-rec-opt-id">{c.identifier}</span>
+                  <span className="mv-rec-opt-id">
+                    {recordingLabel(c).primary}
+                    <span className="mv-rec-opt-raw">{c.identifier}</span>
+                  </span>
                   {c.identifier === selectedIdentifier ? (
                     <span className="mv-rec-active">✓</span>
                   ) : (
