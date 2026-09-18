@@ -456,6 +456,18 @@ button.mv-track-main { cursor: pointer; }
   place-items: center;
 }
 .mv-addq:active { background: var(--forest); color: var(--paper); }
+/* WCAG 2.2 AA 2.5.8 — expand the pointer target without reflowing the
+   dense .mv-track grid. */
+.mv-addq { position: relative; }
+.mv-addq::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 32px;
+}
 .mv-track .n {
   font-family: var(--mono);
   font-size: 10px;

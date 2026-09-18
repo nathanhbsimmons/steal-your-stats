@@ -729,6 +729,23 @@ p { margin: 0; }
   transition: border-color .1s, color .1s, background .1s;
 }
 .add-q:hover { border-color: var(--rust); color: var(--rust); }
+/* WCAG 2.2 AA 2.5.8 — expand the pointer target without reflowing dense
+   grids. Rows are ~34px tall, so height is capped to avoid neighbouring
+   targets overlapping vertically. */
+.add-q, .tbl-play, .row-play, .play-mini, .vault-player .iconbtn { position: relative; }
+.add-q::after,
+.tbl-play::after,
+.row-play::after,
+.play-mini::after,
+.vault-player .iconbtn::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 32px;
+}
 .add-q.flash {
   border-color: var(--rust);
   background: var(--rust);
