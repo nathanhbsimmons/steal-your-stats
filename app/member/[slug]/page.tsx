@@ -91,10 +91,10 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
             </div>
           </div>
           <div className="actions">
-            <Link href={`/eras?focus=${member.eraId}`} className="btn primary">
+            <Link href={`/eras?focus=${member.eraId}`} className="btn ghost">
               ⟶ View era · {era?.name ?? member.eraId}
             </Link>
-            <PlayShowButton show={member.signatureShows[0]} label="▶ Play featured show" className="btn ghost" />
+            <PlayShowButton show={member.signatureShows[0]} label="▶ Play featured show" className="btn primary" />
           </div>
         </div>
       </div>

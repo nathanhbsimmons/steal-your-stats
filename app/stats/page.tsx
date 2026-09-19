@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import Link from 'next/link'
 import { fetcher, swrOpts } from '@/lib/swr-fetcher'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
+import { toRoman } from '@/lib/roman'
 
 interface YearCount { year: number; count: number }
 interface LeaderEntry { name: string; count: number; pct: number }
@@ -392,7 +393,7 @@ export default function StatsPage() {
                 <li key={entry.name}>
                   <Link href={`/song/${encodeURIComponent(entry.name)}`} style={{ textDecoration: 'none', display: 'block' }}>
                     <div className="row1">
-                      <span className="rank">{i + 1}.</span>
+                      <span className="rank">{toRoman(i + 1)}</span>
                       <span style={{ fontFamily: 'var(--serif-display)', fontSize: 16 }}>{entry.name}</span>
                       <span className="plays">{entry.count}</span>
                     </div>

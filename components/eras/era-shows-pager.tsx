@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { getOfficialReleasesForDate } from '@/lib/official-releases'
-import { ReleaseBadge } from '@/components/ui/release-badge'
+import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 
 interface ShowRef {
   id: string
@@ -120,6 +120,10 @@ export function EraShowsPager({
                   </Link>
                 ))
           }
+
+          {!loadingShows && shows.length > 0 && (
+            <ReleaseLegend inline releases={shows.flatMap(show => getOfficialReleasesForDate(show.date))} />
+          )}
 
           {totalPages > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 14 }}>

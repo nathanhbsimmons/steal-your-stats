@@ -149,7 +149,7 @@ describe('MobileShell', () => {
 
   /* ---------------------------------------------------------------- tab bar */
 
-  describe('MobileTabBar', () => {
+  describe('dock navigation tabs', () => {
     it('renders all six navigation tabs', () => {
       render(<MobileShell />)
       expect(screen.getByText('Home')).toBeInTheDocument()
@@ -341,9 +341,63 @@ describe('MobileShell', () => {
     })
   })
 
-  /* ---------------------------------------------------------------- mini player */
+  /* ---------------------------------------------------------------- bottom dock */
 
-  describe('MobileMini', () => {
+  describe('bottom dock', () => {
+    it('renders one dock containing both the now-playing strip and the tabs', () => {
+      setPathname('/songs')
+      setPlayer({ currentTrack: mockTrack, isPlaying: true })
+      const { container } = render(<MobileShell />)
+      expect(container.querySelectorAll('.mv-dock')).toHaveLength(1)
+      expect(container.querySelector('.mv-dock .mv-dock-now')).toBeTruthy()
+      expect(container.querySelector('.mv-dock .mv-tabs')).toBeTruthy()
+      expect(container.querySelector('.mv-mini')).toBeNull()
+    })
+
+    it('omits the now-playing strip when nothing is loaded', () => {
+      setPathname('/songs')
+      setPlayer({ currentTrack: null })
+      const { container } = render(<MobileShell />)
+      expect(container.querySelector('.mv-dock-now')).toBeNull()
+      expect(container.querySelector('.mv-tabs')).toBeTruthy()
+    })
+
+    it('marks the deck tab as playing so the tab bar carries transport state', () => {
+      setPathname('/songs')
+      setPlayer({ currentTrack: mockTrack, isPlaying: true })
+      const { container } = render(<MobileShell />)
+      expect(container.querySelector('.mv-tab.deck-playing')).toBeTruthy()
+    })
+
+    it('does not mark the deck tab as playing while paused', () => {
+      setPathname('/songs')
+      setPlayer({ currentTrack: mockTrack, isPlaying: false })
+      const { container } = render(<MobileShell />)
+      expect(container.querySelector('.mv-tab.deck-playing')).toBeNull()
+    })
+
+    it('opens the deck when the strip body is tapped', () => {
+      setPathname('/')
+      setPlayer({ currentTrack: mockTrack, isPlaying: true })
+      const { container } = render(<MobileShell />)
+      fireEvent.click(container.querySelector('.mv-dock-open')!)
+      expect(screen.getByText('Deck').closest('button')).toHaveClass('active')
+    })
+
+    it('does not open the deck when the strip play/pause is tapped', () => {
+      setPathname('/')
+      setPlayer({ currentTrack: mockTrack, isPlaying: true })
+      const { container } = render(<MobileShell />)
+      fireEvent.click(screen.getByLabelText('Pause'))
+      expect(mockPause).toHaveBeenCalled()
+      expect(screen.getByText('Deck').closest('button')).not.toHaveClass('active')
+      expect(container.querySelector('.mv-dock-now')).toBeTruthy()
+    })
+  })
+
+  /* ---------------------------------------------------------------- now-playing strip */
+
+  describe('dock now-playing strip', () => {
     it('does not render the mini player when no track is playing', () => {
       setPathname('/songs')
       render(<MobileShell />)
@@ -356,14 +410,6 @@ describe('MobileShell', () => {
       render(<MobileShell />)
       expect(screen.getByRole('status')).toBeInTheDocument()
       expect(screen.getByText('Dark Star')).toBeInTheDocument()
-    })
-
-    it('calls next() when the skip button is clicked', () => {
-      setPathname('/songs')
-      setPlayer({ currentTrack: mockTrack, isPlaying: true })
-      render(<MobileShell />)
-      fireEvent.click(screen.getByLabelText('Skip to next track'))
-      expect(mockNext).toHaveBeenCalled()
     })
 
     it('calls pause() when pause button is clicked while playing', () => {
@@ -411,6 +457,17 @@ describe('MobileShell', () => {
       render(<MobileShell />)
       activateDeck()
       expect(screen.getByLabelText('Reel-to-reel player')).toBeInTheDocument()
+    })
+
+    it('shows the track position in the reel hub', () => {
+      setPlayer({
+        currentTrack: mockTrack,
+        isPlaying: true,
+        queue: [mockTrack, { ...mockTrack, id: 'track-2' }, { ...mockTrack, id: 'track-3' }],
+      })
+      const { container } = render(<MobileShell />)
+      activateDeck()
+      expect(container.querySelector('.mv-reel .hub')?.textContent).toBe('01 / 03')
     })
 
     it('renders transport controls when deck tab is active', () => {
@@ -848,6 +905,25 @@ describe('MobileShell', () => {
       expect(screen.getByText('Barton Hall')).toBeInTheDocument()
       const link = screen.getByText('Barton Hall').closest('a')!
       expect(link).toHaveAttribute('href', '/show/1977-05-08')
+    })
+
+    it('does NOT render a release legend wrapper when shows are present but none has a release', async () => {
+      mockFetch({
+        ...defaultFetch,
+        '/api/search': {
+          ...emptySearch,
+          shows: [{
+            date: '1977-05-08', year: 1977, month: 5, day: 8, venue: 'Barton Hall', venueSlug: 'barton-hall',
+            city: 'Ithaca', state: 'NY', country: 'US', songs: [], songCount: 0,
+            hasAudio: false, releases: [], hasRelease: false, releaseSeries: [], haystack: '',
+          }],
+          totals: { ...emptySearch.totals, shows: 1 },
+        },
+      })
+      const { container } = render(<MobileShell />)
+      await typeAndFlush('Barton')
+      expect(screen.getByText('Barton Hall')).toBeInTheDocument()
+      expect(container.querySelector('.mv-shows-legend')).toBeNull()
     })
 
     it('does NOT render the Venues section when no venues match', async () => {

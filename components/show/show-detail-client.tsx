@@ -7,26 +7,20 @@ import { TimelineStrip } from '@/components/ui/timeline-strip'
 import { formatArchiveTrackName } from '@/lib/hooks/use-audio-player'
 import { formatDuration, slugifyVenue } from '@/lib/utils'
 import { getEraForYear } from '@/lib/eras'
+import { toRoman } from '@/lib/roman'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
+import { hasMissingAudio, missingAudioMessage } from '@/lib/missing-audio'
+import { recordingLabel } from '@/lib/recording-label'
 import type { ArchiveTrackPayload, ArchiveSetlistMatch, ShowDetail } from '@/lib/show-of-the-day-types'
 import type { OfficialRelease } from '@/lib/official-releases'
 import type { ShowRef } from '@/lib/services/realtime-song-facts'
-import { ReleaseBadge } from '@/components/ui/release-badge'
+import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 
 function formatDateLong(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number)
   return new Date(year, month - 1, day).toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   })
-}
-
-const SET_ROMANS = ['I', 'II', 'III', 'IV']
-
-function recordingTypeLabel(type: string): string {
-  if (type === 'sbd') return 'SBD'
-  if (type === 'aud') return 'AUD'
-  if (type === 'matrix') return 'Matrix'
-  return '?'
 }
 
 export function ShowDetailClient({ date, initialShow, officialReleases = [], adjacentShows = { prev: null, next: null } }: { date: string; initialShow: ShowDetail; officialReleases?: OfficialRelease[]; adjacentShows?: { prev: ShowRef | null; next: ShowRef | null } }) {
@@ -309,6 +303,7 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
               ))}
             </div>
           )}
+          {officialReleases.length > 0 && <ReleaseLegend inline releases={officialReleases} />}
         </div>
         <div className="toolbar">
           <span>{show.totalSongs} songs</span>
@@ -363,12 +358,10 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
       {/* Recording mismatch warning — only when setlist songs are actually
           missing from the tape, not when the tape just has extra bonus
           material (handled by the bonus section below). */}
-      {archiveMatch && archiveMatch.matched.filter(m => !m.track).length > 2 && (
+      {hasMissingAudio(archiveCoveredIndices, show.totalSongs) && (
         <div className="margin-note" style={{ marginTop: 8, borderColor: 'var(--rust)' }}>
           <span className="head" style={{ color: 'var(--rust)' }}>Recording note</span>
-          {archiveMatch.matched.filter(m => !m.track).length} of {archiveMatch.matched.length} songs
-          couldn&apos;t be matched to a track on this recording — see the recording
-          section below for actual track titles.
+          {missingAudioMessage({ candidateCount: candidates.length, switcherLocation: 'below' })}
         </div>
       )}
 
@@ -389,7 +382,7 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
             {show.sets.map((set, si) => {
               const isEncore = set.encore
               const romanIdx = isEncore ? si : setIndex++
-              const roman = isEncore ? 'E.' : SET_ROMANS[romanIdx] ?? String(romanIdx + 1)
+              const roman = isEncore ? 'E.' : `${toRoman(romanIdx + 1)}.`
               const setOffset = flatOffset
               flatOffset += set.songs.length
               return (
@@ -410,13 +403,12 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                     return (
                       <div
                         key={`s${ji}`}
-                        className={`track${isCurrentSong && isPlaying ? ' playing' : ''}${pending ? ' pending' : ''}`}
+                        className={`track${isCurrentSong && isPlaying ? ' playing' : ''}${pending ? ' pending' : ''}${!inArchive && !pending && archiveRecording !== null ? ' unavailable' : ''}`}
                         onClick={inArchive ? () => { if (isCurrentSong && isPlaying) { pause() } else { void handlePlaySingleSong(songFlatIdx) } } : undefined}
                         onKeyDown={inArchive ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (isCurrentSong && isPlaying) { pause() } else { void handlePlaySingleSong(songFlatIdx) } } } : undefined}
                         role={inArchive ? 'button' : undefined}
                         tabIndex={inArchive ? 0 : undefined}
                         aria-label={inArchive ? `${isCurrentSong && isPlaying ? 'Pause' : 'Play'} ${song}` : undefined}
-                        style={!inArchive && !pending && archiveRecording !== null ? { cursor: 'default', opacity: 0.4 } : undefined}
                         data-queue-safe={inArchive ? 'true' : undefined}
                       >
                         <span className="num">{String(ji + 1).padStart(2, '0')}</span>
@@ -434,11 +426,15 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                         >
                           {song}{hasSegue && <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--rust)', marginLeft: 8, fontWeight: 500 }}>→</span>}
                         </Link>
-                        <Link
-                          href={`/song/${encodeURIComponent(song)}`}
-                          className="chev"
-                          onClick={e => e.stopPropagation()}
-                        >go to song ↗</Link>
+                        {!inArchive && !pending && archiveRecording !== null ? (
+                          <span className="unavail">Audio Unavailable</span>
+                        ) : (
+                          <Link
+                            href={`/song/${encodeURIComponent(song)}`}
+                            className="chev"
+                            onClick={e => e.stopPropagation()}
+                          >go to song ↗</Link>
+                        )}
                         <span className="dur">
                           {archiveDurations.has(songFlatIdx) ? formatDuration(archiveDurations.get(songFlatIdx)!) : ''}
                         </span>
@@ -504,7 +500,7 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
       {archiveRecording && (() => {
         const currentCandidate = candidates.find(c => c.identifier === archiveRecording.identifier)
         const altCandidates = candidates.filter(c => c.identifier !== archiveRecording.identifier)
-        const typeLabel = currentCandidate ? recordingTypeLabel(currentCandidate.recordingType) : null
+        const currentLabel = recordingLabel({ identifier: archiveRecording.identifier, recordingType: currentCandidate?.recordingType })
         return (
           <div style={{ marginTop: 16, border: '2px solid var(--gray)', borderRadius: 12, overflow: 'hidden' }}>
             <button
@@ -520,16 +516,11 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                 <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.08em', color: 'var(--ink-3)', textTransform: 'uppercase' }}>
                   Archive.org Recording
                 </div>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink)', marginTop: 2 }}>
-                  {archiveRecording.identifier}
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink)', marginTop: 2 }} title={archiveRecording.identifier}>
+                  {currentLabel.primary}
                 </div>
               </div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0, marginLeft: 12 }}>
-                {typeLabel && (
-                  <span style={{ border: '1px solid var(--gray)', borderRadius: 4, padding: '1px 5px', fontSize: 10, fontWeight: 600, color: 'var(--ink)' }}>
-                    {typeLabel}
-                  </span>
-                )}
                 {altCandidates.length > 0 && (
                   <span style={{ fontSize: 10, color: 'var(--ink-3)' }}>
                     +{altCandidates.length} more
@@ -548,13 +539,13 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                     <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.08em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: 6 }}>
                       Switch recording
                     </div>
-                    {altCandidates.map(c => (
+                    {altCandidates.map(c => {
+                      const label = recordingLabel(c)
+                      return (
                       <div key={c.identifier} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, border: '1px solid var(--gray)', borderRadius: 4, padding: '1px 5px', flexShrink: 0, color: 'var(--ink)' }}>
-                          {recordingTypeLabel(c.recordingType)}
-                        </span>
-                        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                          {c.identifier}
+                        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', overflow: 'hidden', flex: 1, minWidth: 0 }} title={label.detail}>
+                          <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label.primary}</span>
+                          <span style={{ display: 'block', fontSize: 9, color: 'var(--ink-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{label.detail}</span>
                         </span>
                         <button
                           onClick={() => handleSwitchRecording(c.identifier)}
@@ -564,7 +555,8 @@ export function ShowDetailClient({ date, initialShow, officialReleases = [], adj
                           {switchingRecording ? '...' : 'switch →'}
                         </button>
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
 

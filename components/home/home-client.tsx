@@ -7,11 +7,13 @@ import { TimelineStrip } from '@/components/ui/timeline-strip'
 import { getVenueTidbit } from '@/lib/venue-tidbits'
 import { formatDuration } from '@/lib/utils'
 import { getDateParts } from '@/lib/date-parts'
+import { toRoman } from '@/lib/roman'
 import { formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
 import type { ArchiveTrackPayload, ShowOfTheDayPayload } from '@/lib/show-of-the-day-types'
 import type { SummaryStats, GlobalStats } from '@/lib/services/realtime-song-facts'
 import { getOfficialReleasesForDate } from '@/lib/official-releases'
-import { ReleaseBadge } from '@/components/ui/release-badge'
+import { recordingLabel } from '@/lib/recording-label'
+import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 
 export function HomeClient({
   initialKpi,
@@ -207,6 +209,8 @@ export function HomeClient({
                 )}
               </div>
 
+              {releases.length > 0 && <ReleaseLegend inline releases={releases} />}
+
               {venueTidbit && (
                 <div style={{ fontStyle: 'italic', fontSize: 13, color: 'var(--ink-3)', marginTop: 6, lineHeight: 1.55, maxWidth: 540 }}>
                   {venueTidbit}
@@ -259,9 +263,8 @@ export function HomeClient({
           return (
             <div className="setlist">
               {showDetail!.sets.map((set, si) => {
-                const romanNumerals = ['I', 'II', 'III', 'IV', 'E.']
                 const isEncore = set.encore
-                const roman = isEncore ? 'E.' : romanNumerals[si] ?? String(si + 1)
+                const roman = isEncore ? 'E.' : toRoman(si + 1)
                 const setOffset = flatOffset
                 flatOffset += set.songs.length
                 return (
@@ -432,7 +435,7 @@ export function HomeClient({
           )}{' '}
           to browse all available recordings for this show and switch between them.
           {archiveIdentifier && (
-            <><br />Playing: <strong>{archiveIdentifier}</strong></>
+            <><br />Playing: <strong title={archiveIdentifier}>{recordingLabel({ identifier: archiveIdentifier }).primary}</strong></>
           )}
         </div>
       </section>
@@ -479,7 +482,7 @@ export function HomeClient({
                 <li key={m.name}>
                   <Link href={`/song/${encodeURIComponent(m.name)}`} style={{ textDecoration: 'none' }}>
                     <div className="row1">
-                      <span className="rank">{String(i + 1).padStart(2, '0')}.</span>
+                      <span className="rank">{toRoman(i + 1)}</span>
                       <span>{m.name}</span>
                       <span className="plays">{m.count}</span>
                     </div>

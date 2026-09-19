@@ -4,12 +4,15 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
+import { toRoman } from '@/lib/roman'
 import { usePlayer } from '@/lib/contexts/player-context'
 import { getVenueTidbit } from '@/lib/venue-tidbits'
 import { getOfficialReleasesForDate, getOfficialReleasesForDates } from '@/lib/official-releases'
 import { ReleaseBadge, ReleaseLegend } from '@/components/ui/release-badge'
 import { getDateParts } from '@/lib/date-parts'
 import { matchArchiveTracksToSetlist, formatBonusTrackTitle, deriveBonusSectionLabel } from '@/lib/archive-track-match'
+import { hasMissingAudio as checkMissingAudio, missingAudioMessage } from '@/lib/missing-audio'
+import { recordingLabel } from '@/lib/recording-label'
 import type { ArchiveSetlistMatch, ArchiveTrackPayload } from '@/lib/show-of-the-day-types'
 import { parseQuery } from '@/lib/search/query-parser'
 import { useDebounce, activeRailCount, type RailFilters } from '@/components/search/use-search-state'
@@ -72,8 +75,6 @@ function shortDate(iso: string): string {
   return `${m} ${day}, ${year}`
 }
 
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
-
 /* ---------------------------------------- archive coverage helpers */
 
 /* -------------------------------------------------------------- era donut */
@@ -124,14 +125,17 @@ function getUrlTab(pathname: string): MobileTabId {
   return 'home'
 }
 
-/* --------------------------------------------------------------- tab bar */
+/* ------------------------------------------------------------- bottom dock */
 
-interface MobileTabBarProps {
+interface MobileDockProps {
   activeTabId: MobileTabId
   onTabClick: (id: MobileTabId) => void
+  onOpenDeck: () => void
+  showNowPlaying: boolean
 }
 
-function MobileTabBar({ activeTabId, onTabClick }: MobileTabBarProps) {
+function MobileDock({ activeTabId, onTabClick, onOpenDeck, showNowPlaying }: MobileDockProps) {
+  const { currentTrack, isPlaying, play, pause } = usePlayer()
   const tabs: Array<{ id: MobileTabId; num: string; label: string }> = [
     { id: 'home',   num: 'I',   label: 'Home'   },
     { id: 'deck',   num: 'II',  label: 'Deck'   },
@@ -140,19 +144,39 @@ function MobileTabBar({ activeTabId, onTabClick }: MobileTabBarProps) {
     { id: 'stats',  num: 'V',   label: 'Stats'  },
     { id: 'search', num: 'VI',  label: 'Search' },
   ]
+  const nowPlaying = showNowPlaying && !!currentTrack
+
   return (
-    <div className="mv-tabs mv-tabs-6" role="navigation" aria-label="Main navigation">
-      {tabs.map(tab => (
-        <button
-          key={tab.id}
-          className={`mv-tab${activeTabId === tab.id ? ' active' : ''}`}
-          onClick={() => onTabClick(tab.id)}
-          aria-current={activeTabId === tab.id ? 'page' : undefined}
-        >
-          <span className="num">{tab.num}</span>
-          <span className="lab">{tab.label}</span>
-        </button>
-      ))}
+    <div className="mv-dock">
+      {nowPlaying && currentTrack && (
+        <div className={`mv-dock-now${!isPlaying ? ' paused' : ''}`} role="status" aria-live="polite">
+          <button className="mv-dock-open" onClick={onOpenDeck} aria-label={`Open player — ${currentTrack.name}`}>
+            <span className="title">{currentTrack.name}</span>
+            {currentTrack.showDate && <span className="sub">{currentTrack.showDate}</span>}
+          </button>
+          <button
+            className="mv-dock-pp"
+            onClick={isPlaying ? pause : play}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+          >{isPlaying ? '❚❚' : '▶'}</button>
+        </div>
+      )}
+      <div className="mv-tabs mv-tabs-6" role="navigation" aria-label="Main navigation">
+        {tabs.map(tab => {
+          const isDeckPlaying = tab.id === 'deck' && isPlaying && !!currentTrack
+          return (
+            <button
+              key={tab.id}
+              className={`mv-tab${activeTabId === tab.id ? ' active' : ''}${isDeckPlaying ? ' deck-playing' : ''}`}
+              onClick={() => onTabClick(tab.id)}
+              aria-current={activeTabId === tab.id ? 'page' : undefined}
+            >
+              <span className="num">{tab.num}</span>
+              <span className="lab">{tab.label}</span>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -257,38 +281,9 @@ function MobileMast() {
   )
 }
 
-/* ------------------------------------------------------------- mini player */
-
-function MobileMini({ onOpen }: { onOpen: () => void }) {
-  const { currentTrack, isPlaying, play, pause, next } = usePlayer()
-  if (!currentTrack) return null
-  const dateStr = currentTrack.showDate ?? ''
-  const venueStr = [currentTrack.venue, currentTrack.city].filter(Boolean).join(' · ').toUpperCase()
-  const releases = currentTrack.showDate ? getOfficialReleasesForDate(currentTrack.showDate) : []
-  return (
-    <div className={`mv-mini${!isPlaying ? ' paused' : ''}`} role="status" aria-live="polite">
-      <div className="stamp" aria-hidden="true" />
-      <button className="mv-mini-open" onClick={onOpen} aria-label="Open player">
-        <div className="meta">
-          <div className="title-row">
-            <div className="title">{currentTrack.name}</div>
-            {releases.length > 0 && <ReleaseBadge releases={releases} variant="icon" size="xs" />}
-          </div>
-          <div className="sub">{dateStr}{venueStr ? ` · ${venueStr}` : ''}</div>
-        </div>
-      </button>
-      <button className="next" onClick={next} aria-label="Skip to next track">▶▶</button>
-      <button className="pp" onClick={isPlaying ? pause : play} aria-label={isPlaying ? 'Pause' : 'Play'}>
-        {isPlaying ? '❚❚' : '▶'}
-      </button>
-      <div className="hair" style={{ width: '0%' }} aria-hidden="true" />
-    </div>
-  )
-}
-
 /* --------------------------------------------------- shared now-playing */
 
-function MobileNowPlaying() {
+function MobileNowPlaying({ queuePos, queueLength }: { queuePos: number; queueLength: number }) {
   const { currentTrack, isPlaying, play, pause, next, previous } = usePlayer()
 
   const [audioTime, setAudioTime] = useState({ currentTime: 0, duration: 0 })
@@ -318,6 +313,9 @@ function MobileNowPlaying() {
     currentTrack.city,
   ].filter(Boolean).join(' · ')
   const pct = audioTime.duration > 0 ? (audioTime.currentTime / audioTime.duration) * 100 : 0
+  const hubLabel = queuePos >= 0 && queueLength > 0
+    ? `${String(queuePos + 1).padStart(2, '0')} / ${String(queueLength).padStart(2, '0')}`
+    : '—'
 
   return (
     <>
@@ -328,7 +326,7 @@ function MobileNowPlaying() {
             <span style={{ transform: 'translateX(-50%) rotate(120deg)' }} />
             <span style={{ transform: 'translateX(-50%) rotate(240deg)' }} />
           </div>
-          <div className="hub">A · 01</div>
+          <div className="hub">{hubLabel}</div>
         </div>
         <div className="mv-now-title">{currentTrack.name}</div>
         <div className="mv-now-sub">{subLine}</div>
@@ -427,7 +425,7 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
         </div>
       ) : (
         <>
-          <MobileNowPlaying />
+          <MobileNowPlaying queuePos={currentIdx} queueLength={queue.length} />
           <div className="mv-player-queue" style={{ paddingBottom: 24 }}>
             <div className="mv-queue-head">
               <span className="name">Queue</span>
@@ -576,7 +574,7 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
   const displayCity = featured ? `${featured.city}${featured.state ? `, ${featured.state}` : ''}` : ''
   const venueTidbit = featured ? getVenueTidbit(featured.venue, featured.city) : null
   const allSongs = showDetail?.sets.flatMap(s => s.songs) ?? []
-  const hasMissingAudio = allSongs.length > 0 && allSongs.some((_, i) => !archiveCoveredIndices.has(i))
+  const hasMissingAudio = checkMissingAudio(archiveCoveredIndices, allSongs.length)
 
   return (
     <>
@@ -593,9 +591,14 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
             {displayDate && (() => {
               const releases = getOfficialReleasesForDate(displayDate)
               return releases.length > 0 ? (
-                <div style={{ textAlign: 'center', marginBottom: 14 }}>
-                  <ReleaseBadge releases={releases} />
-                </div>
+                <>
+                  <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                    <ReleaseBadge releases={releases} />
+                  </div>
+                  <div className="mv-shows-legend">
+                    <ReleaseLegend releases={releases} />
+                  </div>
+                </>
               ) : null
             })()}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -619,18 +622,17 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
         <div className="mv-setlist">
           {hasMissingAudio && (
             <div className="mv-archive-note">
-              Some songs from this show don&apos;t have available audio.{' '}
+              {missingAudioMessage({ candidateCount: 0, canOpenSetlist: true })}{' '}
               {displayDate && (
                 <Link href={`/show/${displayDate}`} style={{ color: 'var(--rust)', textDecoration: 'underline' }}>
                   Open setlist ↗
                 </Link>
-              )}{' '}
-              to browse available recordings.
+              )}
             </div>
           )}
           {showDetail.sets.map((set, si) => {
             const isEncore = set.encore
-            const roman = isEncore ? 'E.' : (ROMAN[si] ?? String(si + 1))
+            const roman = isEncore ? 'E.' : toRoman(si + 1)
             return (
               <div key={set.name}>
                 <div className="mv-set-head">
@@ -1160,7 +1162,7 @@ function StatsScreen() {
                 className="mv-ledger row"
                 style={{ display: 'grid', textDecoration: 'none' }}
               >
-                <span className="rank">{ROMAN[i] ?? String(i + 1)}</span>
+                <span className="rank">{toRoman(i + 1)}</span>
                 <span className="name">{entry.name}</span>
                 <span className="num">{entry.count}×</span>
                 <div className="bar" style={{ '--w': `${(entry.count / leaderMax) * 100}%` } as React.CSSProperties} />
@@ -1267,6 +1269,7 @@ function SearchScreen() {
 
   const { data, loading, loadingMore, active } = useSearchResults(dq, filters, page)
   const { tokens } = parseQuery(dq)
+  const searchReleases = data?.shows.flatMap(show => show.releases) ?? []
 
   // Any new search (new debounced text or a filter change) starts back at page 1 —
   // only the "load more" button should ever advance it.
@@ -1407,6 +1410,11 @@ function SearchScreen() {
                   <span className="s">{fmtDate(show.date)} · {show.city}{show.state ? `, ${show.state}` : ''}</span>
                 </Link>
               ))}
+              {searchReleases.length > 0 && (
+                <div className="mv-shows-legend">
+                  <ReleaseLegend releases={searchReleases} />
+                </div>
+              )}
               {!loading && (data?.shows.length ?? 0) < (data?.totals.shows ?? 0) && (
                 <button className="mv-load-more" onClick={() => setPage(p => p + 1)} disabled={loadingMore}>
                   {loadingMore ? 'Loading…' : `Load more (${(data?.totals.shows ?? 0) - (data?.shows.length ?? 0)} remaining)`}
@@ -1604,7 +1612,7 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
   }, [showDetail, selectedIdentifier, enqueueEntireShow, onPlayShow])
 
   const allSongs = showDetail?.sets.flatMap(s => s.songs) ?? []
-  const hasMissingAudio = archiveCoveredIndices !== null && allSongs.some((_, i) => !archiveCoveredIndices.has(i))
+  const hasMissingAudio = checkMissingAudio(archiveCoveredIndices, allSongs.length)
 
   return (
     <>
@@ -1620,9 +1628,14 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
               {(() => {
                 const releases = getOfficialReleasesForDate(date)
                 return releases.length > 0 ? (
-                  <div style={{ marginTop: 6 }}>
-                    <ReleaseBadge releases={releases} />
-                  </div>
+                  <>
+                    <div style={{ marginTop: 6 }}>
+                      <ReleaseBadge releases={releases} />
+                    </div>
+                    <div className="mv-shows-legend">
+                      <ReleaseLegend releases={releases} />
+                    </div>
+                  </>
                 ) : null
               })()}
             </div>
@@ -1643,15 +1656,24 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
         <div className="mv-rec-picker">
           <button className="mv-rec-toggle" onClick={() => setShowRecordingPicker(p => !p)}>
             <span className="mv-rec-label">Recording</span>
-            <span className="mv-rec-id">{selectedIdentifier ?? '…'}</span>
+            <span className="mv-rec-id" title={selectedIdentifier ?? undefined}>
+              {selectedIdentifier
+                ? recordingLabel({
+                    identifier: selectedIdentifier,
+                    recordingType: candidates.find(c => c.identifier === selectedIdentifier)?.recordingType,
+                  }).primary
+                : '…'}
+            </span>
             <span className="mv-rec-caret">{showRecordingPicker ? '▲' : '▼'}</span>
           </button>
           {showRecordingPicker && (
             <div className="mv-rec-list">
               {candidates.map(c => (
                 <div key={c.identifier} className="mv-rec-opt-row">
-                  {c.recordingType && <span className="mv-rec-type">{c.recordingType}</span>}
-                  <span className="mv-rec-opt-id">{c.identifier}</span>
+                  <span className="mv-rec-opt-id">
+                    {recordingLabel(c).primary}
+                    <span className="mv-rec-opt-raw">{c.identifier}</span>
+                  </span>
                   {c.identifier === selectedIdentifier ? (
                     <span className="mv-rec-active">✓</span>
                   ) : (
@@ -1673,13 +1695,12 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
         <div className="mv-setlist">
           {hasMissingAudio && (
             <div className="mv-archive-note">
-              Some songs from this show don&apos;t have available audio.
-              {candidates.length > 1 ? ' Try switching recordings above.' : ''}
+              {missingAudioMessage({ candidateCount: candidates.length })}
             </div>
           )}
           {showDetail.sets.map((set, si) => {
             const isEncore = set.encore
-            const roman = isEncore ? 'E.' : (ROMAN[si] ?? String(si + 1))
+            const roman = isEncore ? 'E.' : toRoman(si + 1)
             return (
               <div key={set.name}>
                 <div className="mv-set-head">
@@ -2050,9 +2071,6 @@ export function MobileShell() {
         {activeTabId === 'search' && <SearchScreen />}
       </div>
 
-      {/* Mini player — shown on all tabs except Deck */}
-      {!isDeckTab && <MobileMini onOpen={navigateToDeck} />}
-
       {/* Back-to-top floating button */}
       {showBackToTop && !isDeckTab && (
         <button
@@ -2062,7 +2080,12 @@ export function MobileShell() {
         >↑</button>
       )}
 
-      <MobileTabBar activeTabId={activeTabId} onTabClick={handleTabClick} />
+      <MobileDock
+        activeTabId={activeTabId}
+        onTabClick={handleTabClick}
+        onOpenDeck={navigateToDeck}
+        showNowPlaying={hasMini}
+      />
     </div>
   )
 }
