@@ -41,7 +41,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <div className={`vault-page spine${folded ? ' folded' : ''}`}>
+    <div className={`vault-page spine-layout${folded ? ' folded' : ''}`}>
       <Spine search={search} setSearch={setSearch} folded={folded} setFolded={setFolded} />
       <main className="vault-main">
         <TopBand />

@@ -5,14 +5,16 @@
    ========================================================================== */
 
 /* ---- page grid: sidebar | main ---- */
-.vault-page.spine{max-width:none;padding:0 0 var(--vault-player-h);display:grid;grid-template-columns:232px minmax(0,1fr);align-items:start}
-.vault-page.spine.folded{grid-template-columns:64px minmax(0,1fr)}
-.vault-page.spine .vault-main{min-width:0;max-width:1360px;padding:16px 56px 0 40px}
-.vault-page.spine.folded .vault-main{padding-left:48px}
+.vault-page.spine-layout{max-width:none;padding:0;display:grid;grid-template-columns:232px minmax(0,1fr);align-items:start}
+.vault-page.spine-layout.folded{grid-template-columns:64px minmax(0,1fr)}
+/* Bottom clearance lives on the main column so the grid row (and the sticky spine) spans the whole page. */
+.vault-page.spine-layout .vault-main{min-width:0;max-width:1360px;padding:16px 56px var(--vault-player-h) 40px}
+.vault-page.spine-layout.folded .vault-main{padding-left:48px}
 
 /* ---- sidebar ---- */
-.spine-wrap{position:sticky;top:0;height:calc(100vh - var(--vault-player-h));z-index:30}
-.spine{height:100%;overflow-y:auto;box-sizing:border-box;border-right:4px double var(--ink);background:var(--paper-2);padding:16px 18px;display:flex;flex-direction:column;gap:16px}
+/* Full viewport height so the double rule runs to the fold; the fixed player (z 50) sits over its foot. */
+.spine-wrap{position:sticky;top:0;height:100vh;z-index:30}
+.spine{height:100%;overflow-y:auto;box-sizing:border-box;border-right:4px double var(--ink);background:var(--paper-2);padding:16px 18px calc(var(--vault-player-bar-h, 88px) + 16px);display:flex;flex-direction:column;gap:16px}
 .spine-wm{font-family:var(--serif-display);font-size:26px;line-height:1;letter-spacing:-0.01em;color:var(--ink);text-decoration:none;white-space:nowrap;font-feature-settings:"lnum"}
 .spine-wm .your{font-style:italic;color:var(--rust);padding:0 1px}
 .spine-wm:focus-visible{outline:2px solid var(--rust);outline-offset:3px}
@@ -44,7 +46,7 @@
 .spine-foot a:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
 
 /* notch on the double rule — fold toggle, ⌘B */
-.spine-notch{position:absolute;top:50%;right:-15px;transform:translateY(-50%);width:15px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--paper);border:1.5px solid var(--ink);border-left:0;border-radius:0 3px 3px 0;color:var(--ink-2);font-size:13px;line-height:1;cursor:pointer}
+.spine-notch{position:absolute;top:calc((100% - var(--vault-player-bar-h, 88px)) / 2);right:-15px;transform:translateY(-50%);width:15px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--paper);border:1.5px solid var(--ink);border-left:0;border-radius:0 3px 3px 0;color:var(--ink-2);font-size:13px;line-height:1;cursor:pointer}
 .spine-notch:hover{background:var(--ink);color:var(--paper)}
 .spine-notch:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
 .spine-notch .tip{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s}
@@ -52,7 +54,7 @@
 .spine-notch:hover .tip,.spine-notch:focus-visible .tip{opacity:1}
 
 /* folded (64px, numerals only) */
-.folded .spine{padding:16px 0;align-items:stretch}
+.folded .spine{padding:16px 0 calc(var(--vault-player-bar-h, 88px) + 16px);align-items:stretch}
 .folded .spine-wm{align-self:center;font-size:22px}
 .folded .spine-list a{grid-template-columns:1fr;justify-items:center;margin:0;padding:9px 0}
 .folded .spine-list .num{font-size:11px}
@@ -60,7 +62,7 @@
 .folded .spine-foot a{font-size:14px;letter-spacing:0}
 
 /* ---- top band (replaces .masthead + .edition-strip + .chapters) ---- */
-.top-band{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:baseline;gap:24px;border-top:4px double var(--ink);border-bottom:4px double var(--ink);padding:7px 0 8px;margin:0 -22px 20px 0;text-align:center}
+.top-band{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:baseline;gap:24px;border-top:4px double var(--ink);border-bottom:4px double var(--ink);padding:7px 0 8px;margin:0 -22px 0 0;text-align:center}
 .top-band .wx{font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .top-band .wx.l{text-align:left}
 .top-band .wx.r{text-align:right}

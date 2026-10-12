@@ -69,6 +69,19 @@ export function VaultPlayer() {
     }
   }, [isPlaying, currentTrack])
 
+  // Publish the bar's real height so the spine can clear it (the
+  // --vault-player-h token over-reserves for the queue drawer).
+  const barRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = barRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(([entry]) => {
+      document.documentElement.style.setProperty('--vault-player-bar-h', `${Math.round(entry.borderBoxSize?.[0]?.blockSize ?? el.offsetHeight)}px`)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   // Resume across that reload: restore position and continue playing if the
   // snapshot is fresh and still points at the same track.
   const resumedRef = useRef(false)
@@ -236,7 +249,7 @@ export function VaultPlayer() {
           concert audio with no dialogue track, so no caption track applies. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} preload="metadata" style={{ display: 'none' }} />
-      <div className="vault-player">
+      <div className="vault-player" ref={barRef}>
         <div className="inner">
           {/* Now playing */}
           <div className="now">

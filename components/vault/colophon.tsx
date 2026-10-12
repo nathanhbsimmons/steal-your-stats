@@ -7,7 +7,7 @@ export function Colophon() {
   const pathname = usePathname()
   return (
     <footer className="colophon">
-      <span>© MMXXVI · Steal Your Stats Press · Made by hand</span>
+      <span>© MMXXVI · Steal Your Stats</span>
       <span className="center">
         <span className="glyph">❦</span>
         &nbsp;&nbsp;If you get confused, listen to the music play&nbsp;&nbsp;
