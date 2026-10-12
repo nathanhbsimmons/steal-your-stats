@@ -208,5 +208,28 @@ describe('Home', () => {
       const yr68 = screen.getAllByText('1968')
       expect(yr68.length).toBeGreaterThanOrEqual(2)
     })
+
+    it('sits above the most played leaderboard in the right column', () => {
+      const beacon = { date: '1976-06-14', year: 1976, venue: 'Beacon Theatre', city: 'New York', state: 'NY', country: 'US', songs: ['Dark Star'] }
+      render(
+        <PlayerProvider>
+          <HomeClient
+            initialKpi={null}
+            initialStats={{ showsPerYear: [], leaderboard: [{ name: 'Dark Star', count: 219, pct: 100 }] }}
+            initialDayPayload={sotdPayload({
+              shows: [
+                { date: '1968-06-14', year: 1968, venue: 'Fillmore East', city: 'New York', state: 'NY', country: 'US', songs: [] },
+                beacon,
+              ],
+              featured: beacon,
+            })}
+            initialQuote={{ quote: 'Test quote', song: 'Test Song' }}
+          />
+        </PlayerProvider>
+      )
+      const also = document.querySelector('.right-col .alsolist')!
+      const top = document.querySelector('.right-col .toptable')!
+      expect(also.compareDocumentPosition(top) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
   })
 })

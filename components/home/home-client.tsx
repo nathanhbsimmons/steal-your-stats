@@ -461,6 +461,30 @@ export function HomeClient({
           </li>
         </ul>
 
+        {/* Also on this day */}
+        {shows.length > 1 && (
+          <>
+            <div className="gutter-label" style={{ marginTop: 18 }}>
+              <span>Also On This Day</span>
+              <span className="mono">{shows.length} SHOWS</span>
+            </div>
+            <ul className="alsolist">
+              {shows.slice(0, 6).map((show, i) => (
+                <li key={`${show.date}-${show.venue}-${i}`}>
+                  <Link href={`/show/${show.date}`} style={{ display: 'contents' }}>
+                    <span className="yr">{show.year}</span>
+                    <span className="where">
+                      {show.venue}
+                      <span className="city">{show.city}{show.state ? `, ${show.state}` : ''}</span>
+                    </span>
+                    <span className="ext">↗</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
         {/* Most played */}
         {mostPlayed.length > 0 && (
           <>
@@ -480,30 +504,6 @@ export function HomeClient({
                     <div className="bar">
                       <div className="fill" style={{ width: `${m.pct}%` }} />
                     </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        {/* Also on this day */}
-        {shows.length > 1 && (
-          <>
-            <div className="gutter-label" style={{ marginTop: 18 }}>
-              <span>Also On This Day</span>
-              <span className="mono">{shows.length} SHOWS</span>
-            </div>
-            <ul className="alsolist">
-              {shows.slice(0, 6).map((show, i) => (
-                <li key={`${show.date}-${show.venue}-${i}`}>
-                  <Link href={`/show/${show.date}`} style={{ display: 'contents' }}>
-                    <span className="yr">{show.year}</span>
-                    <span className="where">
-                      {show.venue}
-                      <span className="city">{show.city}{show.state ? `, ${show.state}` : ''}</span>
-                    </span>
-                    <span className="ext">↗</span>
                   </Link>
                 </li>
               ))}
