@@ -175,11 +175,6 @@ export function HomeClient({
     <>
       {/* Main content column */}
       <section className="col">
-        <div className="gutter-label gutter-label-lg">
-          <span>Featured · On This Day</span>
-          <span className="mono">{year ? `PG. ${year}` : ''}</span>
-        </div>
-
         <div className="feature">
           <span className="tag">
             <span className="pulse" />
@@ -443,10 +438,6 @@ export function HomeClient({
       {/* Right ledger column */}
       <aside className="col right-col">
         {/* Stats hero */}
-        <div className="gutter-label">
-          <span>The Ledger · Stats</span>
-          <span className="mono">MMXXVI</span>
-        </div>
         <div className="ledger-hero">
           <div className="cell">
             <div className="label">Shows Indexed</div>

@@ -3,6 +3,8 @@ import { DM_Serif_Display, Bodoni_Moda, Crimson_Pro, JetBrains_Mono, UnifrakturM
 import { VaultShell } from "@/components/vault/vault-shell";
 import { SITE_URL } from "@/lib/site-config";
 import "./globals.css";
+import "./vault-spine.css";
+import "./support.css";
 import "./mobile.css";
 
 const dmSerifDisplay = DM_Serif_Display({

@@ -1,4 +1,10 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
 export function Colophon() {
+  const pathname = usePathname()
   return (
     <footer className="colophon">
       <span>© MMXXVI · Steal Your Stats Press · Made by hand</span>
@@ -7,7 +13,9 @@ export function Colophon() {
         &nbsp;&nbsp;If you get confused, listen to the music play&nbsp;&nbsp;
         <span className="glyph">❦</span>
       </span>
-      <span>v.11.5 · cached locally · last sync 1h ago</span>
+      <span>
+        <Link href={`/support?from=${encodeURIComponent(pathname)}`}>Send feedback · tip the operator</Link>
+      </span>
     </footer>
   )
 }

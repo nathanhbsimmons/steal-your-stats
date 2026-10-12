@@ -13,7 +13,7 @@ export interface SiteEntry {
 export async function getSiteEntries(): Promise<SiteEntry[]> {
   const now = new Date()
 
-  const staticRoutes = ['', '/shows', '/venues', '/artists', '/eras', '/songs', '/search', '/recent', '/stats']
+  const staticRoutes = ['', '/shows', '/venues', '/artists', '/eras', '/songs', '/search', '/recent', '/stats', '/support']
     .map(route => ({ url: `${SITE_URL}${route}`, lastModified: now }))
 
   const { shows: allShows } = await realtimeSongFactsService

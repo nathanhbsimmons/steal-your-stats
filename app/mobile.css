@@ -2127,3 +2127,42 @@ button.mv-track-main { cursor: pointer; }
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* ---------------------------------------- SUPPORT */
+/* Reuses the desktop .fb / .tip styles from support.css; only sizing changes. */
+.mv-support {
+  padding: 14px 18px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.mv-support h2 {
+  font-family: var(--serif-display);
+  font-size: 28px;
+  line-height: 1.05;
+  margin: 0;
+}
+.mv-support h2 .italic { font-style: italic; color: var(--forest); }
+.mv-support .lede {
+  font-family: var(--serif-body);
+  font-size: 16px;
+  color: var(--ink-2);
+  margin: -12px 0 0;
+}
+.mv-support .fb-type span { font-size: 16px; padding: 10px 14px; }
+.mv-support .tip { position: static; }
+.mv-support-link {
+  padding: 4px 18px 24px;
+  text-align: center;
+}
+.mv-support-link a {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  display: inline-block;
+  padding: 12px 8px;
+}

@@ -1,17 +1,16 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { PlayerProvider } from '@/lib/contexts/player-context'
-import { Masthead } from './masthead'
-import { EditionStrip } from './edition-strip'
-import { Chapters } from './chapters'
+import { Spine } from './spine'
+import { TopBand } from './top-band'
 import { Colophon } from './colophon'
 import { VaultPlayer } from './vault-player'
 import { MobileShell } from '@/components/mobile/mobile-shell'
 
 const WIDE_ROUTES = new Set([
-  '/search', '/songs', '/stats', '/venues', '/eras', '/artists', '/recent', '/export', '/shows',
+  '/search', '/songs', '/stats', '/venues', '/eras', '/artists', '/recent', '/export', '/shows', '/support',
 ])
 
 function isWideRoute(pathname: string): boolean {
@@ -25,26 +24,32 @@ function isWideRoute(pathname: string): boolean {
   return false
 }
 
+const FOLD_KEY = 'sys:spine-folded'
+
 function ShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [search, setSearch] = useState('')
+  const [folded, setFoldedState] = useState(false)
   const wide = isWideRoute(pathname)
 
-  const handleSearch = (q: string) => {
-    setSearch(q)
-  }
+  useEffect(() => {
+    try { setFoldedState(localStorage.getItem(FOLD_KEY) === '1') } catch {}
+  }, [])
+  const setFolded = useCallback((v: boolean) => {
+    setFoldedState(v)
+    try { localStorage.setItem(FOLD_KEY, v ? '1' : '0') } catch {}
+  }, [])
 
   return (
-    <div className="vault-page">
-      <Masthead search={search} setSearch={handleSearch} />
-      <EditionStrip />
-      <Chapters />
-
-      <div className={`page-grid${wide ? ' wide' : ''}`}>
-        {children}
-      </div>
-
-      <Colophon />
+    <div className={`vault-page spine${folded ? ' folded' : ''}`}>
+      <Spine search={search} setSearch={setSearch} folded={folded} setFolded={setFolded} />
+      <main className="vault-main">
+        <TopBand />
+        <div className={`page-grid${wide ? ' wide' : ''}`}>
+          {children}
+        </div>
+        <Colophon />
+      </main>
     </div>
   )
 }

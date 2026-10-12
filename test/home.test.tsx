@@ -48,9 +48,9 @@ function renderHome(dayPayload: ShowOfTheDayPayload | null = sotdPayload()) {
 }
 
 describe('Home', () => {
-  it('renders the On This Day heading', () => {
+  it('renders the On This Day feature tag', () => {
     renderHome()
-    expect(screen.getByText(/On This Day/)).toBeInTheDocument()
+    expect(screen.getByText(/On this day ·/)).toBeInTheDocument()
   })
 
   it('renders a fallback message when there is no featured show for today', () => {

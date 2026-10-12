@@ -1,8 +1,11 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { Suspense, useState, useEffect, useCallback, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { PAYPAL_ME_URL } from '@/lib/site-config'
+import { FeedbackForm } from '@/components/support/feedback-form'
+import { TipJar } from '@/components/support/tip-jar'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
 import { toRoman } from '@/lib/roman'
 import { usePlayer } from '@/lib/contexts/player-context'
@@ -201,6 +204,10 @@ function chapterMeta(tabId: MobileTabId, pathname: string, songTitle?: string, t
   if (tabId === 'home') {
     if (pathname.startsWith('/show/')) return {
       left: <><span className="num">I·a</span> HOME · SETLIST</>,
+      right: '0001',
+    }
+    if (pathname === '/support') return {
+      left: <><span className="num">I·b</span> HOME · SUPPORT</>,
       right: '0001',
     }
     return {
@@ -752,7 +759,26 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
           </div>
         </div>
       )}
+
+      <div className="mv-support-link">
+        <Link href="/support?from=%2F">Feedback &amp; tips</Link>
+      </div>
     </>
+  )
+}
+
+/* ========================================================== SUPPORT SCREEN */
+
+function SupportScreen() {
+  return (
+    <div className="mv-support support">
+      <h2>Found a bug? <span className="italic">Have an idea?</span></h2>
+      <p className="lede">Tell us what&apos;s broken, what could be better, or what feature you wish existed.</p>
+      <Suspense fallback={null}>
+        <FeedbackForm />
+      </Suspense>
+      {PAYPAL_ME_URL && <TipJar url={PAYPAL_ME_URL} />}
+    </div>
   )
 }
 
@@ -1998,6 +2024,7 @@ export function MobileShell() {
 
   const isAtRoot    = pathname === '/'
   const isShowDetail = pathname.startsWith('/show/')
+  const isSupport   = pathname === '/support'
   const isSongs     = pathname === '/songs'
   const isSongDetail = pathname.startsWith('/song/')
   const isShows     = pathname.startsWith('/shows')
@@ -2064,6 +2091,7 @@ export function MobileShell() {
         {/* Home tab */}
         {activeTabId === 'home' && isAtRoot && <HomeScreen onPlayShow={navigateToDeck} />}
         {activeTabId === 'home' && isShowDetail && showDate && <ShowDetailScreen date={showDate} onPlayShow={navigateToDeck} />}
+        {activeTabId === 'home' && isSupport && <SupportScreen />}
 
         {/* Deck tab (player) */}
         {activeTabId === 'deck' && <DeckScreen onClose={closeDeck} />}

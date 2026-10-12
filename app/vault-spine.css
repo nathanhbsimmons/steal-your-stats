@@ -1,0 +1,74 @@
+/* ==========================================================================
+   Spine navigation + top band
+   Drop in: app/vault-spine.css   (import in app/layout.tsx after globals.css)
+   Uses tokens already in app/globals.css (:root).
+   ========================================================================== */
+
+/* ---- page grid: sidebar | main ---- */
+.vault-page.spine{max-width:none;padding:0 0 var(--vault-player-h);display:grid;grid-template-columns:232px minmax(0,1fr);align-items:start}
+.vault-page.spine.folded{grid-template-columns:64px minmax(0,1fr)}
+.vault-page.spine .vault-main{min-width:0;max-width:1360px;padding:16px 56px 0 40px}
+.vault-page.spine.folded .vault-main{padding-left:48px}
+
+/* ---- sidebar ---- */
+.spine-wrap{position:sticky;top:0;height:calc(100vh - var(--vault-player-h));z-index:30}
+.spine{height:100%;overflow-y:auto;box-sizing:border-box;border-right:4px double var(--ink);background:var(--paper-2);padding:16px 18px;display:flex;flex-direction:column;gap:16px}
+.spine-wm{font-family:var(--serif-display);font-size:26px;line-height:1;letter-spacing:-0.01em;color:var(--ink);text-decoration:none;white-space:nowrap;font-feature-settings:"lnum"}
+.spine-wm .your{font-style:italic;color:var(--rust);padding:0 1px}
+.spine-wm:focus-visible{outline:2px solid var(--rust);outline-offset:3px}
+
+/* search — hairline, ⌘K chip */
+.spine-search{display:flex;align-items:center;gap:8px;margin-top:-4px;border:1px solid var(--rule);background:transparent;padding:5px 8px;font-family:var(--mono);font-size:12px;letter-spacing:0.04em;min-width:0}
+.spine-search .g{color:var(--ink-3)}
+.spine-search input{flex:1;width:0;min-width:0;background:transparent;border:0;outline:0;padding:0;font:inherit;color:var(--ink)}
+.spine-search input::placeholder{color:var(--ink-3)}
+.spine-search .kbd{font-size:9.5px;line-height:16px;border:1px solid var(--rule);background:var(--paper);padding:0 5px;color:var(--ink-3)}
+.spine-search:focus-within{border-color:var(--ink)}
+.spine-search-icon{align-self:center;width:28px;height:28px;border:1px solid var(--rule);background:transparent;color:var(--ink);font-size:14px;cursor:pointer}
+
+/* chapter list */
+.spine-list{display:flex;flex-direction:column;gap:1px}
+.spine-list a{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:baseline;gap:4px;padding:6px 8px;margin:0 -8px;text-decoration:none;font-family:var(--serif-display);font-size:16px;color:var(--ink-2)}
+.spine-list .num{font-family:var(--mono);font-size:10px;letter-spacing:0.08em;color:var(--rust)}
+.spine-list .badge{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+.spine-list a:hover{background:var(--hi);color:var(--ink)}
+.spine-list a.active{background:var(--ink);color:var(--paper)}
+.spine-list a.active .num,.spine-list a.active .badge{color:var(--paper-3)}
+.spine-list a:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
+
+/* footer — colophon-style link */
+.spine-foot{margin-top:auto;display:flex;border-top:1px solid var(--rule);padding-top:10px}
+.spine-foot a{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);text-decoration:none;white-space:nowrap}
+.spine-foot a:hover{color:var(--rust)}
+.spine-foot a.active{color:var(--ink);text-decoration:underline;text-decoration-color:var(--rust);text-underline-offset:3px}
+.spine-foot a:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
+
+/* notch on the double rule — fold toggle, ⌘B */
+.spine-notch{position:absolute;top:50%;right:-15px;transform:translateY(-50%);width:15px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--paper);border:1.5px solid var(--ink);border-left:0;border-radius:0 3px 3px 0;color:var(--ink-2);font-size:13px;line-height:1;cursor:pointer}
+.spine-notch:hover{background:var(--ink);color:var(--paper)}
+.spine-notch:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
+.spine-notch .tip{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s}
+.spine-notch .tip kbd{font-family:inherit;border:1px solid var(--ink-3);padding:0 4px;margin-left:4px}
+.spine-notch:hover .tip,.spine-notch:focus-visible .tip{opacity:1}
+
+/* folded (64px, numerals only) */
+.folded .spine{padding:16px 0;align-items:stretch}
+.folded .spine-wm{align-self:center;font-size:22px}
+.folded .spine-list a{grid-template-columns:1fr;justify-items:center;margin:0;padding:9px 0}
+.folded .spine-list .num{font-size:11px}
+.folded .spine-foot{justify-content:center}
+.folded .spine-foot a{font-size:14px;letter-spacing:0}
+
+/* ---- top band (replaces .masthead + .edition-strip + .chapters) ---- */
+.top-band{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:baseline;gap:24px;border-top:4px double var(--ink);border-bottom:4px double var(--ink);padding:7px 0 8px;margin:0 -22px 20px 0;text-align:center}
+.top-band .wx{font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.top-band .wx.l{text-align:left}
+.top-band .wx.r{text-align:right}
+.top-band .sub{font-family:var(--serif-body);font-style:italic;font-size:17px;letter-spacing:0.02em;color:var(--ink-2)}
+.top-band .sub .blackletter{font-family:var(--blackletter);font-style:normal;font-size:19px;color:var(--forest);padding:0 3px}
+@media (max-width:1200px){.top-band .wx{font-size:10px;letter-spacing:0.04em}}
+@media (max-width:1100px){.top-band{gap:12px}.top-band .wx{font-size:9.5px;letter-spacing:0}}
+
+/* ---- colophon support link ---- */
+.colophon a{color:var(--rust);text-decoration:underline;text-underline-offset:3px}
+.colophon a:hover{color:var(--rust-dark)}

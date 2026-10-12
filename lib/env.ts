@@ -2,6 +2,9 @@ import { z } from 'zod'
 
 const envSchema = z.object({
   SETLISTFM_API_KEY: z.string().min(1, 'Setlist.fm API key is required').optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  FEEDBACK_FROM_EMAIL: z.string().min(1).optional(),
+  FEEDBACK_TO_EMAIL: z.string().min(1).optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 })
 
