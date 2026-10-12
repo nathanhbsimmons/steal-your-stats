@@ -43,8 +43,8 @@
   /* chrome heights — consumed by both shells; see mobile.css dock + .vault-page */
   --safe-b: env(safe-area-inset-bottom, 0px);
   --mv-tabbar-h: 52px;
-  --mv-dock-now-h: 30px;
-  --mv-chrome-h: calc(var(--mv-tabbar-h) + var(--mv-dock-now-h));
+  --mv-mini-h: 64px;
+  --mv-chrome-h: calc(var(--mv-tabbar-h) + var(--mv-mini-h));
   --vault-player-h: 160px;
 
   /* button variants — consumed by .btn (desktop) and .mv-* buttons (mobile) */

@@ -219,7 +219,7 @@
 }
 @keyframes mv-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion) {
-  .mv-reel .spokes { animation: none !important; }
+  .mv-reel .spokes, .mv-mini .stamp::after { animation: none !important; }
   .mv-status .dot { animation: none !important; }
 }
 
@@ -552,70 +552,137 @@ button.mv-track-main { cursor: pointer; }
 }
 
 /* ---------------------------------------- BOTTOM DOCK */
+/* One wrapper stacks the mini player and tabs in flow, so the two bars
+   can't drift apart the way separately positioned bars did. */
 .mv-dock {
   position: absolute;
   left: 0; right: 0;
   bottom: 0;
   z-index: 5;
-  background: var(--paper-3);
-  border-top: 3px double var(--ink);
 }
-.mv-dock-now {
-  height: var(--mv-dock-now-h);
+
+/* ---------------------------------------- MINI PLAYER */
+.mv-mini {
+  position: relative;
+  height: var(--mv-mini-h);
+  background: var(--paper-2);
+  border-top: 3px double var(--ink);
+  border-bottom: 1px solid var(--rule);
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 44px 1fr auto auto;
   gap: 10px;
   align-items: center;
   padding: 0 14px;
-  border-bottom: 1px solid var(--rule);
-  background: var(--paper-2);
 }
-.mv-dock-open {
+.mv-mini .stamp {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--ink-2);
+  background: var(--paper-3);
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.mv-mini .stamp::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed rgba(26, 20, 12, 0.5);
+  border-radius: 50%;
+  animation: mv-spin 10s linear infinite;
+}
+.mv-mini .stamp::before {
+  content: "";
+  position: absolute;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  z-index: 2;
+}
+.mv-mini.paused .stamp::after { animation-play-state: paused; }
+.mv-mini-open {
   min-width: 0;
-  align-self: stretch;   /* full 29px hit area — WCAG 2.5.8 */
   background: none;
   border: none;
   padding: 0;
+  margin: 0;
   text-align: left;
   cursor: pointer;
+  display: block;
+}
+.mv-mini .meta { min-width: 0; }
+.mv-mini .title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  overflow: hidden;
+  gap: 5px;
+  min-width: 0;
 }
-.mv-dock-open .title {
+.mv-mini .title {
   font-family: var(--serif-body);
-  font-size: 13.5px;
-  line-height: 1;
+  font-size: 14.5px;
+  line-height: 1.05;
   color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
 }
-.mv-dock-open .sub {
+.mv-mini .sub {
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: 9px;
   letter-spacing: 0.1em;
   color: var(--ink-3);
-  white-space: nowrap;
-  flex-shrink: 0;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
-.mv-dock-pp {
-  width: 26px;
-  height: 26px;
+.mv-mini .pp {
+  position: relative;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 1.2px solid var(--ink);
   background: var(--paper);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 13px;
   color: var(--ink);
   display: grid;
   place-items: center;
   cursor: pointer;
   flex-shrink: 0;
-  position: relative;
 }
+.mv-mini .next {
+  position: relative;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  padding: 6px 4px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  flex-shrink: 0;
+}
+.mv-mini .hair {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--rust);
+}
+/* WCAG 2.2 AA 2.5.8 — expand pointer targets without changing the visuals.
+   .next stays 34px wide so its target doesn't overlap the play button's. */
+.mv-mini .pp::after,
+.mv-mini .next::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+}
+.mv-mini .next::after { width: 34px; }
 .mv-tab .num { position: relative; }
 .mv-tab.deck-playing .num::after {
   content: "";
@@ -633,8 +700,8 @@ button.mv-track-main { cursor: pointer; }
   -webkit-appearance: none;
   appearance: none;
 }
-.mv-tab, .mv-iconbtn, .mv-back, .mv-load-more, .mv-play-show-btn, .mv-dock-pp,
-.mv-dock-open, .mv-addq, .mv-vbtn, .mv-play-all, .mv-queue-all, .mv-sheet-close, .mv-qx, .mv-qclear,
+.mv-tab, .mv-iconbtn, .mv-back, .mv-load-more, .mv-play-show-btn, .mv-mini .pp, .mv-mini .next,
+.mv-mini-open, .mv-addq, .mv-vbtn, .mv-play-all, .mv-queue-all, .mv-sheet-close, .mv-qx, .mv-qclear,
 .mv-qrow-btn, .mv-track-main {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -648,9 +715,6 @@ button.mv-track-main { cursor: pointer; }
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   padding-bottom: var(--safe-b);
-}
-.mv-dock > .mv-tabs:first-child {
-  border-top: none;
 }
 .mv-tabs.mv-tabs-5 {
   grid-template-columns: repeat(5, 1fr);

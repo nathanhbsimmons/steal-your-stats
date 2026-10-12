@@ -135,7 +135,7 @@ interface MobileDockProps {
 }
 
 function MobileDock({ activeTabId, onTabClick, onOpenDeck, showNowPlaying }: MobileDockProps) {
-  const { currentTrack, isPlaying, play, pause } = usePlayer()
+  const { currentTrack, isPlaying, play, pause, next } = usePlayer()
   const tabs: Array<{ id: MobileTabId; num: string; label: string }> = [
     { id: 'home',   num: 'I',   label: 'Home'   },
     { id: 'deck',   num: 'II',  label: 'Deck'   },
@@ -145,20 +145,33 @@ function MobileDock({ activeTabId, onTabClick, onOpenDeck, showNowPlaying }: Mob
     { id: 'search', num: 'VI',  label: 'Search' },
   ]
   const nowPlaying = showNowPlaying && !!currentTrack
+  const dateStr = currentTrack?.showDate ?? ''
+  const venueStr = currentTrack ? [currentTrack.venue, currentTrack.city].filter(Boolean).join(' · ').toUpperCase() : ''
+  const releases = currentTrack?.showDate ? getOfficialReleasesForDate(currentTrack.showDate) : []
 
   return (
     <div className="mv-dock">
       {nowPlaying && currentTrack && (
-        <div className={`mv-dock-now${!isPlaying ? ' paused' : ''}`} role="status" aria-live="polite">
-          <button className="mv-dock-open" onClick={onOpenDeck} aria-label={`Open player — ${currentTrack.name}`}>
-            <span className="title">{currentTrack.name}</span>
-            {currentTrack.showDate && <span className="sub">{currentTrack.showDate}</span>}
+        <div className={`mv-mini${!isPlaying ? ' paused' : ''}`}>
+          {/* Announce only the track change, not the controls around it. */}
+          <span className="sr-only" role="status" aria-live="polite">
+            Now playing: {currentTrack.name}{dateStr ? `, ${dateStr}` : ''}
+          </span>
+          <div className="stamp" aria-hidden="true" />
+          <button className="mv-mini-open" onClick={onOpenDeck} aria-label={`Open player — ${currentTrack.name}`}>
+            <div className="meta">
+              <div className="title-row">
+                <div className="title">{currentTrack.name}</div>
+                {releases.length > 0 && <ReleaseBadge releases={releases} variant="icon" size="xs" />}
+              </div>
+              <div className="sub">{dateStr}{venueStr ? ` · ${venueStr}` : ''}</div>
+            </div>
           </button>
-          <button
-            className="mv-dock-pp"
-            onClick={isPlaying ? pause : play}
-            aria-label={isPlaying ? 'Pause' : 'Play'}
-          >{isPlaying ? '❚❚' : '▶'}</button>
+          <button className="next" onClick={next} aria-label="Skip to next track">▶▶</button>
+          <button className="pp" onClick={isPlaying ? pause : play} aria-label={isPlaying ? 'Pause' : 'Play'}>
+            {isPlaying ? '❚❚' : '▶'}
+          </button>
+          <div className="hair" style={{ width: '0%' }} aria-hidden="true" />
         </div>
       )}
       <div className="mv-tabs mv-tabs-6" role="navigation" aria-label="Main navigation">

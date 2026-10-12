@@ -344,21 +344,44 @@ describe('MobileShell', () => {
   /* ---------------------------------------------------------------- bottom dock */
 
   describe('bottom dock', () => {
-    it('renders one dock containing both the now-playing strip and the tabs', () => {
+    it('renders one dock containing both the mini player and the tabs', () => {
       setPathname('/songs')
       setPlayer({ currentTrack: mockTrack, isPlaying: true })
       const { container } = render(<MobileShell />)
       expect(container.querySelectorAll('.mv-dock')).toHaveLength(1)
-      expect(container.querySelector('.mv-dock .mv-dock-now')).toBeTruthy()
+      expect(container.querySelector('.mv-dock .mv-mini')).toBeTruthy()
       expect(container.querySelector('.mv-dock .mv-tabs')).toBeTruthy()
-      expect(container.querySelector('.mv-mini')).toBeNull()
+    })
+
+    it('shows the date, venue and city in the mini player', () => {
+      setPathname('/songs')
+      setPlayer({ currentTrack: mockTrack, isPlaying: true })
+      const { container } = render(<MobileShell />)
+      expect(container.querySelector('.mv-mini .sub')).toHaveTextContent('1977-05-08 · BARTON HALL · ITHACA')
+    })
+
+    it('skips to the next track from the mini player', () => {
+      setPathname('/songs')
+      setPlayer({ currentTrack: mockTrack, isPlaying: true })
+      render(<MobileShell />)
+      fireEvent.click(screen.getByLabelText('Skip to next track'))
+      expect(mockNext).toHaveBeenCalled()
+    })
+
+    it('announces only the track change, not the controls', () => {
+      setPathname('/songs')
+      setPlayer({ currentTrack: mockTrack, isPlaying: true })
+      render(<MobileShell />)
+      const status = screen.getByRole('status')
+      expect(status).toHaveTextContent('Now playing: Dark Star, 1977-05-08')
+      expect(status.querySelector('button')).toBeNull()
     })
 
     it('omits the now-playing strip when nothing is loaded', () => {
       setPathname('/songs')
       setPlayer({ currentTrack: null })
       const { container } = render(<MobileShell />)
-      expect(container.querySelector('.mv-dock-now')).toBeNull()
+      expect(container.querySelector('.mv-mini')).toBeNull()
       expect(container.querySelector('.mv-tabs')).toBeTruthy()
     })
 
@@ -380,7 +403,7 @@ describe('MobileShell', () => {
       setPathname('/')
       setPlayer({ currentTrack: mockTrack, isPlaying: true })
       const { container } = render(<MobileShell />)
-      fireEvent.click(container.querySelector('.mv-dock-open')!)
+      fireEvent.click(container.querySelector('.mv-mini-open')!)
       expect(screen.getByText('Deck').closest('button')).toHaveClass('active')
     })
 
@@ -391,13 +414,13 @@ describe('MobileShell', () => {
       fireEvent.click(screen.getByLabelText('Pause'))
       expect(mockPause).toHaveBeenCalled()
       expect(screen.getByText('Deck').closest('button')).not.toHaveClass('active')
-      expect(container.querySelector('.mv-dock-now')).toBeTruthy()
+      expect(container.querySelector('.mv-mini')).toBeTruthy()
     })
   })
 
   /* ---------------------------------------------------------------- now-playing strip */
 
-  describe('dock now-playing strip', () => {
+  describe('mini player', () => {
     it('does not render the mini player when no track is playing', () => {
       setPathname('/songs')
       render(<MobileShell />)
