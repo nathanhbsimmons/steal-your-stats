@@ -114,6 +114,17 @@ function TimelineStrip({ show, player }) {
 }
 
 function SetlistBlock({ player, show }) {
+  const [flashed, setFlashed] = useStateP({});
+  const queueIt = (e, t) => {
+    e.stopPropagation();
+    player.addToQueue(t.id);
+    setFlashed(f => ({ ...f, [t.id]: (f[t.id] || 0) + 1 }));
+    setTimeout(() => setFlashed(f => {
+      const c = { ...f };
+      if ((c[t.id] || 0) <= 1) delete c[t.id]; else c[t.id] -= 1;
+      return c;
+    }), 700);
+  };
   return (
     <div className="setlist">
       {show.sets.map((set, si) => (
@@ -136,7 +147,14 @@ function SetlistBlock({ player, show }) {
                 <span className="title">{t.title}{t.segue && <span className="arrow"> › </span>}</span>
                 <span className="note">{t.note || ""}</span>
                 <span className="dur">{t.dur}</span>
-                <span className="chev">→</span>
+                <button
+                  className={"queue-btn" + (flashed[t.id] ? " just" : "") + (isQueued ? " on" : "")}
+                  onClick={(e) => queueIt(e, t)}
+                  title={isQueued ? "Add another copy to queue" : "Add to queue"}
+                  aria-label="Add to queue">
+                  <span className="glyph">+</span>
+                  <span className="confirm">queued</span>
+                </button>
               </div>
             );
           })}

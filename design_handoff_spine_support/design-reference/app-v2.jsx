@@ -1,4 +1,4 @@
-/* THE VAULT OPERATOR — main app shell + router */
+/* THE VAULT OPERATOR v2 — compact navigation shells */
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -70,6 +70,14 @@ function usePlayer() {
     });
   }, [index]);
 
+  const addToQueue = useCallback((trackId, contextTracks) => {
+    const list = contextTracks || ALL_TRACKS;
+    const track = list.find(t => t.id === trackId);
+    if (!track) return;
+    setQueue(q => [...q, track]);
+    setEntireShowMode(false);
+  }, []);
+
   const clearAndPlayShow = useCallback(() => { playEntireShow(); }, [playEntireShow]);
   const clearQueue = useCallback(() => { setQueue([]); setIndex(0); setElapsed(0); setPlaying(false); setEntireShowMode(false); }, []);
 
@@ -77,7 +85,7 @@ function usePlayer() {
     queue, index, current, currentDur, playing, elapsed, volume,
     showQueue, entireShowMode, setVolume, setShowQueue,
     playTrack, playEntireShow, toggle, next, prev, seek,
-    removeFromQueue, clearAndPlayShow, clearQueue,
+    removeFromQueue, addToQueue, clearAndPlayShow, clearQueue,
   };
 }
 
@@ -107,6 +115,7 @@ function useRouter() {
     if (route === "era" && params.id)   hash += "/" + params.id;
     if (route === "member" && params.id) hash += "/" + params.id;
     if (route === "search" && params.q) hash += "/" + encodeURIComponent(params.q);
+    window.__fromRoute = (window.location.hash || "#/home").replace(/^#/, "");
     window.location.hash = hash;
     window.scrollTo(0, 0);
   }, []);
@@ -153,7 +162,7 @@ function EditionStrip({ nav }) {
         <span>An Annotated Guide to Grateful Dead Songlists</span>
         <span className="glyph">❦</span>
       </div>
-      <div>setlist.fm · archive.org</div>
+      <div>setlist.fm · archive.org · this volume</div>
     </div>
   );
 }
@@ -161,9 +170,9 @@ function EditionStrip({ nav }) {
 // =================================================================== CHAPTERS
 const ROUTE_TO_CHAPTER = {
   home: "home", search: "search", songs: "songs", song: "songs",
-  show: "home", recent: "recent", members: "members", member: "members",
+  show: "shows", shows: "shows", recent: "recent", members: "members", member: "members",
   venues: "venues", eras: "eras", era: "eras",
-  stats: "stats", export: "export",
+  stats: "stats", export: "export", support: "support",
 };
 
 function Chapters({ nav }) {
@@ -191,9 +200,11 @@ const CATALOG_NAV = [
   { id: "recent",  num: "IV",   label: "Recent",       badge: "12" },
   { id: "members", num: "V",    label: "Band Members", badge: null },
   { id: "venues",  num: "VI",   label: "Venues",       badge: "382" },
-  { id: "eras",    num: "VII",  label: "Eras",         badge: null },
-  { id: "stats",   num: "VIII", label: "Stats",        badge: null },
-  { id: "export",  num: "IX",   label: "Export",       badge: null },
+  { id: "shows",   num: "VII",  label: "Shows",        badge: null },
+  { id: "eras",    num: "VIII", label: "Eras",         badge: null },
+  { id: "stats",   num: "IX",   label: "Stats",        badge: null },
+  { id: "export",  num: "X",    label: "Export",       badge: null },
+  { id: "support", num: "XI",   label: "Support",      badge: null },
 ];
 
 function LeftIndex({ nav, onPlayPinned }) {
@@ -356,12 +367,12 @@ function QueueDrawer({ player }) {
   );
 }
 
-function Colophon() {
+function Colophon({ nav }) {
   return (
     <footer className="colophon">
       <span>© MMXXVI · Steal Your Stats Press · Made by hand</span>
       <span className="center"><span className="glyph">❦</span>&nbsp;&nbsp;If you get confused, listen to the music play&nbsp;&nbsp;<span className="glyph">❦</span></span>
-      <span>v.11.5 · cached locally · last sync 1h ago</span>
+      <span><a onClick={() => nav && nav.go("support")} style={{cursor:"pointer"}}>Send feedback · tip the operator</a></span>
     </footer>
   );
 }
@@ -379,12 +390,14 @@ function App() {
   };
 
   // Routes that use a 2-column layout (no right-col gutter content)
-  const wideRoutes = new Set(["show","song","songs","search","stats","venues","eras","members","member","recent","export"]);
+  const wideRoutes = new Set(["support","show","shows","song","songs","search","stats","venues","eras","members","member","recent","export"]);
   const isWide = wideRoutes.has(nav.route);
 
+  const [t, setTweak] = useTweaks(window.TWEAK_DEFAULTS);
   let body;
   if (nav.route === "home") body = <HomePage player={player} nav={nav} />;
   else if (nav.route === "show")    body = <ShowDetailPage player={player} nav={nav} params={nav.params} />;
+  else if (nav.route === "shows")   body = <ShowDetailPage player={player} nav={nav} params={nav.params} />;
   else if (nav.route === "song")    body = <SongDetailPage player={player} nav={nav} params={nav.params} />;
   else if (nav.route === "songs")   body = <SongsCatalogPage nav={nav} />;
   else if (nav.route === "search")  body = <SearchPage nav={nav} searchQ={nav.params.q || search} setSearchQ={setSearch} />;
@@ -396,22 +409,31 @@ function App() {
   else if (nav.route === "member")  body = <MemberDetailPage nav={nav} params={nav.params} player={player} />;
   else if (nav.route === "recent")  body = <RecentPage nav={nav} player={player} />;
   else if (nav.route === "export")  body = <ExportPage nav={nav} />;
+  else if (nav.route === "support") body = <SupportPage nav={nav} simulate={t.simulate} tipJar={t.tipJar} from={new URLSearchParams(location.search).get("from") || window.__fromRoute || document.referrer || "/"} />;
   else body = <HomePage player={player} nav={nav} />;
 
+  const np = { nav, search, setSearch };
+  const folded = t.spineFolded;
   return (
-    <div className="page">
-      <Masthead search={search} setSearch={setSearch} nav={nav} />
-      <EditionStrip nav={nav} />
-      <Chapters nav={nav} />
-
-      <div className={"grid" + (isWide && nav.route !== "era" ? " wide" : "")}>
-        {body}
-      </div>
-
-      <Colophon />
-
+    <div className={"page nav-spine" + (folded ? " folded" : "")}>
+      <NavSpine {...np} folded={folded} setFolded={v => setTweak("spineFolded", v)} />
+      <main className="main">
+        <NavMast nav={nav} />
+        <div className={"grid" + ((isWide && nav.route !== "era") || (nav.route === "support" && !t.tipJar) ? " wide" : "")}>{body}</div>
+        <Colophon nav={nav} />
+      </main>
       <Player player={player} />
       <QueueDrawer player={player} />
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Navigation">
+          <TweakToggle label="Fold spine to numerals" value={t.spineFolded} onChange={v => setTweak("spineFolded", v)} />
+        </TweakSection>
+        <TweakSection label="Support page">
+          <TweakSelect label="Simulated API response" value={t.simulate} options={[{value:"200",label:"200 · sent"},{value:"400",label:"400 · validation"},{value:"429",label:"429 · rate limited"},{value:"503",label:"503 · mail down"}]} onChange={v => setTweak("simulate", v)} />
+          <TweakToggle label="Tip jar (PAYPAL_ME_URL set)" value={t.tipJar} onChange={v => setTweak("tipJar", v)} />
+          <TweakButton label="Open /support" onClick={() => nav.go("support")} />
+        </TweakSection>
+      </TweaksPanel>
     </div>
   );
 }

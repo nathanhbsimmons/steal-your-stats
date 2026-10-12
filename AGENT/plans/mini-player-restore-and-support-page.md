@@ -1,14 +1,17 @@
-# Plan: Restore mobile mini player + add /support (feedback + tip jar)
+# Plan: Restore mobile mini player, spine nav + /support, home column swap
+
+Branch: `feat/mini-player-and-support`. Do the parts in order and commit after each one.
 
 ## Context
 - `ed7e89f` ("merge mobile mini-player into the tab bar dock", in squash `aab1de5`) shrank the mobile mini player from 64px to a 30px strip. The play/pause button went to 26px, the venue line and release badge were dropped, and the skip button was removed. It's now too small to tap and shows too little. Goal: bring back the old look and keep the fixes that change only behavior.
-- Users have no way to report bugs or ask for features, and there's no way to tip. Goal: one `/support` page with a feedback form (emailed through Resend) and a PayPal.me tip link.
+- Users have no way to report bugs or ask for features, and there's no way to tip. `design_handoff_spine_support/` supplies a high-fidelity desktop redesign (spine sidebar plus top band) and a `/support` page: a feedback form sent through Resend, and a PayPal.me tip jar.
+- On the desktop home page, the right column should list "Also On This Day" before "Most Played".
 
-Decisions made: PayPal.me only. Keep the Deck-tab playing dot. One `/support` page, linked from the desktop colophon and the bottom of mobile Home.
+Decisions made: PayPal.me only. Keep the Deck-tab playing dot. Reach `/support` from the spine footer and the colophon on desktop, and from the bottom of mobile Home.
 
 ---
 
-## Part A: Restore the mini player (branch `feat/restore-mobile-mini`)
+## Part A: Restore the mini player (mobile)
 
 Restore the visuals from the parent commit of `ed7e89f`: `git show ed7e89f^:app/mobile.css` (the `/* MINI PLAYER */` block) and `git show ed7e89f^:components/mobile/mobile-shell.tsx` (`MobileMini`).
 
@@ -22,7 +25,7 @@ Restore the visuals from the parent commit of `ed7e89f`: `git show ed7e89f^:app/
 **New behavior-only fixes:**
 - Skip ▶▶ button: the visible glyph stays the same size. Add an invisible centered `::after` overlay (44×44) so the tap target is large enough. This follows the `.mv-addq::after` pattern in `app/mobile.css` (from `66f113c`).
 - Play/pause button: the visible size stays 36px. Add the same overlay to bring its tap target to 44×44.
-- Move `aria-live` off the whole row, which wraps buttons, onto a visually hidden `<span>` that holds only the track title and date. Screen readers then announce track changes without re-reading the controls.
+- Move `aria-live` off the whole row, which wraps buttons, onto a `.sr-only` span (defined in `app/globals.css:113`) that holds only the track title and date.
 - Restore the `.mv-mini .stamp::after` rule under `prefers-reduced-motion`.
 
 **Steps:**
@@ -42,100 +45,98 @@ Restore the visuals from the parent commit of `ed7e89f`: `git show ed7e89f^:app/
    Also make these changes:
    - Pull `next` from `usePlayer()`.
    - Keep the accessible name `Open player — {name}`.
-   - Add a hidden live `<span>` (use the existing visually-hidden class if there is one; otherwise an inline sr-only style).
+   - Add the `.sr-only` live span.
 7. `test/mobile-shell.test.tsx` (~line 344–440, 1234–1250): update the selectors from `.mv-dock-now`/`.mv-dock-open` to `.mv-mini`/`.mv-mini-open`. Add tests that:
    - the skip button calls `next`
    - the venue line renders
    - there is exactly one `.mv-dock`
-8. Run `pnpm test:run`, `pnpm lint`, `pnpm typecheck`.
+8. Run `pnpm test:run`, `pnpm lint`, `pnpm typecheck`, then commit.
 
 ---
 
-## Part B: `/support` page (branch `feat/support-page`)
+## Part B: Install `design_handoff_spine_support` (desktop spine + /support)
 
-### Spec: feedback form
-- Fields:
-  - **Type**: radio, one of Bug / Improvement / New feature (required).
-  - **Message**: textarea, 10–4000 characters (required).
-  - **Email**: optional, for replies, validated as an email.
-  - **Page**: hidden, filled from `document.referrer` or the query `?from=`.
-  - **User agent**: captured on the server from the request header.
-- Spam controls:
-  - A honeypot field named `website`, visually hidden; a filled value means a silent 200 and no email.
-  - Reject submissions made less than 3s after the form rendered (a hidden timestamp).
-  - A best-effort in-memory rate limit of 5 submissions per IP per 10 minutes, kept in a module-level `Map`. On serverless this applies per instance, which is acceptable.
-- `POST /api/feedback` validates the body with zod, then sends through the Resend REST API using `fetch` (no new dependency):
-  - Endpoint: `POST https://api.resend.com/emails` with `Authorization: Bearer RESEND_API_KEY`.
-  - Body: `{ from: FEEDBACK_FROM_EMAIL, to: FEEDBACK_TO_EMAIL, reply_to: email?, subject: "[SYS {type}] {first 60 chars}", text }`.
-  - Responses: 200 `{ok:true}`, 400 for validation errors, 429 when rate-limited, 503 when Resend fails or env vars are missing.
-- UI states (project model, idle → loading → empty → error → success):
-  - **idle**: the form.
-  - **loading**: submit disabled, "Sending…".
-  - **error**: inline message in an `aria-live` region, with the form values kept.
-  - **success**: thank-you panel with a "Send another" button.
-- Accessibility (WCAG AA):
-  - Labels on every field; the type choice is a `fieldset`/`legend`.
-  - Errors are tied to their fields with `aria-describedby`.
-  - Focus moves to the status message after submit.
-  - Visible focus rings come from the existing tokens.
+Source: `design_handoff_spine_support/README.md` is the spec. Its files mirror repo paths and are written against `main`. Install as listed, then make the repo-specific adjustments below.
 
-### Spec: tip jar
-- The PayPal.me link is a constant: `PAYPAL_ME_URL` in `lib/site-config.ts` (for example `https://paypal.me/<handle>`). If it's empty, the section is hidden.
-- Short copy, and one primary button "Tip via PayPal" that opens in a new tab (`target="_blank" rel="noopener noreferrer"`).
-- No backend, no amounts, no PCI scope. PayPal.me accepts cards from people without a PayPal account.
+**Install (copy from the handoff):**
+1. Add `app/vault-spine.css` and `app/support.css`. In `app/layout.tsx:5-6`, import both after `globals.css` and before `mobile.css`. `globals.css` has no `@layer`, so no layer wrapping is needed.
+2. Add `components/vault/spine.tsx` and `components/vault/top-band.tsx`.
+3. Replace `components/vault/vault-shell.tsx` and `components/vault/colophon.tsx`. `/support` is added to `WIDE_ROUTES`.
+4. `lib/site-config.ts`: copy the handoff's `PAYPAL_ME_URL` addition only, set to the user's PayPal.me URL. The other contents are identical to the repo's.
+5. Delete `components/vault/masthead.tsx`, `edition-strip.tsx` and `chapters.tsx`. The only importer is `vault-shell.tsx`. User approved deletion.
+6. Add `app/support/page.tsx`, `components/support/feedback-form.tsx`, `components/support/tip-jar.tsx` and `app/api/feedback/route.ts`.
+7. `components/home/home-client.tsx`: remove the gutter labels at ~line 178 ("Featured · On This Day" / "PG. 1977") and ~line 446 ("The Ledger · Stats" / "MMXXVI"), including the label's bottom border.
+8. `app/sitemap.ts`: add `/support`.
 
-### Files
-New:
-- `app/support/page.tsx`: server component that exports `metadata` and renders `<SupportContent />`.
-- `components/support/support-content.tsx`: client component holding the feedback form and the tip section, shared by both shells.
-- `components/support/feedback-form.tsx`: the form and its state machine.
-- `app/api/feedback/route.ts`: the POST handler.
-- `test/feedback-route.test.ts`, `test/feedback-form.test.tsx`
-
-Modified:
-- `lib/env.ts`: add optional `RESEND_API_KEY`, `FEEDBACK_TO_EMAIL` and `FEEDBACK_FROM_EMAIL` to the schema.
-- `lib/site-config.ts`: add `PAYPAL_ME_URL`.
-- `components/vault/colophon.tsx`: add a "Feedback & Tips" link to `/support`.
-- `components/mobile/mobile-shell.tsx`:
-  - Under the home tab, render `<SupportContent />` when `pathname === '/support'`. This mirrors the `isShowDetail` pattern around line 2050, because the mobile shell ignores route children.
+**Repo adjustments to the handoff:**
+- `lib/env.ts`: add optional `RESEND_API_KEY`, `FEEDBACK_TO_EMAIL` and `FEEDBACK_FROM_EMAIL` to the schema. The route reads `process.env` directly, which is fine on the server; the schema documents the keys.
+- `app/api/feedback/route.ts`: the handoff uses `error.flatten()` and `z.string().email()`, which are deprecated in zod v4 (the repo is on `^4.1.3`). Swap in `z.flattenError(error)` and `z.email()`, keeping the behavior the same.
+- Mobile `/support`: the handoff leaves mobile untouched, but the mobile shell ignores route children, so `/support` would render blank on phones. In `components/mobile/mobile-shell.tsx`:
+  - Under the home tab, render `<FeedbackForm />` and `<TipJar />` when `pathname === '/support'`. This mirrors the `isShowDetail` pattern around line 2050.
   - Add a `chapterMeta` entry for `/support`.
-  - Add a "Feedback & Tips" link at the bottom of `HomeScreen`.
-- `app/globals.css` and `app/mobile.css`: form styles using the existing tokens (`--rule`, `--r-*`, `--shadow-card`, and the button variant tokens from `8fe7395`). Add no new colors.
-- `app/sitemap.ts`: add `/support`.
+  - Add a "Feedback & tips" link at the bottom of `HomeScreen`.
+  - `support.css` selectors aren't scoped (`.support`, `.fb*`, `.tip`), so they apply inside `.mv`. Add mobile-only size tweaks to `app/mobile.css` if needed, using existing tokens.
+- Remove the dead masthead, edition-strip and chapters rules from `globals.css` only if they aren't shared. Check first; leave them otherwise.
 - `CLAUDE.md`: list the three new env vars.
 
-### Steps
-1. Add the env schema entries and the site-config constant.
-2. Write the route tests for valid input, invalid input, honeypot, rate limit and Resend failure, with `fetch` mocked. Then implement `app/api/feedback/route.ts`. The patterns to follow are `NextResponse.json` from `app/api/weather/route.ts` and zod from `lib/env.ts`.
-3. Write the form tests for the states and accessibility wiring, then implement `feedback-form.tsx`.
-4. Build `support-content.tsx` (form plus tip section) and `app/support/page.tsx`.
-5. Wire the mobile shell route, the colophon link and the mobile Home link.
-6. Add styles to both stylesheets.
-7. Update the sitemap and `CLAUDE.md`.
-8. Run `pnpm test:run`, `pnpm lint`, `pnpm typecheck`.
+**Tests (none ship with the handoff):**
+- `test/feedback-route.test.ts` (mock `fetch`). Cover:
+  - 400 with fieldErrors
+  - honeypot returning a silent 200 with no email
+  - a submission under 3s returning 400
+  - the 6th call returning 429
+  - missing env returning 503
+  - a Resend failure returning 503
+  - success returning 200, with the `reply_to` and subject format checked
+- `test/feedback-form.test.tsx`. Cover:
+  - client validation and the error count
+  - focus moving to the status box
+  - the 400/429/503 messages
+  - the success panel, with and without an email
+  - "Send another" resetting the form
+- A spine test for:
+  - the active chapter
+  - fold persistence in `localStorage['sys:spine-folded']`
+  - ⌘K focusing search and ⌘B toggling fold
+  - the `/support?from=` link
+- Fix any existing tests that reference the masthead, chapters or edition strip.
 
-### You need to provide
-- `RESEND_API_KEY`
-- A sending address on a domain verified in Resend (for example `feedback@stealyourstats.com`) as `FEEDBACK_FROM_EMAIL`
-- The inbox to receive feedback as `FEEDBACK_TO_EMAIL`
-- Your PayPal.me handle
+**Env (set by the user, not pasted into chat):**
+```
+RESEND_API_KEY=...                                   # Resend dashboard
+FEEDBACK_TO_EMAIL=nathansimmons@hey.com
+FEEDBACK_FROM_EMAIL=support@stealyourstats.com       # domain must be verified in Resend
+```
+Add these to `.env.local` and to the hosting dashboard. Then run `pnpm test:run`, `pnpm lint`, `pnpm typecheck`, and commit.
 
-Add the env vars to `.env.local` and to the hosting dashboard.
+---
+
+## Part C: Swap Most Played and Also On This Day (desktop home)
+
+1. `components/home/home-client.tsx` (~line 473–521): move the `{/* Also on this day */}` block (`shows.length > 1`, `.alsolist`) above the `{/* Most played */}` block (`mostPlayed.length > 0`, `.toptable`). Both keep `marginTop: 18`.
+2. Update `test/home.test.tsx` if it asserts section order. Otherwise add a test that checks "Also On This Day" comes before "Most Played".
+3. Run tests, lint and typecheck, then commit.
 
 ---
 
 ## Verification
 - **Part A:** run `pnpm dev`, then use the Playwright MCP at 390×844.
-  - Play a track and check that the mini player matches the old screenshot and layout (`git stash` and check out `ed7e89f^` to compare).
+  - Play a track and check that the mini player matches `ed7e89f^` (compare it in a worktree).
   - Check that skip and play/pause respond to taps on the edge of the 44px area.
   - Check that the Deck dot shows.
   - Check that back-to-top isn't covered by the dock.
   - Check that content isn't hidden behind the dock, both with a track playing and without.
 - **Part B:**
-  - Submit the form at `/support` on desktop and mobile widths, and confirm the email arrives with reply-to set.
-  - Submit with the honeypot filled and confirm no email is sent.
-  - Submit 6 times quickly and confirm the 6th returns 429.
-  - Remove the env vars and confirm a graceful 503 error state.
-  - Confirm the PayPal link opens in a new tab.
+  - At 1440px and 1100px widths, compare the spine and top band to `design-reference/The Vault Operator v2.html`.
+  - Fold and unfold, reload, and confirm the fold state persists.
+  - Check ⌘K and ⌘B.
+  - Check that the player dock doesn't overlap the bottom of the spine.
+  - At `/support` on desktop and at 390px:
+    - Submit, and confirm the email arrives at `nathansimmons@hey.com` with reply-to set.
+    - Submit with the honeypot filled and confirm no email is sent.
+    - Submit 6 times quickly and confirm the 6th returns 429.
+    - Remove the env vars and confirm the "mail room is closed" error.
+    - Confirm the PayPal link opens in a new tab.
   - Do a keyboard-only pass.
-- `pnpm test:run && pnpm lint && pnpm typecheck` all pass. Then recommend `test-qa-engineer` for end-to-end coverage of `/support`.
+- **Part C:** on the desktop home page, the right column order is: ledger, Also On This Day, Most Played, quote.
+- `pnpm test:run && pnpm lint && pnpm typecheck` all pass. Then recommend `test-qa-engineer` for end-to-end coverage of `/support` and the spine.

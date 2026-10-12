@@ -559,7 +559,7 @@ body::after {
 
 .track {
   display: grid;
-  grid-template-columns: 30px 22px 1fr 90px 70px 20px;
+  grid-template-columns: 30px 22px 1fr 90px 70px 28px;
   align-items: center;
   gap: 6px;
   padding: 7px 4px 7px 0;
@@ -619,12 +619,83 @@ body::after {
 }
 .track .chev { color: var(--ink-3); font-size: 13px; text-align: center; }
 
+/* Add-to-queue button — sibling of .play-dot, on the right of each row */
+.track .queue-btn {
+  position: relative;
+  width: 22px; height: 22px;
+  border: 1px solid var(--ink-3);
+  background: var(--paper);
+  color: var(--ink-3);
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  justify-self: end;
+  font-family: var(--mono);
+  transition: background .12s, color .12s, border-color .12s, transform .08s;
+}
+.track .queue-btn .glyph {
+  font-size: 14px;
+  line-height: 1;
+  margin-top: -1px;
+  transition: opacity .15s;
+}
+.track .queue-btn .confirm {
+  position: absolute;
+  right: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--forest);
+  background: var(--paper);
+  padding: 2px 6px;
+  border: 1px solid var(--forest);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s, transform .15s;
+}
+.track .queue-btn:hover {
+  background: var(--paper);
+  border-color: var(--rust);
+  color: var(--rust);
+}
+.track .queue-btn:active { transform: scale(0.92); }
+/* Already in the queue — quiet forest outline */
+.track .queue-btn.on { border-color: var(--forest); color: var(--forest); }
+/* Just-queued flash — short rust pulse + "queued" callout */
+.track .queue-btn.just {
+  background: var(--rust);
+  border-color: var(--rust-dark);
+  color: var(--paper);
+  animation: queueFlash 0.7s ease-out;
+}
+.track .queue-btn.just .glyph { opacity: 0; }
+.track .queue-btn.just .confirm {
+  opacity: 1;
+  transform: translateY(-50%) translateX(-2px);
+  color: var(--paper);
+  background: var(--rust);
+  border-color: var(--rust-dark);
+}
+@keyframes queueFlash {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(168, 57, 31, 0.55); }
+  40%  { transform: scale(1.18); box-shadow: 0 0 0 6px rgba(168, 57, 31, 0); }
+  100% { transform: scale(1); }
+}
+
 .track.playing { background: var(--hi); }
 .track.playing .play-dot { background: var(--rust); color: var(--paper); border-color: var(--rust); animation: pulse 1.6s infinite; }
 .track.playing .title { color: var(--rust-dark); }
 .track.queued { }
 .track.queued .num { color: var(--forest); font-weight: 700; }
 .track.queued .play-dot { border-color: var(--forest); color: var(--forest); }
+/* keep the queue button forest-quiet when row is queued, but don't override the just-queued flash */
+.track.queued .queue-btn:not(.just) { border-color: var(--forest); color: var(--forest); }
 
 /* footnotes between sets */
 .fn {
