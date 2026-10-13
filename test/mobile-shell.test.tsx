@@ -318,26 +318,26 @@ describe('MobileShell', () => {
       expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     })
 
-    it('does not render the masthead on non-home pages', () => {
+    it('renders the masthead on non-home pages', () => {
       setPathname('/songs')
       render(<MobileShell />)
-      expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     })
 
-    it('does not render the masthead when deck tab is active', () => {
+    it('renders the masthead when deck tab is active', () => {
       render(<MobileShell />)
       fireEvent.click(screen.getByText('Deck'))
-      expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     })
 
-    it('renders "Grateful Dead" in the masthead subtitle', () => {
+    it('renders "Grateful Dead" in the chapter strip', () => {
       render(<MobileShell />)
       expect(screen.getByText(/Grateful Dead/i)).toBeInTheDocument()
     })
 
-    it('renders "compiled by hand, played through the deck" in the masthead subtitle', () => {
+    it('does not render the "compiled by hand" tagline', () => {
       render(<MobileShell />)
-      expect(screen.getByText(/compiled by hand, played through the deck/i)).toBeInTheDocument()
+      expect(screen.queryByText(/compiled by hand, played through the deck/i)).not.toBeInTheDocument()
     })
   })
 
