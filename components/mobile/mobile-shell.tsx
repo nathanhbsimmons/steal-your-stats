@@ -170,9 +170,15 @@ function MobileDock({ activeTabId, onTabClick, onOpenDeck, showNowPlaying }: Mob
               <div className="sub">{dateStr}{venueStr ? ` · ${venueStr}` : ''}</div>
             </div>
           </button>
-          <button className="next" onClick={next} aria-label="Skip to next track">▶▶</button>
+          <button className="next" onClick={next} aria-label="Skip to next track">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 5H19v14h-2.5zM4 5v14l11-7z" /></svg>
+          </button>
           <button className="pp" onClick={isPlaying ? pause : play} aria-label={isPlaying ? 'Pause' : 'Play'}>
-            {isPlaying ? '❚❚' : '▶'}
+            {isPlaying ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" /></svg>
+            )}
           </button>
           <div className="hair" style={{ width: '0%' }} aria-hidden="true" />
         </div>
@@ -199,61 +205,50 @@ function MobileDock({ activeTabId, onTabClick, onOpenDeck, showNowPlaying }: Mob
 
 /* ---------------------------------------------------------- chapter strip */
 
-function chapterMeta(tabId: MobileTabId, pathname: string, songTitle?: string, totalShows?: number | null): { left: React.ReactNode; right: string } {
-  const showsBadge = String(totalShows ?? 2329)
+function chapterMeta(tabId: MobileTabId, pathname: string): { left: React.ReactNode } {
   if (tabId === 'home') {
     if (pathname.startsWith('/show/')) return {
-      left: <><span className="num">I·a</span> HOME · SETLIST</>,
-      right: '0001',
+      left: <>HOME · SETLIST</>,
     }
     if (pathname === '/support') return {
-      left: <><span className="num">I·b</span> HOME · SUPPORT</>,
-      right: '0001',
+      left: <>HOME · SUPPORT</>,
     }
     return {
-      left: <><span className="num">I.</span> HOME · ON THIS DAY</>,
-      right: '0001',
+      left: <>HOME · ON THIS DAY</>,
     }
   }
   if (tabId === 'deck') return {
-    left: <><span className="num">II.</span> DECK · NOW PLAYING</>,
-    right: '0001',
+    left: <>DECK · NOW PLAYING</>,
   }
   if (tabId === 'shows') {
     const yearMatch = pathname.match(/^\/shows\/(\d{4})$/)
     if (yearMatch) return {
-      left: <><span className="num">III·a</span> SHOWS › {yearMatch[1]}</>,
-      right: yearMatch[1],
+      left: <>SHOWS › {yearMatch[1]}</>,
     }
     return {
-      left: <><span className="num">III.</span> SHOWS · BY DECADE</>,
-      right: showsBadge,
+      left: <>SHOWS · BY DECADE</>,
     }
   }
   if (tabId === 'songs') {
-    if (pathname.startsWith('/song/') && songTitle) return {
-      left: <><span className="num">IV·a</span> SONGS › DETAIL</>,
-      right: `0214 / ${CANONICAL_SONG_COUNT}`,
+    if (pathname.startsWith('/song/')) return {
+      left: <>SONGS › DETAIL</>,
     }
     return {
-      left: <><span className="num">IV.</span> SONGS · CATALOG</>,
-      right: String(CANONICAL_SONG_COUNT),
+      left: <>SONGS · CATALOG</>,
     }
   }
   if (tabId === 'stats') return {
-    left: <><span className="num">V.</span> STATS · BY THE NUMBERS</>,
-    right: showsBadge,
+    left: <>STATS · BY THE NUMBERS</>,
   }
   if (tabId === 'search') return {
-    left: <><span className="num">VI.</span> SEARCH · CATALOG</>,
-    right: showsBadge,
+    left: <>SEARCH · CATALOG</>,
   }
-  return { left: <><span className="num">I.</span> THE VAULT</>, right: '0001' }
+  return { left: <>THE VAULT</> }
 }
 
-function MobileChapter({ tabId, pathname, songTitle, totalShows }: { tabId: MobileTabId; pathname: string; songTitle?: string; totalShows?: number | null }) {
+function MobileChapter({ tabId, pathname }: { tabId: MobileTabId; pathname: string }) {
   const router = useRouter()
-  const { left, right } = chapterMeta(tabId, pathname, songTitle, totalShows)
+  const { left } = chapterMeta(tabId, pathname)
   const isDetail = pathname.startsWith('/song/') || pathname.startsWith('/show/') || pathname.match(/^\/shows\/\d{4}$/)
   return (
     <div className="mv-chapter">
@@ -269,7 +264,7 @@ function MobileChapter({ tabId, pathname, songTitle, totalShows }: { tabId: Mobi
         )}
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{left}</span>
       </span>
-      <span className="pg">{right}</span>
+      <span className="pg">The <span className="bl">Grateful Dead</span> Archive</span>
     </div>
   )
 }
@@ -277,26 +272,9 @@ function MobileChapter({ tabId, pathname, songTitle, totalShows }: { tabId: Mobi
 /* ------------------------------------------------------------- masthead */
 
 function MobileMast() {
-  const [weather, setWeather] = useState<{ temp: number | null; label: string | null } | null>(null)
-
-  useEffect(() => {
-    fetch('/api/weather')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setWeather(d) })
-      .catch(() => {})
-  }, [])
-
-  const weatherStr = weather?.temp != null && weather?.label
-    ? `${weather.temp}°F · ${weather.label}`
-    : null
-
   return (
     <div className="mv-mast">
-      {weatherStr && <div className="mv-mast-weather">{weatherStr}</div>}
       <h1>Steal<span className="amp">your</span>Stats</h1>
-      <div className="sub">
-        The <span className="bl">Grateful Dead</span> Archive · <em>compiled by hand, played through the deck</em>
-      </div>
     </div>
   )
 }
@@ -390,13 +368,21 @@ function MobileNowPlaying({ queuePos, queueLength }: { queuePos: number; queueLe
           </span>
         </div>
         <div className="mv-ctrls">
-          <button className="mv-iconbtn ghost" onClick={previous} aria-label="Previous track">◀◀</button>
-          <button className="mv-iconbtn ghost" aria-label="Skip back 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: -10 } }))}>−10</button>
-          <button className="mv-iconbtn play" onClick={isPlaying_ ? pause : play} aria-label={isPlaying_ ? 'Pause' : 'Play'}>
-            {isPlaying_ ? '❚❚' : '▶'}
+          <button className="mv-iconbtn ghost" onClick={previous} aria-label="Previous track">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5h2.5v14H5zM20 5v14L9 12z" /></svg>
           </button>
-          <button className="mv-iconbtn ghost" aria-label="Skip forward 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: 10 } }))}>+10</button>
-          <button className="mv-iconbtn ghost" onClick={next} aria-label="Next track">▶▶</button>
+          <button className="mv-iconbtn ghost" aria-label="Skip back 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: -10 } }))}>−10s</button>
+          <button className="mv-iconbtn play" onClick={isPlaying_ ? pause : play} aria-label={isPlaying_ ? 'Pause' : 'Play'}>
+            {isPlaying_ ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" /></svg>
+            )}
+          </button>
+          <button className="mv-iconbtn ghost" aria-label="Skip forward 10 seconds" onClick={() => window.dispatchEvent(new CustomEvent('vault-seek-by', { detail: { seconds: 10 } }))}>+10s</button>
+          <button className="mv-iconbtn ghost" onClick={next} aria-label="Next track">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 5H19v14h-2.5zM4 5v14l11-7z" /></svg>
+          </button>
         </div>
       </div>
     </>
@@ -408,6 +394,7 @@ function MobileNowPlaying({ queuePos, queueLength }: { queuePos: number; queueLe
 function DeckScreen({ onClose }: { onClose: () => void }) {
   const { currentTrack, queue, queueResolving, selectTrack, removeFromQueue, clearQueue } = usePlayer()
   const currentIdx = currentTrack ? queue.findIndex(t => t.id === currentTrack.id) : -1
+  const multiShow = new Set(queue.map(t => t.showDate)).size > 1
 
   return (
     <>
@@ -458,8 +445,13 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
               <div className="mv-queue-empty">The deck is empty. Cue a track to begin.</div>
             ) : (
               queue.map((t, i) => (
+                <React.Fragment key={t.id + i}>
+                {multiShow && (i === 0 || queue[i - 1].showDate !== t.showDate) && (
+                  <div className="mv-qgroup">
+                    {[t.showDate ? shortDate(t.showDate) : '', t.venue].filter(Boolean).join(' · ')}
+                  </div>
+                )}
                 <div
-                  key={t.id + i}
                   className={`mv-qrow${i === currentIdx ? ' current' : ''}`}
                 >
                   <button
@@ -472,7 +464,6 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
                     <span className="mv-qnum">{String(i + 1).padStart(2, '0')}</span>
                     <span className="mv-qmeta">
                       <span className="mv-qtitle">{t.name}</span>
-                      <span className="mv-qsub">{t.showDate}{t.venue ? ` · ${t.venue}` : ''}</span>
                     </span>
                     <span className="mv-qdur">{formatDur(t.duration)}</span>
                   </button>
@@ -483,6 +474,7 @@ function DeckScreen({ onClose }: { onClose: () => void }) {
                     aria-label={`Remove ${t.name} from queue`}
                   >×</button>
                 </div>
+                </React.Fragment>
               ))
             )}
             {queue.length > 0 && (
@@ -607,21 +599,18 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
             {displayDate && <div className="mv-preplay-date"><ShowDate iso={displayDate} /></div>}
             {displayVenue && <div className="mv-preplay-venue">{displayVenue}</div>}
             {displayCity && <div className="mv-preplay-city">{displayCity}</div>}
-            {venueTidbit && <div className="mv-preplay-tidbit">{venueTidbit}</div>}
             {displayDate && (() => {
               const releases = getOfficialReleasesForDate(displayDate)
               return releases.length > 0 ? (
                 <>
-                  <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                  <div style={{ textAlign: 'center', margin: '14px 0' }}>
                     <ReleaseBadge releases={releases} />
-                  </div>
-                  <div className="mv-shows-legend">
-                    <ReleaseLegend releases={releases} />
                   </div>
                 </>
               ) : null
             })()}
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+            {venueTidbit && <div className="mv-preplay-tidbit">{venueTidbit}</div>}
+            <div className="mv-preplay-actions">
               {displayDate && archiveCoveredIndices.size > 0 && (
                 <button className="mv-play-show-btn" onClick={handlePlay}>▶ Play Show</button>
               )}
@@ -640,23 +629,13 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
       {/* Setlist */}
       {showDetail && showDetail.sets.length > 0 && (
         <div className="mv-setlist">
-          {hasMissingAudio && (
-            <div className="mv-archive-note">
-              {missingAudioMessage({ candidateCount: 0, canOpenSetlist: true })}{' '}
-              {displayDate && (
-                <Link href={`/show/${displayDate}`} style={{ color: 'var(--rust)', textDecoration: 'underline' }}>
-                  Open setlist ↗
-                </Link>
-              )}
-            </div>
-          )}
           {showDetail.sets.map((set, si) => {
             const isEncore = set.encore
             const roman = isEncore ? 'E.' : toRoman(si + 1)
             return (
               <div key={set.name}>
                 <div className="mv-set-head">
-                  <span className="name"><span style={{ color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: 14, marginRight: 6 }}>{roman}</span>{set.name}</span>
+                  <span className="name"><span style={{ color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: 14, marginRight: 6 }}>{roman}</span>{set.name.replace(/:\s*$/, '')}</span>
                   <span className="meta">{set.songs.length} tracks</span>
                 </div>
                 {set.songs.map((song, ti) => {
@@ -731,6 +710,21 @@ function HomeScreen({ onPlayShow }: { onPlayShow: () => void }) {
               >+</button>
             </div>
           ))}
+        </div>
+      )}
+
+      {hasMissingAudio && showDetail && showDetail.sets.length > 0 && (
+        <div className="mv-setlist" style={{ paddingTop: 0 }}>
+            {hasMissingAudio && (
+              <div className="mv-archive-note">
+                {missingAudioMessage({ candidateCount: 0, canOpenSetlist: true })}{' '}
+                {displayDate && (
+                  <Link href={`/show/${displayDate}`} style={{ color: 'var(--rust)', textDecoration: 'underline' }}>
+                    Open setlist ↗
+                  </Link>
+                )}
+              </div>
+            )}
         </div>
       )}
 
@@ -1743,7 +1737,7 @@ function ShowDetailScreen({ date, onPlayShow }: { date: string; onPlayShow: () =
             return (
               <div key={set.name}>
                 <div className="mv-set-head">
-                  <span className="name"><span style={{ color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: 14, marginRight: 6 }}>{roman}</span>{set.name}</span>
+                  <span className="name"><span style={{ color: 'var(--rust)', fontFamily: 'var(--mono)', fontSize: 14, marginRight: 6 }}>{roman}</span>{set.name.replace(/:\s*$/, '')}</span>
                   <span className="meta">{set.songs.length} tracks</span>
                 </div>
                 {set.songs.map((song, ti) => {
@@ -1995,10 +1989,6 @@ export function MobileShell() {
   const router = useRouter()
   const { currentTrack } = usePlayer()
 
-  const [totalShows, setTotalShows] = useState<number | null>(null)
-  useEffect(() => {
-    fetch('/api/stats/summary').then(r => r.ok ? r.json() : null).then(d => { if (d?.totalShows) setTotalShows(d.totalShows) }).catch(() => {})
-  }, [])
 
   // Tracks whether the player (deck) tab is active.
   // Both Home and Deck live at '/'; this distinguishes them.
@@ -2078,15 +2068,14 @@ export function MobileShell() {
 
   const songSlug  = isSongDetail ? decodeURIComponent(pathname.replace('/song/', '')) : undefined
   const showDate  = isShowDetail ? pathname.replace('/show/', '') : undefined
-  const showMast  = activeTabId === 'home' && isAtRoot
   const isDeckTab = activeTabId === 'deck'
   const hasMini = !isDeckTab && !!currentTrack
 
   return (
     <div className="mv" role="main">
       <div ref={scrollRef} className={`mv-scroll${!hasMini ? ' no-mini' : ''}`}>
-        {showMast && <MobileMast />}
-        <MobileChapter tabId={activeTabId} pathname={pathname} songTitle={songSlug} totalShows={totalShows} />
+        <MobileMast />
+        <MobileChapter tabId={activeTabId} pathname={pathname} />
 
         {/* Home tab */}
         {activeTabId === 'home' && isAtRoot && <HomeScreen onPlayShow={navigateToDeck} />}

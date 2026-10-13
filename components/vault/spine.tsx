@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { CANONICAL_SONG_COUNT } from '@/lib/ids'
@@ -65,6 +65,15 @@ export function Spine({ search, setSearch, folded, setFolded }: SpineProps) {
     return () => window.removeEventListener('keydown', handler)
   }, [folded, setFolded])
 
+  const [tip, setTip] = useState<{ text: string; top: number } | null>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const showTip = (text: string) => (e: React.SyntheticEvent<HTMLElement>) => {
+    if (!folded || !wrapRef.current) return
+    const r = e.currentTarget.getBoundingClientRect()
+    setTip({ text, top: r.top + r.height / 2 - wrapRef.current.getBoundingClientRect().top })
+  }
+  const hideTip = () => setTip(null)
+
   const onSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && search.trim()) router.push(`/search?q=${encodeURIComponent(search.trim())}`)
   }
@@ -72,14 +81,14 @@ export function Spine({ search, setSearch, folded, setFolded }: SpineProps) {
   const supportHref = `/support?from=${encodeURIComponent(pathname)}`
 
   return (
-    <div className="spine-wrap">
+    <div className="spine-wrap" ref={wrapRef}>
       <aside className="spine" aria-label="Chapter navigation">
         <Link href="/" className="spine-wm" aria-label="Steal Your Stats — home">
           {folded ? <>S<span className="your">y</span>S</> : <>Steal<span className="your">your</span>Stats</>}
         </Link>
 
         {folded ? (
-          <button type="button" className="spine-search-icon" title="Search (⌘K)" aria-label="Search" onClick={() => router.push('/search')}>⌕</button>
+          <button type="button" className="spine-search-icon" aria-label="Search" onMouseEnter={showTip('Search ⌘K')} onMouseLeave={hideTip} onFocus={showTip('Search ⌘K')} onBlur={hideTip} onClick={() => router.push('/search')}>⌕</button>
         ) : (
           <label className="spine-search">
             <span className="g" aria-hidden="true">⌕</span>
@@ -102,8 +111,11 @@ export function Spine({ search, setSearch, folded, setFolded }: SpineProps) {
               href={c.href}
               className={activeId === c.id ? 'active' : ''}
               aria-current={activeId === c.id ? 'page' : undefined}
-              title={folded ? c.label : undefined}
               aria-label={folded ? c.label : undefined}
+              onMouseEnter={showTip(c.label)}
+              onMouseLeave={hideTip}
+              onFocus={showTip(c.label)}
+              onBlur={hideTip}
             >
               <span className="num">{c.num}</span>
               {!folded && <span className="label">{c.label}</span>}
@@ -117,13 +129,18 @@ export function Spine({ search, setSearch, folded, setFolded }: SpineProps) {
             href={supportHref}
             className={activeId === 'support' ? 'active' : ''}
             aria-current={activeId === 'support' ? 'page' : undefined}
-            title={folded ? 'Support & feedback' : undefined}
             aria-label={folded ? 'Support & feedback' : undefined}
+            onMouseEnter={showTip('Support & feedback')}
+            onMouseLeave={hideTip}
+            onFocus={showTip('Support & feedback')}
+            onBlur={hideTip}
           >
             {folded ? '✉' : 'Support & feedback'}
           </Link>
         </div>
       </aside>
+
+      {folded && tip && <span className="spine-tip" role="tooltip" style={{ top: tip.top }}>{tip.text}</span>}
 
       <button
         type="button"

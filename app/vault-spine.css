@@ -46,12 +46,15 @@
 .spine-foot a:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
 
 /* notch on the double rule — fold toggle, ⌘B */
-.spine-notch{position:absolute;top:calc((100% - var(--vault-player-bar-h, 88px)) / 2);right:-15px;transform:translateY(-50%);width:15px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--paper);border:1.5px solid var(--ink);border-left:0;border-radius:0 3px 3px 0;color:var(--ink-2);font-size:13px;line-height:1;cursor:pointer}
+.spine-notch{position:absolute;top:41px;right:-15px;transform:translateY(-50%);width:15px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--paper);border:1.5px solid var(--ink);border-left:0;border-radius:0 3px 3px 0;color:var(--ink-2);font-size:13px;line-height:1;cursor:pointer}
 .spine-notch:hover{background:var(--ink);color:var(--paper)}
 .spine-notch:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
 .spine-notch .tip{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s}
 .spine-notch .tip kbd{font-family:inherit;border:1px solid var(--ink-3);padding:0 4px;margin-left:4px}
 .spine-notch:hover .tip,.spine-notch:focus-visible .tip{opacity:1}
+
+/* nav tooltips (folded) — same look as the notch tip */
+.spine-tip{position:absolute;left:calc(100% + 8px);transform:translateY(-50%);background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;white-space:nowrap;pointer-events:none;z-index:40}
 
 /* folded (64px, numerals only) */
 .folded .spine{padding:16px 0 calc(var(--vault-player-bar-h, 88px) + 16px);align-items:stretch}
